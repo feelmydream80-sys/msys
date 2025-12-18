@@ -30,14 +30,12 @@ def log_menu_access(f):
 # 데이터 명세서 (Data Specification)
 # =============================================
 @bp.route('/data_spec')
-@data_spec_required
 @log_menu_access
 def data_spec_page():
     """데이터 명세서 페이지를 렌더링합니다."""
     return render_template('data_spec.html')
 
 @bp.route('/api/data-spec', methods=['GET', 'POST'])
-@data_spec_required
 def handle_data_specs():
     """GET: 모든 명세서 목록을 조회합니다. POST: 새 명세서를 생성합니다."""
     if request.method == 'GET':

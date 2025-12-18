@@ -24,7 +24,7 @@ class DashboardService:
     """
 
     def __init__(self, db_connection):
-        self.conn = db_connection
+        self.connection = db_connection
         self.dashboard_mapper = DashboardMapper(db_connection)
         self.user_mapper = UserMapper(db_connection)
         self.mngr_sett_mapper = MngrSettMapper(db_connection)
@@ -33,16 +33,41 @@ class DashboardService:
         user_id_log = user.get('user_id') if user else 'None'
         logging.info(f"DashboardService.get_summary called for user: {user_id_log}")
 
-        # 1. Fetch all manager settings and create a lookup map
+        # 1. Fetch manager settings with icon codes
+        settings_map = self._fetch_manager_settings_with_icons()
+
+        # 2. Check data access permissions
+        allowed_job_ids = self._get_allowed_job_ids(user)
+        if allowed_job_ids is not None and not allowed_job_ids:
+            return []
+
+        # 3. Combine historical data with today's schedule
+        combined_summary_data = self._combine_historical_and_today_data(
+            start_date, end_date, all_data, allowed_job_ids, user
+        )
+
+        # 4. Combine summary data with settings and apply filters
+        processed_summary_data = self._apply_settings_and_filters(combined_summary_data, settings_map)
+
+        # 5. Add fail streak calculations
+        self._add_fail_streaks(processed_summary_data)
+
+        # 6. Log final data counts
+        self._log_final_data_counts(processed_summary_data)
+
+        return processed_summary_data
+
+    def _fetch_manager_settings_with_icons(self) -> Dict[str, Dict]:
+        """Fetch all manager settings and create a lookup map with icon codes."""
         try:
-            # 1. Fetch raw settings and icon data
+            # Fetch raw settings and icon data
             all_settings_raw = self.mngr_sett_mapper.get_all_settings()
-            
-            icon_service = IconService(self.conn)
+
+            icon_service = IconService(self.connection)
             all_icons = icon_service.get_all_icons_data()
             icon_code_map = {icon['icon_id']: icon['icon_cd'] for icon in all_icons}
 
-            # 2. Add icon codes to each setting object
+            # Add icon codes to each setting object
             all_settings_with_codes = []
             for setting_raw in all_settings_raw:
                 combined_setting = setting_raw.copy()
@@ -55,38 +80,51 @@ class DashboardService:
                     combined_setting[f'{field}_code'] = icon_code_map.get(icon_id)
                 all_settings_with_codes.append(combined_setting)
 
-            # 3. Create the final settings map
+            # Create the final settings map
             settings_map = {setting['cd']: setting for setting in all_settings_with_codes}
             logging.info(f"Successfully fetched and mapped {len(settings_map)} manager settings with icon codes.")
+            return settings_map
         except Exception as e:
             logging.error(f"Failed to fetch manager settings in DashboardService: {e}", exc_info=True)
-            settings_map = {}
+            return {}
 
-        # 2. Check data access permissions
-        allowed_job_ids = self._get_allowed_job_ids(user)
-        if allowed_job_ids is not None and not allowed_job_ids:
-            return []
-
-        # 3. NEW LOGIC: Combine historical data with today's schedule
-        
-        # 3a. Fetch historical summary data from the database
+    def _combine_historical_and_today_data(self, start_date: Optional[str], end_date: Optional[str],
+                                         all_data: bool, allowed_job_ids: Optional[List[str]],
+                                         user: Optional[Dict]) -> List[Dict]:
+        """Combine historical summary data with today's schedule data."""
+        # Fetch historical summary data
         historical_summary_list = self.dashboard_mapper.get_summary(start_date, end_date, all_data, allowed_job_ids)
         historical_summary_map = {item['job_id']: item for item in historical_summary_list}
 
-        # 3b. Fetch today's schedule and status
+        # Fetch today's schedule and status
         kst = pytz.timezone('Asia/Seoul')
         today = datetime.now(kst).date()
-        collection_schedule_service = CollectionScheduleService(self.conn)
+        collection_schedule_service = CollectionScheduleService(self.connection)
         job_statuses_today = collection_schedule_service.get_schedule_and_history(today, today, user)
 
-        # 3c. Process today's data to get counts
+        # Process today's data to get counts
+        today_counts = self._process_today_schedule_data(job_statuses_today)
+
+        # Only use job IDs that exist in historical data
+        all_known_job_ids = sorted(list(set(historical_summary_map.keys())))
+
+        # Build the final combined summary data
+        combined_summary_data = []
+        for job_id in all_known_job_ids:
+            hist_data = historical_summary_map.get(job_id, {})
+            today_data = today_counts[job_id]
+
+            item = self._create_combined_item(job_id, hist_data, today_data)
+            combined_summary_data.append(item)
+
+        return combined_summary_data
+
+    def _process_today_schedule_data(self, job_statuses_today: List[Dict]) -> Dict[str, Dict]:
+        """Process today's schedule data to get status counts per job."""
         today_counts = defaultdict(lambda: {"success": 0, "fail": 0, "progress": 0, "uncollected": 0, "total_scheduled": 0})
-        
-        all_job_ids_today = set()
 
         for job in job_statuses_today:
             job_id = job['job_id']
-            all_job_ids_today.add(job_id)
             status = job['status']
 
             if status != '예정':
@@ -100,67 +138,52 @@ class DashboardService:
                 elif status == '미수집':
                     today_counts[job_id]["uncollected"] += 1
 
-        # 3d. Only use job IDs that exist in historical data (tb_con_hist)
-        # This ensures we only show jobs that have actually been collected
-        all_known_job_ids = sorted(list(set(historical_summary_map.keys())))
+        return today_counts
 
-        # 3e. Build the final combined summary data
-        combined_summary_data = []
-        for job_id in all_known_job_ids:
-            hist_data = historical_summary_map.get(job_id, {})
-            today_data = today_counts[job_id]
+    def _create_combined_item(self, job_id: str, hist_data: Dict, today_data: Dict) -> Dict:
+        """Create a combined summary item from historical and today's data."""
+        item = {
+            'job_id': job_id,
+            'cd_nm': hist_data.get('cd_nm'),
+            'frequency': hist_data.get('frequency'),
+            'min_con_dt': hist_data.get('min_con_dt'),
+            'max_con_dt': hist_data.get('max_con_dt'),
+            'total_count': hist_data.get('total_count', 0),
+            'overall_success_count': hist_data.get('overall_success_count', 0),
+            'overall_ing_count': hist_data.get('overall_ing_count', 0),
+            'overall_fail_count': hist_data.get('overall_fail_count', 0),
+            'overall_cd904_count': hist_data.get('overall_cd904_count', 0),
+            'overall_no_data_count': hist_data.get('overall_no_data_count', 0),
+            # weekly, monthly, etc.
+            'week_success': hist_data.get('week_success', 0),
+            'week_ing_count': hist_data.get('week_ing_count', 0),
+            'week_fail_count': hist_data.get('week_fail_count', 0),
+            'week_no_data_count': hist_data.get('week_no_data_count', 0),
+            'month_success': hist_data.get('month_success', 0),
+            'month_ing_count': hist_data.get('month_ing_count', 0),
+            'month_fail_count': hist_data.get('month_fail_count', 0),
+            'month_no_data_count': hist_data.get('month_no_data_count', 0),
+            'half_success': hist_data.get('half_success', 0),
+            'half_ing_count': hist_data.get('half_ing_count', 0),
+            'half_fail_count': hist_data.get('half_fail_count', 0),
+            'half_no_data_count': hist_data.get('half_no_data_count', 0),
+            'year_success': hist_data.get('year_success', 0),
+            'year_ing_count': hist_data.get('year_ing_count', 0),
+            'year_fail_count': hist_data.get('year_fail_count', 0),
+            'year_no_data_count': hist_data.get('year_no_data_count', 0),
+        }
 
-            # Create base item from historical data, filling missing keys
-            item = {
-                'job_id': job_id,
-                'cd_nm': hist_data.get('cd_nm'),
-                'frequency': hist_data.get('frequency'),
-                'min_con_dt': hist_data.get('min_con_dt'),
-                'max_con_dt': hist_data.get('max_con_dt'),
-                'total_count': hist_data.get('total_count', 0),
-                'overall_success_count': hist_data.get('overall_success_count', 0),
-                'overall_ing_count': hist_data.get('overall_ing_count', 0),
-                'overall_fail_count': hist_data.get('overall_fail_count', 0),
-                'overall_cd904_count': hist_data.get('overall_cd904_count', 0),
-                'overall_no_data_count': hist_data.get('overall_no_data_count', 0),
-                # weekly, monthly, etc.
-                'week_success': hist_data.get('week_success', 0),
-                'week_ing_count': hist_data.get('week_ing_count', 0),
-                'week_fail_count': hist_data.get('week_fail_count', 0),
-                'week_no_data_count': hist_data.get('week_no_data_count', 0),
-                'month_success': hist_data.get('month_success', 0),
-                'month_ing_count': hist_data.get('month_ing_count', 0),
-                'month_fail_count': hist_data.get('month_fail_count', 0),
-                'month_no_data_count': hist_data.get('month_no_data_count', 0),
-                'half_success': hist_data.get('half_success', 0),
-                'half_ing_count': hist_data.get('half_ing_count', 0),
-                'half_fail_count': hist_data.get('half_fail_count', 0),
-                'half_no_data_count': hist_data.get('half_no_data_count', 0),
-                'year_success': hist_data.get('year_success', 0),
-                'year_ing_count': hist_data.get('year_ing_count', 0),
-                'year_fail_count': hist_data.get('year_fail_count', 0),
-                'year_no_data_count': hist_data.get('year_no_data_count', 0),
-            }
+        # Override daily counts with accurate data from CollectionScheduleService
+        item['day_success'] = today_data['success']
+        item['day_fail_count'] = today_data['fail']
+        item['day_ing_count'] = today_data['progress']
+        item['day_no_data_count'] = today_data['uncollected']
+        item['day_total_scheduled'] = today_data['total_scheduled']
 
-            # Override daily counts with accurate data from CollectionScheduleService
-            item['day_success'] = today_data['success']
-            item['day_fail_count'] = today_data['fail']
-            item['day_ing_count'] = today_data['progress']
-            # 'day_no_data_count' is not directly represented, 'uncollected' is the equivalent concept
-            item['day_no_data_count'] = today_data['uncollected']
-            item['day_total_scheduled'] = today_data['total_scheduled']
+        return item
 
-            # If cd_nm is missing (job exists in schedule but not history), fetch from MST
-            if not item['cd_nm']:
-                mst_info = next((job for job in all_mst_jobs if job['cd'] == job_id), None)
-                if mst_info:
-                    item['cd_nm'] = mst_info.get('cd_nm')
-                    item['frequency'] = mst_info.get('item6')
-
-            combined_summary_data.append(item)
-
-
-        # 4. Combine summary data with settings
+    def _apply_settings_and_filters(self, combined_summary_data: List[Dict], settings_map: Dict[str, Dict]) -> List[Dict]:
+        """Combine summary data with settings and apply dashboard display filters."""
         processed_summary_data = []
         for item in combined_summary_data:
             job_id = item.get('job_id')
@@ -170,24 +193,26 @@ class DashboardService:
             if job_settings.get('CHRT_DSP_YN', 'Y').upper() == 'N':
                 logging.info(f"Skipping job '{job_id}' from dashboard summary as per CHRT_DSP_YN setting.")
                 continue
-            
+
             item['settings'] = job_settings
             processed_summary_data.append(item)
 
-        # --- fail_streak 계산 추가 ---
+        return processed_summary_data
+
+    def _add_fail_streaks(self, processed_summary_data: List[Dict]) -> None:
+        """Add fail streak calculations to each item."""
         for item in processed_summary_data:
             job_id = item.get('job_id')
             if job_id:
                 fail_streak = self._calculate_fail_streak(job_id)
                 item['fail_streak'] = fail_streak
 
-        # --- [LOG] 최종 데이터 수량 기록 ---
+    def _log_final_data_counts(self, processed_summary_data: List[Dict]) -> None:
+        """Log final data counts for monitoring."""
         final_total_count = len(processed_summary_data)
         final_cd101_count = sum(1 for item in processed_summary_data if item.get('job_id') == 'CD101')
         final_cd102_count = sum(1 for item in processed_summary_data if item.get('job_id') == 'CD102')
         logging.info(f"--- [DATA LOG] Dashboard - Final Data Count: Total={final_total_count}, CD101={final_cd101_count}, CD102={final_cd102_count}")
-
-        return processed_summary_data
 
     def _calculate_fail_streak(self, job_id: str) -> int:
         """
@@ -206,7 +231,7 @@ class DashboardService:
                 ) recent_runs
                 WHERE status IN ('CD902', 'CD903')
             """
-            with self.conn.cursor() as cur:
+            with self.connection.cursor() as cur:
                 cur.execute(query, (job_id,))
                 result = cur.fetchone()
                 return result[0] if result else 0

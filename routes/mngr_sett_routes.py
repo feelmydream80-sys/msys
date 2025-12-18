@@ -16,7 +16,6 @@ mngr_sett_bp = Blueprint('mngr_sett', __name__)
 @mngr_sett_bp.route('/mngr_sett', methods=['GET'])
 @login_required
 @check_password_change_required
-@admin_required
 def mngr_sett_page():
     """관리자 설정 페이지를 렌더링합니다."""
     return render_template('mngr_sett.html')

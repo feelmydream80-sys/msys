@@ -67,7 +67,7 @@ export async function loadMngrSettings() {
  * @returns {Promise<Array<Object>>} 성공 시 Job ID 목록 배열을, 실패 시 에러를 반환합니다.
  */
 export async function fetchJobIdsFromHist() {
-    const res = await fetch('/api/analysis/job_ids');
+    const res = await fetch('/api/analytics/job_ids');
     if (!res.ok) throw new Error('Job ID 목록 조회 실패');
     return await res.json();
 }

@@ -6,6 +6,7 @@ from ..auth_routes import login_required, check_password_change_required
 
 from service.dashboard_service import DashboardService
 from msys.database import get_db_connection
+from utils.datetime_utils import convert_datetime_fields_to_kst_str
 
 dashboard_api_bp = Blueprint('dashboard_api', __name__, url_prefix='/api/dashboard')
 
@@ -41,18 +42,13 @@ def get_dashboard_summary():
 
             user = session.get('user')
             summary_data = dashboard_service.get_summary(start_date_str, end_date_str, all_data, user=user)
-            
+
             # Convert datetime objects to KST strings before jsonify
-            kst = pytz.timezone('Asia/Seoul')
-            utc = pytz.utc
+            convert_datetime_fields_to_kst_str(summary_data)
+            # None 값을 빈 문자열로 변환
             for item in summary_data:
                 for key, value in item.items():
-                    if isinstance(value, datetime):
-                        # Naive datetime을 UTC로 간주하고 KST로 변환
-                        if value.tzinfo is None:
-                            value = utc.localize(value)
-                        item[key] = value.astimezone(kst).strftime('%Y-%m-%d %H:%M:%S')
-                    elif value is None:
+                    if value is None:
                         item[key] = ''
 
             return jsonify(summary_data), 200
@@ -117,18 +113,13 @@ def get_event_log_api():
 
             user = session.get('user')
             event_log_data = dashboard_service.get_event_log(start_date_str, end_date_str, all_data, user=user)
-            
+
             # Convert datetime objects to KST strings before jsonify
-            kst = pytz.timezone('Asia/Seoul')
-            utc = pytz.utc
+            convert_datetime_fields_to_kst_str(event_log_data)
+            # None 값을 빈 문자열로 변환
             for item in event_log_data:
                 for key, value in item.items():
-                    if isinstance(value, datetime):
-                        # Naive datetime을 UTC로 간주하고 KST로 변환
-                        if value.tzinfo is None:
-                            value = utc.localize(value)
-                        item[key] = value.astimezone(kst).strftime('%Y-%m-%d %H:%M:%S')
-                    elif value is None:
+                    if value is None:
                         item[key] = ''
 
             return jsonify(event_log_data), 200

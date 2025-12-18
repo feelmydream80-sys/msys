@@ -51,7 +51,6 @@ def log_menu_access(f):
 @dashboard_bp.route("/dashboard")
 @login_required
 @check_password_change_required
-@dashboard_required
 @log_menu_access
 def dashboard():
     current_app.logger.info(f"--- [LOG] Initial access to root or dashboard route: {request.path}")

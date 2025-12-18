@@ -40,12 +40,10 @@ def test_get_all_users_with_permissions(user_service):
     user_service.user_mapper.find_all_permissions.assert_called_once()
 
 def test_approve_user(user_service, app_context):
-    """approve_user 메서드가 사용자를 승인하고 비밀번호를 초기화하는지 테스트합니다."""
+    """approve_user 메서드가 사용자를 승인하는지 테스트합니다."""
     user_id = 'testuser'
-    
-    with patch('service.user_service.PasswordService.hash_password') as mock_hash_password, \
-         patch('service.user_service.g') as mock_g:
-        mock_hash_password.return_value = 'hashed_password'
+
+    with patch('service.user_service.g') as mock_g:
         mock_g.user = {'user_id': 'admin'}
 
         # 메서드 호출
@@ -53,8 +51,7 @@ def test_approve_user(user_service, app_context):
 
         # 결과 검증
         user_service.user_mapper.update_status.assert_called_once_with(user_id, 'APPROVED')
-        user_service.user_mapper.update_password.assert_called_once_with(user_id, 'hashed_password')
-        mock_hash_password.assert_called_once_with(user_id)
+        # 비밀번호 업데이트는 더 이상 수행되지 않음
 
 def test_reject_user(user_service, app_context):
     """reject_user 메서드가 사용자를 거절하고 삭제하는지 테스트합니다."""

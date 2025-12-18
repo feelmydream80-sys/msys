@@ -37,7 +37,7 @@ export async function fetchSummaryData(start, end, jobIds, allData = false) {
     const params = new URLSearchParams({ start_date: start, end_date: end });
     if (jobIds && jobIds.length > 0) params.append('job_ids', jobIds.join(','));
     if (allData) params.append('all_data', 'true');
-    const res = await fetch(`/api/analysis/summary?${params.toString()}`);
+    const res = await fetch(`/api/analytics/summary?${params.toString()}`);
     if (!res.ok) throw new Error('요약 데이터 조회 실패');
     return await res.json();
 }
@@ -54,7 +54,7 @@ export async function fetchTrendData(start, end, jobIds, allData = false) {
     const params = new URLSearchParams({ start_date: start, end_date: end });
     if (jobIds && jobIds.length > 0) params.append('job_ids', jobIds.join(','));
     if (allData) params.append('all_data', 'true');
-    const res = await fetch(`/api/analysis/trend?${params.toString()}`);
+    const res = await fetch(`/api/analytics/trend?${params.toString()}`);
     if (!res.ok) throw new Error('추이 데이터 조회 실패');
     return await res.json();
 }
@@ -71,7 +71,7 @@ export async function fetchRawData(start, end, jobIds, allData = false) {
     const params = new URLSearchParams({ start_date: start, end_date: end });
     if (jobIds && jobIds.length > 0) params.append('job_ids', jobIds.join(','));
     if (allData) params.append('all_data', 'true');
-    const res = await fetch(`/api/analysis/raw_data?${params.toString()}`);
+    const res = await fetch(`/api/analytics/raw_data?${params.toString()}`);
     if (!res.ok) throw new Error('원천 데이터 조회 실패');
     return await res.json();
 }
@@ -81,7 +81,7 @@ export async function fetchRawData(start, end, jobIds, allData = false) {
  * @param {HTMLElement} jobIdSelect - Job ID select 엘리먼트
  */
 export async function loadJobOptions(jobIdSelect) {
-    const res = await fetch('/api/analysis/job_ids');
+    const res = await fetch('/api/analytics/job_ids');
     if (!res.ok) throw new Error('Job ID 목록 조회 실패');
     const jobs = await res.json();
     jobIdSelect.innerHTML = '<option value="">전체</option>';
@@ -102,7 +102,7 @@ export async function loadJobOptions(jobIdSelect) {
  * @description 장애코드 맵을 로드합니다.
  */
 async function loadErrorCodeMap() {
-    const res = await fetch('/api/analysis/error_code_map');
+    const res = await fetch('/api/analytics/error_code_map');
     if (res.ok) errorCodeMap = await res.json();
 }
 
@@ -112,7 +112,7 @@ async function loadErrorCodeMap() {
  */
 export async function loadErrorCodeOptions(errorCodeSelect) {
     await loadErrorCodeMap();
-    const res = await fetch('/api/analysis/error_codes');
+    const res = await fetch('/api/analytics/error_codes');
     if (!res.ok) throw new Error('장애코드 목록 조회 실패');
     const errorCodes = await res.json();
     if (errorCodeSelect) {

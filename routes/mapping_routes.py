@@ -31,16 +31,12 @@ def log_menu_access(f):
 @log_menu_access
 def index():
     """컬럼 매핑 관리 페이지를 렌더링합니다."""
-    if 'mapping_management' not in session.get('user', {}).get('permissions', []):
-        return render_template("unauthorized.html")
     return render_template('mapping_management.html')
 
 @mapping_bp.route('/api/all', methods=['GET'])
 @login_required
 def get_all_mappings():
     """모든 컬럼 매핑 정보를 반환합니다."""
-    if 'mapping_management' not in session.get('user', {}).get('permissions', []):
-        return jsonify({"error": "권한이 없습니다."}), 403
     try:
         with get_db_connection() as conn:
             mapping_service = MappingService(conn)
@@ -54,8 +50,6 @@ def get_all_mappings():
 @login_required
 def get_unmapped_columns():
     """매핑되지 않은 컬럼 목록을 반환합니다."""
-    if 'mapping_management' not in session.get('user', {}).get('permissions', []):
-        return jsonify({"error": "권한이 없습니다."}), 403
     try:
         with get_db_connection() as conn:
             mapping_service = MappingService(conn)
@@ -69,8 +63,6 @@ def get_unmapped_columns():
 @login_required
 def add_mapping():
     """새로운 매핑을 추가합니다."""
-    if 'mapping_management' not in session.get('user', {}).get('permissions', []):
-        return jsonify({"error": "권한이 없습니다."}), 403
     try:
         with get_db_connection() as conn:
             mapping_service = MappingService(conn)
@@ -88,8 +80,6 @@ def add_mapping():
 @login_required
 def update_mapping():
     """기존 매핑을 업데이트합니다."""
-    if 'mapping_management' not in session.get('user', {}).get('permissions', []):
-        return jsonify({"error": "권한이 없습니다."}), 403
     try:
         with get_db_connection() as conn:
             mapping_service = MappingService(conn)
@@ -107,8 +97,6 @@ def update_mapping():
 @login_required
 def delete_mapping(mapp_id):
     """매핑을 삭제합니다."""
-    if 'mapping_management' not in session.get('user', {}).get('permissions', []):
-        return jsonify({"error": "권한이 없습니다."}), 403
     try:
         with get_db_connection() as conn:
             mapping_service = MappingService(conn)

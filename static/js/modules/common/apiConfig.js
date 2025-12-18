@@ -2,53 +2,96 @@ const apiGroups = {
     "관리자 설정": [
         {
             title: "모든 관리자 설정 조회",
-            endpoint: "/api/admin/settings/all",
+            endpoint: "/api/mngr_sett/settings/all",
             method: "GET",
             defaultData: {}
         },
         {
             title: "관리자 설정 저장",
-            endpoint: "/api/admin/settings/save",
+            endpoint: "/api/mngr_sett/settings/save",
             method: "POST",
-            defaultData: [
-                {
-                    "cd": "JOB_ID_EXAMPLE",
-                    "cnn_failr_thrs_val": 5,
-                    "cnn_warn_thrs_val": 3,
-                    "cnn_failr_icon_id": 2,
-                    "cnn_failr_wrd_colr": "#dc3545",
-                    "cnn_warn_icon_id": 5,
-                    "cnn_warn_wrd_colr": "#ffc107",
-                    "cnn_sucs_icon_id": 1,
-                    "cnn_sucs_wrd_colr": "#28a745",
-                    "dly_sucs_rt_thrs_val": 95.0,
-                    "dd7_sucs_rt_thrs_val": 90.0,
-                    "mthl_sucs_rt_thrs_val": 85.0,
-                    "mc6_sucs_rt_thrs_val": 80.0,
-                    "yy1_sucs_rt_thrs_val": 75.0,
-                    "sucs_rt_sucs_icon_id": 1,
-                    "sucs_rt_sucs_wrd_colr": "#28a745",
-                    "sucs_rt_warn_icon_id": 2,
-                    "sucs_rt_warn_wrd_colr": "#ffc107",
-                    "chrt_colr": "#007bff",
-                    "chrt_dsp_yn": "Y",
-                    "grass_chrt_min_colr": "#9be9a8",
-                    "grass_chrt_max_colr": "#216e39"
-                }
-            ]
+            defaultData: {
+                "mngr_settings": [
+                    {
+                        "sett_id": "JOB_ID_EXAMPLE",
+                        "CNN_FAILR_THRS_VAL": 5
+                    }
+                ],
+                "user_permissions": []
+            }
         },
         {
             title: "관리자 설정 내보내기",
-            endpoint: "/api/admin/settings/export",
+            endpoint: "/api/mngr_sett/settings/export",
             method: "GET",
             defaultData: {}
         },
-        // {
-        //     title: "관리자 설정 가져오기",
-        //     endpoint: "/api/admin/settings/import",
-        //     method: "POST",
-        //     defaultData: {}
-        // }
+        {
+            title: "관리자 설정 가져오기",
+            endpoint: "/api/mngr_sett/settings/import",
+            method: "POST",
+            defaultData: {}
+        },
+        {
+            title: "아이콘 목록 조회",
+            endpoint: "/api/mngr_sett/icons/all",
+            method: "GET",
+            defaultData: {}
+        },
+        {
+            title: "아이콘 저장",
+            endpoint: "/api/mngr_sett/icons/save",
+            method: "POST",
+            defaultData: {
+                "icon_id": 1,
+                "icon_cd": "🟢",
+                "icon_nm": "성공",
+                "icon_expl": "성공 상태",
+                "icon_dsp_yn": "Y"
+            }
+        },
+        {
+            title: "아이콘 표시 여부 토글",
+            endpoint: "/api/mngr_sett/icons/toggle-display",
+            method: "POST",
+            defaultData: {
+                "icon_id": 1,
+                "icon_dsp_yn": "N"
+            }
+        },
+        {
+            title: "사용자 목록 조회",
+            endpoint: "/api/mngr_sett/users",
+            method: "GET",
+            defaultData: {}
+        },
+        {
+            title: "사용자 승인",
+            endpoint: "/api/mngr_sett/users/approve",
+            method: "POST",
+            defaultData: { "user_id": "testuser" }
+        },
+        {
+            title: "사용자 거절",
+            endpoint: "/api/mngr_sett/users/reject",
+            method: "POST",
+            defaultData: { "user_id": "testuser" }
+        },
+        {
+            title: "비밀번호 초기화",
+            endpoint: "/api/mngr_sett/users/reset-password",
+            method: "POST",
+            defaultData: { "user_id": "testuser" }
+        },
+        {
+            title: "사용자 권한 업데이트",
+            endpoint: "/api/mngr_sett/users/permissions",
+            method: "POST",
+            defaultData: {
+                "user_id": "testuser",
+                "menu_ids": ["dashboard", "analysis"]
+            }
+        }
     ],
     "아이콘 관리": [
         {
@@ -148,7 +191,7 @@ const apiGroups = {
         },
         {
             title: "분석 요약 데이터",
-            endpoint: "/api/analysis/summary",
+            endpoint: "/api/analytics/summary",
             method: "GET",
             defaultData: {
                 "start_date": "2024-01-01",
@@ -158,7 +201,7 @@ const apiGroups = {
         },
         {
             title: "분석 추이 데이터",
-            endpoint: "/api/analysis/trend",
+            endpoint: "/api/analytics/trend",
             method: "GET",
             defaultData: {
                 "start_date": "2024-01-01",
@@ -168,7 +211,7 @@ const apiGroups = {
         },
         {
             title: "분석 원천 데이터",
-            endpoint: "/api/analysis/raw_data",
+            endpoint: "/api/analytics/raw_data",
             method: "GET",
             defaultData: {
                 "start_date": "2024-01-01",
@@ -178,13 +221,13 @@ const apiGroups = {
         },
         {
             title: "Job ID 목록 조회",
-            endpoint: "/api/analysis/job_ids",
+            endpoint: "/api/analytics/job_ids",
             method: "GET",
             defaultData: {}
         },
         {
             title: "장애 코드 목록 조회",
-            endpoint: "/api/analysis/error_codes",
+            endpoint: "/api/analytics/error_codes",
             method: "GET",
             defaultData: {
                 "start_date": "2024-01-01",
@@ -194,13 +237,13 @@ const apiGroups = {
         },
         {
             title: "장애 코드 맵 조회",
-            endpoint: "/api/analysis/error_code_map",
+            endpoint: "/api/analytics/error_code_map",
             method: "GET",
             defaultData: {}
         },
         {
             title: "동적 차트 데이터",
-            endpoint: "/api/analysis/dynamic-chart",
+            endpoint: "/api/analytics/dynamic-chart",
             method: "GET",
             defaultData: {
                 "x_axis": "date",
@@ -322,22 +365,32 @@ const apiGroups = {
         // }
     ],
     "대시보드": [
-        // {
-        //     title: "대시보드 요약 데이터",
-        //     endpoint: "/api/dashboard/summary",
-        //     method: "GET",
-        //     defaultData: {
-        //         "start_date": "2024-01-01",
-        //         "end_date": "2024-01-31",
-        //         "all_data": "false"
-        //     }
-        // },
-        // {
-        //     title: "대시보드 최소/최대 날짜",
-        //     endpoint: "/api/dashboard/min-max-dates",
-        //     method: "GET",
-        //     defaultData: {}
-        // }
+        {
+            title: "대시보드 요약 데이터",
+            endpoint: "/api/dashboard/summary",
+            method: "GET",
+            defaultData: {
+                "start_date": "2024-01-01",
+                "end_date": "2024-01-31",
+                "all_data": "true"
+            }
+        },
+        {
+            title: "대시보드 최소/최대 날짜",
+            endpoint: "/api/dashboard/min-max-dates",
+            method: "GET",
+            defaultData: {}
+        },
+        {
+            title: "이벤트 로그 조회",
+            endpoint: "/api/dashboard/event-log",
+            method: "GET",
+            defaultData: {
+                "start_date": "2024-01-01",
+                "end_date": "2024-01-31",
+                "all_data": "false"
+            }
+        }
     ],
     "데이터 명세서": [
         // {

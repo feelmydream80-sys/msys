@@ -15,6 +15,7 @@ from typing import Optional, Dict, List
 from flask import session
 from service.dashboard_service import DashboardService
 from msys.database import get_db_connection
+from utils.datetime_utils import convert_datetime_fields_to_kst_str
 
 load_dotenv()
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
@@ -79,17 +80,13 @@ def api_detail():
                 return jsonify([]), 200
 
             rows = dashboard_service.get_raw_data(start_date, end_date, job_ids=allowed_job_ids, all_data=all_data)
-            
+
             # 날짜 객체를 KST 'YYYY-MM-DD HH:MI:SS' 형식의 문자열로 변환
-            kst = pytz.timezone('Asia/Seoul')
-            utc = pytz.utc
+            convert_datetime_fields_to_kst_str(rows)
+            # None 값을 빈 문자열로 변환
             for row in rows:
                 for key, value in row.items():
-                    if isinstance(value, datetime):
-                        if value.tzinfo is None:
-                            value = utc.localize(value)
-                        row[key] = value.astimezone(kst).strftime('%Y-%m-%d %H:%M:%S')
-                    elif value is None:
+                    if value is None:
                         row[key] = ''
 
             return jsonify(rows)
@@ -169,19 +166,15 @@ def api_raw_data():
             logging.warning(f"[RAW_DATA_API] User: {user_id}, Admin: {is_admin}, Requested: {requested_job_ids}, DataPerms: {data_permissions}, Allowed: {allowed_job_ids}")
 
             rows = dashboard_service.get_raw_data(start_date=start_date, end_date=end_date, all_data=all_data, job_ids=allowed_job_ids, user=user)
-            
+
             # 날짜 객체를 KST 'YYYY-MM-DD HH:MI:SS' 형식의 문자열로 변환
-            kst = pytz.timezone('Asia/Seoul')
-            utc = pytz.utc
+            convert_datetime_fields_to_kst_str(rows)
+            # None 값을 빈 문자열로 변환
             for row in rows:
                 for key, value in row.items():
-                    if isinstance(value, datetime):
-                        if value.tzinfo is None:
-                            value = utc.localize(value)
-                        row[key] = value.astimezone(kst).strftime('%Y-%m-%d %H:%M:%S')
-                    elif value is None:
+                    if value is None:
                         row[key] = ''
-            
+
             return jsonify(rows), 200
     except Exception as e:
         logging.error(f"❌ API: 원본 데이터 조회 실패: {e}", exc_info=True)

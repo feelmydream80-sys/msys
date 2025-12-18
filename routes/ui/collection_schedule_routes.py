@@ -13,7 +13,6 @@ collection_schedule_bp = Blueprint('collection_schedule', __name__)
 @collection_schedule_bp.route("/collection_schedule")
 @login_required
 @check_password_change_required
-@collection_schedule_required
 @log_menu_access
 def collection_schedule():
     """데이터 수집 일정 페이지를 렌더링합니다."""

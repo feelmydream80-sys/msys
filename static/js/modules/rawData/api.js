@@ -17,7 +17,7 @@
  * }
  */
 export async function fetchJobIds() {
-    const response = await fetch('/api/analysis/job_ids');
+    const response = await fetch('/api/analytics/job_ids');
     if (!response.ok) {
         console.error('Failed to fetch job IDs');
         return [];
@@ -74,7 +74,7 @@ export async function fetchAllData(startDate, endDate, jobIds = null) {
  * }
  */
 export async function fetchErrorCodeMap() {
-    const response = await fetch('/api/analysis/error_code_map');
+    const response = await fetch('/api/analytics/error_code_map');
     if (!response.ok) {
         console.error('Failed to fetch error code map');
         return {};
