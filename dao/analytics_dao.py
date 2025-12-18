@@ -173,67 +173,62 @@ class AnalyticsDAO:
         """
         연간 주별 메뉴 접속 통계를 '일별 데이터 기반'으로 집계하여 조회합니다.
         """
-        query = """
-            -- 1. 일별, 메뉴별로 총 접속수와 순 방문자수 집계
-            SELECT
-                ACS_DT::date AS access_date,
-                MENU_NM,
-                COUNT(*) AS total_access_count,
-                COUNT(DISTINCT USER_ID) AS unique_user_count
-            FROM
-                TB_USER_ACS_LOG
-            WHERE
-                EXTRACT(YEAR FROM ACS_DT) = %s
-        """
-        params = [year]
-        if menu_nm and menu_nm != 'all':
-            query += " AND MENU_NM = %s"
-            params.append(menu_nm)
-        
-        query += " GROUP BY access_date, MENU_NM"
+        try:
+            # SQL 파일에서 쿼리 로드
+            query = load_sql('analytics/get_menu_access_stats_weekly.sql')
+            params = [year]
 
-        with self.conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
-            cur.execute(query, params)
-            daily_stats = cur.fetchall()
+            if menu_nm and menu_nm != 'all':
+                # 메뉴 필터가 있는 경우 쿼리 수정
+                query = query.replace("EXTRACT(YEAR FROM ACS_DT) = %s", "EXTRACT(YEAR FROM ACS_DT) = %s AND MENU_NM = %s")
+                params.append(menu_nm)
 
-        # 2. Python에서 주차 계산 및 재집계
-        weekly_aggregated_stats = {}
-        for row in daily_stats:
-            date = row['access_date']
-            month = date.month
-            
-            # 월의 첫 날과 그 날의 요일 찾기
-            first_day_of_month = date.replace(day=1)
-            first_day_weekday = first_day_of_month.weekday() # Monday is 0 and Sunday is 6
-            
-            # 주차 계산 (일요일 시작 기준)
-            # (day + weekday of 1st of month) / 7, rounded up.
-            week_of_month = (date.day + first_day_weekday) // 7 + 1
+            with self.conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+                cur.execute(query, params)
+                daily_stats = cur.fetchall()
 
-            week_key = (month, week_of_month, row['menu_nm'])
-            
-            if week_key not in weekly_aggregated_stats:
-                weekly_aggregated_stats[week_key] = {
-                    'total_access_count': 0,
-                    'unique_user_count': 0 # 일별 순방문자를 주 단위로 합산
-                }
-            
-            weekly_aggregated_stats[week_key]['total_access_count'] += row['total_access_count']
-            weekly_aggregated_stats[week_key]['unique_user_count'] += row['unique_user_count']
+            # 2. Python에서 주차 계산 및 재집계
+            weekly_aggregated_stats = {}
+            for row in daily_stats:
+                date = row['access_date']
+                month = date.month
 
-        # 3. 최종 결과 포맷으로 변환
-        results = []
-        for (month, week, menu), stats in weekly_aggregated_stats.items():
-            results.append({
-                'month': month,
-                'week_of_month': week,
-                'menu_nm': menu,
-                'total_access_count': stats['total_access_count'],
-                'unique_user_count': stats['unique_user_count']
-            })
-        
-        logging.info(f"DAO: Fetched and processed {len(results)} records for weekly menu access stats for year {year}.")
-        return sorted(results, key=lambda x: (x['month'], x['week_of_month'], x['menu_nm']))
+                # 월의 첫 날과 그 날의 요일 찾기
+                first_day_of_month = date.replace(day=1)
+                first_day_weekday = first_day_of_month.weekday() # Monday is 0 and Sunday is 6
+
+                # 주차 계산 (일요일 시작 기준)
+                # (day + weekday of 1st of month) / 7, rounded up.
+                week_of_month = (date.day + first_day_weekday) // 7 + 1
+
+                week_key = (month, week_of_month, row['menu_nm'])
+
+                if week_key not in weekly_aggregated_stats:
+                    weekly_aggregated_stats[week_key] = {
+                        'total_access_count': 0,
+                        'unique_user_count': 0 # 일별 순방문자를 주 단위로 합산
+                    }
+
+                weekly_aggregated_stats[week_key]['total_access_count'] += row['total_access_count']
+                weekly_aggregated_stats[week_key]['unique_user_count'] += row['unique_user_count']
+
+            # 3. 최종 결과 포맷으로 변환
+            results = []
+            for (month, week, menu), stats in weekly_aggregated_stats.items():
+                results.append({
+                    'month': month,
+                    'week_of_month': week,
+                    'menu_nm': menu,
+                    'total_access_count': stats['total_access_count'],
+                    'unique_user_count': stats['unique_user_count']
+                })
+
+            log_operation("분석", "주별 통계", "데이터 조회", f"{len(results)}건 처리 완료")
+            return sorted(results, key=lambda x: (x['month'], x['week_of_month'], x['menu_nm']))
+
+        except Exception as e:
+            log_operation("분석", "주별 통계", "데이터 조회", f"실패: {type(e).__name__}", "ERROR")
+            raise
 
     def get_distinct_menu_names(self) -> List[str]:
         """
