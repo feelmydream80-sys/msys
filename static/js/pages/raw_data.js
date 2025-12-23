@@ -11,6 +11,7 @@ import { initCollapsibleFeatures } from '../modules/ui_components/collapsible.js
 import { updateDateRangeDisplay } from '../modules/common/ui.js';
 import { fetchMinMaxDates } from '../modules/common/api/dashboard.js';
 import { setDataFlowStatus } from '../modules/common/api/client.js';
+import { showMessage } from '../modules/common/utils.js';
 
 /**
  * 애플리케이션 상태를 관리하는 객체
@@ -105,6 +106,39 @@ export async function init() {
     
     // 초기 렌더링
     rerender();
+
+    // 엑셀 템플릿 다운로드 버튼 이벤트 리스너
+    const downloadExcelTemplateBtn = document.getElementById('downloadExcelTemplateBtn');
+    if (downloadExcelTemplateBtn) {
+        downloadExcelTemplateBtn.addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/excel_template/download');
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        showMessage('다운로드할 엑셀 템플릿이 없습니다.', 'warning');
+                    } else {
+                        throw new Error('다운로드에 실패했습니다.');
+                    }
+                    return;
+                }
+
+                // 파일 다운로드 처리
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'excel_template.xlsx';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+
+                showMessage('수집 요청서 양식 다운로드가 시작되었습니다.', 'success');
+            } catch (error) {
+                showMessage(error.message, 'error');
+            }
+        });
+    }
 
 }
 
