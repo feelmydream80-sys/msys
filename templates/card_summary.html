@@ -8,20 +8,34 @@
 {% endblock %}
 
 {% block content %}
-<div class="container">
-  <div class="controls-container">
-    <div class="option-card">
-        <div class="option-card-title">카드 요약 표시 옵션</div>
-        <div id="display-mode-selector">
-            <label><input type="radio" name="displayMode" value="name" checked> 명칭</label>
-            <label><input type="radio" name="displayMode" value="code"> 코드</label>
-            <label><input type="radio" name="displayMode" value="both"> 명칭+코드</label>
+<div class="container mx-auto p-4">
+    <div class="flex justify-end space-x-2 mb-4">
+        <button id="downloadExcelTemplateBtn" style="background-color: #10b981; color: white; font-weight: bold; padding: 8px 16px; border-radius: 6px; border: none; font-size: 14px; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.2); transition: background-color 0.3s;">
+            수집 요청서 양식 다운로드
+        </button>
+    </div>
+    <div class="bg-white rounded-lg shadow-md mb-6 p-6">
+        <div class="flex justify-between items-center">
+            <h3 class="text-xl font-semibold text-gray-700">카드 요약 표시 옵션</h3>
+            <div id="display-mode-selector" class="flex gap-4">
+                <label class="flex items-center gap-2 cursor-pointer text-sm">
+                    <input type="radio" name="displayMode" value="name" checked>
+                    명칭
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer text-sm">
+                    <input type="radio" name="displayMode" value="code">
+                    코드
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer text-sm">
+                    <input type="radio" name="displayMode" value="both">
+                    명칭+코드
+                </label>
+            </div>
         </div>
     </div>
-  </div>
-  <div class="card-grid" id="cardContainer">
-    <!-- JS로 동적 생성 -->
-  </div>
+    <div class="grid-cards grid-cards-auto" id="cardContainer">
+        <!-- JS로 동적 생성 -->
+    </div>
 </div>
 {% endblock %}
 

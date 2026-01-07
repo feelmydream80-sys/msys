@@ -8,6 +8,7 @@ import re
 from typing import Optional, Dict, List
 from flask import current_app
 from utils.datetime_utils import is_within_schedule_grace_period
+from service.status_code_service import get_status_codes
 
 class CollectionScheduleService:
     def __init__(self, conn):
@@ -129,6 +130,10 @@ class CollectionScheduleService:
         """스케줄된 작업들과 히스토리 데이터를 매칭하여 상태를 업데이트합니다."""
         kst = pytz.timezone('Asia/Seoul')
 
+        # Get all valid status codes dynamically
+        status_codes = get_status_codes()
+        valid_status_codes = list(status_codes.keys())
+
         for task in scheduled_tasks:
             if task['status'] == '예정':
                 continue
@@ -151,7 +156,7 @@ class CollectionScheduleService:
                 best_match = None
                 for item in history_for_job:
                     status_code = item.get('status')
-                    if status_code in ['CD901', 'CD904', 'CD902', 'CD903']:
+                    if status_code in valid_status_codes:
                         best_match = item
                         break
 
@@ -162,13 +167,8 @@ class CollectionScheduleService:
     def _update_task_status_from_history(self, task: Dict, history_item: Dict) -> None:
         """히스토리 항목으로부터 작업 상태를 업데이트합니다."""
         status_code = history_item.get('status')
-        status_mapping = {
-            'CD901': '성공',
-            'CD904': '수집중',
-            'CD902': '실패',
-            'CD903': '미수집'
-        }
-        task['status'] = status_mapping.get(status_code, '알 수 없음')
+        status_text = self._convert_status_code_to_text(status_code)
+        task['status'] = status_text
         task['actual_date'] = history_item['start_dt_kst'].strftime('%Y-%m-%d %H:%M:%S')
 
     def _process_unmatched_history(self, scheduled_tasks: List[Dict], history_by_date_job: Dict[str, Dict[str, List[Dict]]], allowed_job_ids: Optional[List[str]]) -> None:
@@ -195,10 +195,27 @@ class CollectionScheduleService:
 
     def _convert_status_code_to_text(self, status_code: str) -> str:
         """상태 코드를 텍스트로 변환합니다."""
-        status_mapping = {
-            'CD901': '성공',
-            'CD902': '실패',
-            'CD903': '미수집',
-            'CD904': '수집중'
-        }
+        if not status_code:
+            return '알 수 없음'
+
+        # Get status codes dynamically
+        status_codes = get_status_codes()
+
+        # Create mapping from codes to display text
+        # For now, use the description from database, but we might need custom mapping
+        # This could be extended to have a separate mapping table or configuration
+        status_mapping = {}
+        for code, desc in status_codes.items():
+            if desc.upper() == 'SUCCESS':
+                status_mapping[code] = '성공'
+            elif desc.upper() == 'FAIL':
+                status_mapping[code] = '실패'
+            elif desc.upper() == 'NO_DATA':
+                status_mapping[code] = '미수집'
+            elif desc.upper() == 'IN_PROGRESS':
+                status_mapping[code] = '수집중'
+            else:
+                # For unknown descriptions, use the description as-is or a default
+                status_mapping[code] = desc
+
         return status_mapping.get(status_code, '알 수 없음')

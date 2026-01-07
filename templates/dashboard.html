@@ -70,7 +70,7 @@
         <!-- 날짜 선택 섹션 -->
         <div id="date-selection-card" class="collapsible-card bg-white rounded-lg shadow-md mb-6">
             <div class="card-header p-6 cursor-pointer flex justify-between items-center">
-                <h2 class="text-xl font-semibold text-gray-700">날짜 선택</h2>
+                <h2 class="card-title">날짜 선택</h2>
                 <span class="transform transition-transform duration-300">▼</span>
             </div>
             <div class="card-content px-6 pb-6">
@@ -90,78 +90,52 @@
                 <button onclick="loadDashboardSummary()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md shadow-sm transition duration-300 ease-in-out w-full md:w-auto">
                     조회
                 </button>
-            </div>
+                </div>
                 <div class="mt-4 text-sm text-gray-600">
                     실 존재 데이터 기간: <span id="minDateDisplay">로딩 중...</span> ~ <span id="maxDateDisplay">로딩 중...</span>
                 </div>
             </div>
         </div>
 
-        <!-- 주요 지표 섹션 -->
-        <div id="dashboard-main-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <!-- 주요 지표 및 기간별 현황 한 줄 배치 -->
+        <div id="dashboard-main-grid" class="grid grid-cols-6 gap-6 mb-6">
             <!-- Job ID 개수 -->
-            <div class="bg-white p-6 rounded-lg shadow-md flex items-center justify-between">
+            <div class="col-span-1 bg-white p-6 rounded-lg shadow-md flex items-center justify-between">
                 <div>
                     <h3 class="text-lg font-semibold text-gray-600">총 Job ID 개수</h3>
                     <p id="totalJobsCount" class="text-3xl font-bold text-blue-700">0</p>
                 </div>
                 <span class="text-5xl text-blue-400">⚙️</span>
             </div>
-            <!-- 평균 성공률 -->
-            <!--<div class="bg-white p-6 rounded-lg shadow-md flex items-center justify-between">
-                <div>
-                    <h3 class="text-lg font-semibold text-gray-600">평균 성공률</h3>
-                    <p id="averageSuccessRate" class="text-3xl font-bold text-green-600">0.00%</p>
-                </div>
-                <span class="text-5xl text-green-400">✅</span>
-            </div>-->
             <!-- 총 수집 건수 -->
-            <div class="bg-white p-6 rounded-lg shadow-md flex items-center justify-between">
+            <div class="col-span-1 bg-white p-6 rounded-lg shadow-md flex items-center justify-between">
                 <div>
                     <h3 class="text-lg font-semibold text-gray-600">총 호출 건수</h3>
                     <p id="totalCollectionsCount" class="text-3xl font-bold text-purple-700">0</p>
                 </div>
                 <span class="text-5xl text-purple-400">📊</span>
             </div>
-        </div>
-
-        <!-- 기간별 수집 현황 섹션 -->
-        <div id="collection-status-card" class="collapsible-card bg-white rounded-lg shadow-md mb-6">
-            <div class="card-header p-6 cursor-pointer flex justify-between items-center">
-                <h2 class="text-xl font-semibold text-gray-700">기간별 수집 현황</h2>
-                <span class="transform transition-transform duration-300">▼</span>
-            </div>
-            <div class="card-content px-6 pb-6">
-                <div class="grid grid-cols-5 gap-2">
-                <!-- 일간 현황 -->
-                <div class="bg-blue-50 p-2 rounded-md shadow-sm text-center">
-                    <h3 class="text-base font-semibold text-blue-700 mb-1">일간</h3>
-                    <p class="text-base font-bold text-blue-900"><span id="daySuccessRate">0.00</span>%</p>
-                    <p class="text-xs text-gray-600">총 <span id="dayTotalCount">0</span> 건</p>
-                </div>
-                <!-- 주간 현황 -->
-                <div class="bg-green-50 p-2 rounded-md shadow-sm text-center">
-                    <h3 class="text-base font-semibold text-green-700 mb-1">주간</h3>
-                    <p class="text-base font-bold text-green-900"><span id="weekSuccessRate">0.00</span>%</p>
-                    <p class="text-xs text-gray-600">총 <span id="weekTotalCount">0</span> 건</p>
-                </div>
-                <!-- 월간 현황 -->
-                <div class="bg-yellow-50 p-2 rounded-md shadow-sm text-center">
-                    <h3 class="text-base font-semibold text-yellow-700 mb-1">월간</h3>
-                    <p class="text-base font-bold text-yellow-900"><span id="monthSuccessRate">0.00</span>%</p>
-                    <p class="text-xs text-gray-600">총 <span id="monthTotalCount">0</span> 건</p>
-                </div>
-                <!-- 반기 현황 -->
-                <div class="bg-purple-50 p-2 rounded-md shadow-sm text-center">
-                    <h3 class="text-base font-semibold text-purple-700 mb-1">반기</h3>
-                    <p class="text-base font-bold text-purple-900"><span id="halfSuccessRate">0.00</span>%</p>
-                    <p class="text-xs text-gray-600">총 <span id="halfTotalCount">0</span> 건</p>
-                </div>
-                <!-- 연간 현황 -->
-                    <div class="bg-red-50 p-2 rounded-md shadow-sm text-center">
-                        <h3 class="text-base font-semibold text-red-700 mb-1">연간</h3>
-                        <p class="text-base font-bold text-red-900"><span id="yearSuccessRate">0.00</span>%</p>
-                    <p class="text-xs text-gray-600">총 <span id="yearTotalCount">0</span> 건</p>
+            <!-- 기간별 수집 현황 요약 -->
+            <div class="col-span-4 bg-white p-6 rounded-lg shadow-md">
+                <div class="text-center">
+                    <h3 class="text-lg font-semibold text-gray-600 mb-3">기간별 수집 현황</h3>
+                    <div class="grid grid-cols-4 gap-3">
+                        <div class="bg-blue-50 p-2 rounded-md">
+                            <p class="text-sm font-semibold text-blue-700">일간</p>
+                            <p class="text-lg font-bold text-blue-900"><span id="daySuccessRate">0.00</span>%</p>
+                        </div>
+                        <div class="bg-green-50 p-2 rounded-md">
+                            <p class="text-sm font-semibold text-green-700">주간</p>
+                            <p class="text-lg font-bold text-green-900"><span id="weekSuccessRate">0.00</span>%</p>
+                        </div>
+                        <div class="bg-yellow-50 p-2 rounded-md">
+                            <p class="text-sm font-semibold text-yellow-700">월간</p>
+                            <p class="text-lg font-bold text-yellow-900"><span id="monthSuccessRate">0.00</span>%</p>
+                        </div>
+                        <div class="bg-red-50 p-2 rounded-md">
+                            <p class="text-sm font-semibold text-red-700">연간</p>
+                            <p class="text-lg font-bold text-red-900"><span id="yearSuccessRate">0.00</span>%</p>
+                        </div>
                     </div>
                 </div>
             </div>

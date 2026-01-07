@@ -127,6 +127,41 @@ async function fetchAndRenderCardSummary() {
         });
 }
 
+// 엑셀 템플릿 다운로드 버튼 이벤트 리스너
+function initDownloadButton() {
+    const downloadExcelTemplateBtn = document.getElementById('downloadExcelTemplateBtn');
+    if (downloadExcelTemplateBtn) {
+        downloadExcelTemplateBtn.addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/excel_template/download');
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        alert('다운로드할 카드 요약 양식이 없습니다.');
+                    } else {
+                        throw new Error('다운로드에 실패했습니다.');
+                    }
+                    return;
+                }
+
+                // 파일 다운로드 처리
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'card_summary_template.xlsx';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+
+                alert('카드 요약 양식 다운로드가 시작되었습니다.');
+            } catch (error) {
+                alert(error.message);
+            }
+        });
+    }
+}
+
 /**
  * @description 카드 요약 페이지의 진입점 함수. router.js에 의해 호출됩니다.
  */
@@ -137,7 +172,10 @@ export function init() {
     document.querySelectorAll('input[name="displayMode"]').forEach(radio => {
         radio.addEventListener('change', fetchAndRenderCardSummary);
     });
- 
+
+    // 엑셀 템플릿 다운로드 버튼 초기화
+    initDownloadButton();
+
     // SPA 환경에서 중복 리스너 등록을 방지하기 위해 플래그를 사용합니다.
     if (!window.cardSummaryListenerAttached) {
         document.addEventListener('visibilitychange', () => {

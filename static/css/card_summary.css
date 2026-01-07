@@ -1,45 +1,10 @@
-.controls-container {
-    margin-bottom: 20px;
-}
-
-.option-card {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: white;
-    border-radius: 12px;
-    padding: 16px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    margin-bottom: 20px;
-}
-
-.option-card-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #1a3c6b;
-    margin-bottom: 0; /* flex 정렬을 위해 margin 조정 */
-}
-
-#display-mode-selector {
-    display: flex;
-    gap: 16px;
-    align-items: center;
-}
-
-#display-mode-selector label {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    cursor: pointer;
-    font-size: 0.9rem;
-}
-
-.card-grid {
+/* 카드 요약 페이지 특화 스타일 */
+.card-grid-legacy {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 2px;
+    gap: var(--space-1);
     position: relative;
-    min-height: 100px; /* Ensures container has height for absolute positioning */
+    min-height: 100px;
 }
 .card {
     background: white;

@@ -11,6 +11,7 @@ from dao.analytics_dao import AnalyticsDAO
 from service.dashboard_service import DashboardService
 from service.mst_service import ConMstService
 from service.analysis_service import AnalysisService
+from service.status_code_service import get_status_codes
 from routes.auth_routes import login_required, check_password_change_required, analysis_required, data_analysis_required
 
 analysis_api_bp = Blueprint('analysis_api', __name__, url_prefix='/api/analytics')
@@ -222,12 +223,22 @@ def api_analysis_error_codes():
             user = session.get('user')
             error_codes = dashboard_service.get_distinct_error_codes(start_date, end_date, all_data, user=user)
 
-            status_names = {
-                'CD901': '정상(성공)',
-                'CD902': '실패',
-                'CD903': '미수집',
-                'CD904': '계측중'
-            }
+            # Get status codes dynamically
+            status_codes = get_status_codes()
+
+            # Create dynamic status name mapping
+            status_names = {}
+            for code, desc in status_codes.items():
+                if desc.upper() == 'SUCCESS':
+                    status_names[code] = '정상(성공)'
+                elif desc.upper() == 'FAIL':
+                    status_names[code] = '실패'
+                elif desc.upper() == 'NO_DATA':
+                    status_names[code] = '미수집'
+                elif desc.upper() == 'IN_PROGRESS':
+                    status_names[code] = '계측중'
+                else:
+                    status_names[code] = desc  # Use description as fallback
 
             result = [{"code": code, "name": status_names.get(code, code)} for code in error_codes]
             return jsonify(result), 200

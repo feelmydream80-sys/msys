@@ -1,4 +1,5 @@
 from dao.sql_loader import load_sql
+from service.status_code_service import get_status_codes
 
 class DashboardSQL:
     @staticmethod
@@ -19,9 +20,65 @@ class DashboardSQL:
 
     @staticmethod
     def get_dashboard_summary(start_date, end_date, all_data, job_ids=None):
-        # Base query with all conditional aggregations
+        # Get status codes dynamically
+        status_codes = get_status_codes()
+
+        # Create dynamic CASE WHEN clauses for each status code
+        def create_count_case(status_code, period_condition=""):
+            condition = f"h.status = '{status_code}'"
+            if period_condition:
+                condition += f" AND {period_condition}"
+            return f"COUNT(CASE WHEN {condition} THEN 1 END)"
+
         kst_date_expr = "(h.start_dt::timestamp AT TIME ZONE 'Asia/Seoul')::date"
-        
+
+        # Overall counts - create dynamic columns for each status code
+        overall_counts = []
+        for code, desc in status_codes.items():
+            col_name = f"overall_{desc.lower().replace(' ', '_')}_count"
+            overall_counts.append(f"{create_count_case(code)} as {col_name}")
+
+        # Daily counts
+        daily_counts = []
+        for code, desc in status_codes.items():
+            col_name = f"day_{desc.lower().replace(' ', '_')}"
+            period_condition = f"{kst_date_expr} = CURRENT_DATE"
+            daily_counts.append(f"{create_count_case(code, period_condition)} as {col_name}")
+
+        # Weekly counts
+        weekly_counts = []
+        for code, desc in status_codes.items():
+            col_name = f"week_{desc.lower().replace(' ', '_')}"
+            period_condition = f"{kst_date_expr} >= date_trunc('week', CURRENT_DATE)"
+            weekly_counts.append(f"{create_count_case(code, period_condition)} as {col_name}")
+
+        # Monthly counts
+        monthly_counts = []
+        for code, desc in status_codes.items():
+            col_name = f"month_{desc.lower().replace(' ', '_')}"
+            period_condition = f"{kst_date_expr} >= date_trunc('month', CURRENT_DATE)"
+            monthly_counts.append(f"{create_count_case(code, period_condition)} as {col_name}")
+
+        # Half-year counts
+        half_counts = []
+        for code, desc in status_codes.items():
+            col_name = f"half_{desc.lower().replace(' ', '_')}"
+            period_condition = f"{kst_date_expr} >= date_trunc('month', CURRENT_DATE) - INTERVAL '5 months'"
+            half_counts.append(f"{create_count_case(code, period_condition)} as {col_name}")
+
+        # Yearly counts
+        yearly_counts = []
+        for code, desc in status_codes.items():
+            col_name = f"year_{desc.lower().replace(' ', '_')}"
+            period_condition = f"{kst_date_expr} >= date_trunc('year', CURRENT_DATE)"
+            yearly_counts.append(f"{create_count_case(code, period_condition)} as {col_name}")
+
+        # Get fail codes for fail_streak calculation
+        from service.status_code_service import status_code_service
+        fail_codes = status_code_service.get_fail_codes() if status_code_service else ['CD902', 'CD903']
+        fail_codes_str = "', '".join(fail_codes)
+        fail_condition = f"recent_runs.status IN ('{fail_codes_str}')"
+
         query = f"""
             SELECT
                 h.job_id,
@@ -31,41 +88,22 @@ class DashboardSQL:
                 MAX(h.start_dt) AS max_con_dt,
                 COUNT(*) as total_count,
                 -- Overall counts
-                COUNT(CASE WHEN h.status = 'CD901' THEN 1 END) as overall_success_count,
-                COUNT(CASE WHEN h.status = 'CD902' THEN 1 END) as overall_ing_count,
-                COUNT(CASE WHEN h.status = 'CD903' THEN 1 END) as overall_fail_count,
-                COUNT(CASE WHEN h.status = 'CD904' THEN 1 END) as overall_cd904_count,
-                COUNT(CASE WHEN h.status = 'CD905' THEN 1 END) as overall_no_data_count,
+                {', '.join(overall_counts)},
 
                 -- Daily counts (today in KST)
-                COUNT(CASE WHEN h.status = 'CD901' AND {kst_date_expr} = CURRENT_DATE THEN 1 END) as day_success,
-                COUNT(CASE WHEN h.status = 'CD902' AND {kst_date_expr} = CURRENT_DATE THEN 1 END) as day_ing_count,
-                COUNT(CASE WHEN h.status = 'CD903' AND {kst_date_expr} = CURRENT_DATE THEN 1 END) as day_fail_count,
-                COUNT(CASE WHEN h.status = 'CD905' AND {kst_date_expr} = CURRENT_DATE THEN 1 END) as day_no_data_count,
+                {', '.join(daily_counts)},
 
                 -- Weekly counts (this week in KST)
-                COUNT(CASE WHEN h.status = 'CD901' AND {kst_date_expr} >= date_trunc('week', CURRENT_DATE) THEN 1 END) as week_success,
-                COUNT(CASE WHEN h.status = 'CD902' AND {kst_date_expr} >= date_trunc('week', CURRENT_DATE) THEN 1 END) as week_ing_count,
-                COUNT(CASE WHEN h.status = 'CD903' AND {kst_date_expr} >= date_trunc('week', CURRENT_DATE) THEN 1 END) as week_fail_count,
-                COUNT(CASE WHEN h.status = 'CD905' AND {kst_date_expr} >= date_trunc('week', CURRENT_DATE) THEN 1 END) as week_no_data_count,
+                {', '.join(weekly_counts)},
 
                 -- Monthly counts (this month in KST)
-                COUNT(CASE WHEN h.status = 'CD901' AND {kst_date_expr} >= date_trunc('month', CURRENT_DATE) THEN 1 END) as month_success,
-                COUNT(CASE WHEN h.status = 'CD902' AND {kst_date_expr} >= date_trunc('month', CURRENT_DATE) THEN 1 END) as month_ing_count,
-                COUNT(CASE WHEN h.status = 'CD903' AND {kst_date_expr} >= date_trunc('month', CURRENT_DATE) THEN 1 END) as month_fail_count,
-                COUNT(CASE WHEN h.status = 'CD905' AND {kst_date_expr} >= date_trunc('month', CURRENT_DATE) THEN 1 END) as month_no_data_count,
+                {', '.join(monthly_counts)},
 
                 -- Half-year counts (last 6 months in KST)
-                COUNT(CASE WHEN h.status = 'CD901' AND {kst_date_expr} >= date_trunc('month', CURRENT_DATE) - INTERVAL '5 months' THEN 1 END) as half_success,
-                COUNT(CASE WHEN h.status = 'CD902' AND {kst_date_expr} >= date_trunc('month', CURRENT_DATE) - INTERVAL '5 months' THEN 1 END) as half_ing_count,
-                COUNT(CASE WHEN h.status = 'CD903' AND {kst_date_expr} >= date_trunc('month', CURRENT_DATE) - INTERVAL '5 months' THEN 1 END) as half_fail_count,
-                COUNT(CASE WHEN h.status = 'CD905' AND {kst_date_expr} >= date_trunc('month', CURRENT_DATE) - INTERVAL '5 months' THEN 1 END) as half_no_data_count,
+                {', '.join(half_counts)},
 
                 -- Yearly counts (this year in KST)
-                COUNT(CASE WHEN h.status = 'CD901' AND {kst_date_expr} >= date_trunc('year', CURRENT_DATE) THEN 1 END) as year_success,
-                COUNT(CASE WHEN h.status = 'CD902' AND {kst_date_expr} >= date_trunc('year', CURRENT_DATE) THEN 1 END) as year_ing_count,
-                COUNT(CASE WHEN h.status = 'CD903' AND {kst_date_expr} >= date_trunc('year', CURRENT_DATE) THEN 1 END) as year_fail_count,
-                COUNT(CASE WHEN h.status = 'CD905' AND {kst_date_expr} >= date_trunc('year', CURRENT_DATE) THEN 1 END) as year_no_data_count,
+                {', '.join(yearly_counts)},
 
                 -- 연속 실패 계산 (최근 10번 실행 중 실패 횟수)
                 COALESCE((
@@ -77,7 +115,7 @@ class DashboardSQL:
                         ORDER BY h2.start_dt DESC
                         LIMIT 10
                     ) recent_runs
-                    WHERE recent_runs.status IN ('CD902', 'CD903') -- 실패 상태들
+                    WHERE {fail_condition}
                 ), 0) as fail_streak
             FROM
                 TB_CON_HIST h
@@ -191,9 +229,18 @@ class DashboardSQL:
         
     @staticmethod
     def get_distinct_error_codes(start_date=None, end_date=None, all_data=False, job_ids=None):
+        # Get success codes to exclude from error codes
+        from service.status_code_service import status_code_service
+        success_codes = status_code_service.get_success_codes() if status_code_service else ['CD901']
+
         query = "SELECT DISTINCT status FROM TB_CON_HIST"
         params = []
-        conditions = ["status IS NOT NULL", "status <> 'CD901'"]
+        conditions = ["status IS NOT NULL"]
+
+        # Exclude success codes
+        if success_codes:
+            exclude_conditions = [f"status <> '{code}'" for code in success_codes]
+            conditions.extend(exclude_conditions)
 
         if not all_data:
             if start_date:
@@ -209,9 +256,9 @@ class DashboardSQL:
 
         if conditions:
             query += " WHERE " + " AND ".join(conditions)
-            
+
         query += " ORDER BY status"
-        
+
         return query, params
 
     @staticmethod

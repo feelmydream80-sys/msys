@@ -11,6 +11,7 @@ import pytz
 
 from service.mst_service import ConMstService
 from service.url_analyzer_service import UrlAnalyzerService
+from service.status_code_service import get_status_codes
 from typing import Optional, Dict, List
 from flask import session
 from service.dashboard_service import DashboardService
@@ -290,7 +291,23 @@ def save_event_log():
                 job_id = row.get('job_id', '')
                 status = row.get('status', '')
                 
-                icon_map = {'CD901': '🟢', 'CD902': '🔴', 'CD903': '🟠', 'CD904': '🔵'}
+                # Get status codes dynamically
+                status_codes = get_status_codes()
+
+                # Create dynamic icon mapping
+                icon_map = {}
+                for code, desc in status_codes.items():
+                    if desc.upper() == 'SUCCESS':
+                        icon_map[code] = '🟢'
+                    elif desc.upper() == 'FAIL':
+                        icon_map[code] = '🔴'
+                    elif desc.upper() == 'NO_DATA':
+                        icon_map[code] = '🟠'
+                    elif desc.upper() == 'IN_PROGRESS':
+                        icon_map[code] = '🔵'
+                    else:
+                        icon_map[code] = '🔔'  # Default icon
+
                 icon = icon_map.get(status, '🔔')
 
                 dt_str = row.get('end_dt') or row.get('start_dt')
@@ -306,12 +323,20 @@ def save_event_log():
                         success = total - fail
                         percent = round((success / total) * 100) if total > 0 else 0
 
-                status_map = {
-                    'CD901': {'msg': '정상 수집', 'desc': '수집완료'},
-                    'CD902': {'msg': '장애 발생', 'desc': '실패'},
-                    'CD903': {'msg': '미수집', 'desc': '미수집'},
-                    'CD904': {'msg': '수집중', 'desc': '진행중'}
-                }
+                # Create dynamic status mapping
+                status_map = {}
+                for code, desc in status_codes.items():
+                    if desc.upper() == 'SUCCESS':
+                        status_map[code] = {'msg': '정상 수집', 'desc': '수집완료'}
+                    elif desc.upper() == 'FAIL':
+                        status_map[code] = {'msg': '장애 발생', 'desc': '실패'}
+                    elif desc.upper() == 'NO_DATA':
+                        status_map[code] = {'msg': '미수집', 'desc': '미수집'}
+                    elif desc.upper() == 'IN_PROGRESS':
+                        status_map[code] = {'msg': '수집중', 'desc': '진행중'}
+                    else:
+                        status_map[code] = {'msg': desc, 'desc': desc}
+
                 status_info = status_map.get(status, {'msg': status, 'desc': status})
 
                 duration_hr_str = ''

@@ -92,6 +92,14 @@ def create_app():
             app.logger.error(f"메뉴 데이터 캐싱 실패: {e}")
             app.menu_items = []
 
+        # 상태 코드 서비스 초기화
+        try:
+            from service.status_code_service import init_status_codes
+            init_status_codes(conn)
+            app.logger.info("상태 코드 서비스가 성공적으로 초기화되었습니다.")
+        except Exception as e:
+            app.logger.error(f"상태 코드 서비스 초기화 실패: {e}")
+
     # 블루프린트 초기화
     init_routes(app)
 

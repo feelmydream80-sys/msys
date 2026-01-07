@@ -2,6 +2,7 @@ from docx import Document
 from docx.shared import Inches, Pt, RGBColor
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 from docx.enum.style import WD_STYLE_TYPE
+from docx.enum.section import WD_ORIENT
 
 def create_installation_manual():
     """인프라 관계자용 설치 매뉴얼 생성"""
@@ -158,6 +159,10 @@ def create_function_manual():
     """개발자용 기능 매뉴얼 생성 - DB→DAO→SERVICE→JS→HTML 구조"""
     doc = Document()
 
+    # 페이지 방향을 가로로 설정
+    section = doc.sections[0]
+    section.orientation = WD_ORIENT.LANDSCAPE
+
     # 스타일 설정
     title_style = doc.styles.add_style('FuncTitle', WD_STYLE_TYPE.PARAGRAPH)
     title_style.font.size = Pt(28)
@@ -231,6 +236,15 @@ def create_function_manual():
     dash_intro = doc.add_paragraph()
     dash_intro.add_run('대시보드는 시스템의 전체 현황을 실시간으로 모니터링하는 메인 인터페이스입니다.\n\n')
 
+    # 대시보드 스크린샷 추가
+    try:
+        doc.add_picture('scrennshot/dashboard_screenshot.PNG', width=Inches(6))
+        doc.add_paragraph('그림 2.1: 대시보드 인터페이스 화면', style='FuncH3')
+    except:
+        doc.add_paragraph('[스크린샷: dashboard_screenshot.PNG를 찾을 수 없습니다]', style='FuncH3')
+
+    doc.add_paragraph('', style='FuncH3')  # 빈 줄
+
     # 대시보드 인터페이스 표
     dash_table = doc.add_table(rows=1, cols=5)
     dash_table.style = 'Table Grid'
@@ -251,14 +265,14 @@ def create_function_manual():
 
     # DAO 레벨 메소드별 행들 (첫 번째 행에 파일 정보 표시)
     dao_methods = [
-        ('get_summary(start_date, end_date, all_data, job_ids)', '중', '대시보드 요약 데이터 조회 - 지정된 기간과 Job에 대한 수집 통계 계산'),
-        ('get_raw_data(start_date, end_date, job_ids, all_data)', '중', '원본 수집 데이터 조회 - 필터링된 수집 이력 데이터 반환'),
-        ('get_analytics_success_rate_trend(start_date, end_date, job_ids, all_data)', '고', '성공률 추이 데이터 조회 - 시간별 성공률 변화 추이 계산'),
-        ('get_trouble_by_code(start_date, end_date, job_ids, all_data)', '중', '장애 코드별 문제 데이터 조회 - 오류 유형별 발생 현황 분석'),
-        ('get_event_log(start_date, end_date, all_data, allowed_job_ids)', '중', '이벤트 로그 조회 - 시스템 이벤트 및 변경 이력 확인'),
-        ('get_daily_job_counts(job_id, start_date, end_date, all_data, job_ids)', '중', '일별 Job 카운트 조회 - Job별 일간 실행 통계 집계'),
-        ('save_event(con_id, job_id, status, rqs_info)', '낮음', '이벤트 로그 저장 - 수집 이벤트 정보 기록'),
-        ('get_distinct_job_ids(job_ids)', '낮음', '고유 Job ID 목록 조회 - 중복 제거된 Job ID 리스트 반환')
+        ('get_summary(start_date, end_date, all_data, job_ids)', '중', '대시보드 요약 데이터 조회 - 지정된 기간과 Job에 대한 수집 통계 계산\n입력: start_date="2025-12-01", end_date="2025-12-31", all_data=False, job_ids=["CD101", "CD102"]\n출력: [{"job_id": "CD101", "cd_nm": "기상청 예보 데이터", "total_count": 45, "overall_success_count": 40, "overall_fail_count": 3, "overall_no_data_count": 2, "week_success": 12, "month_success": 35, "day_success": 2, "day_fail_count": 0, "day_ing_count": 1, "day_no_data_count": 0, "day_total_scheduled": 3, "fail_streak": 0, "settings": {...}}]'),
+        ('get_raw_data(start_date, end_date, job_ids, all_data)', '중', '원본 수집 데이터 조회 - 필터링된 수집 이력 데이터 반환\n입력: start_date="2025-12-01", end_date="2025-12-31", job_ids=["CD101"], all_data=False\n출력: [{"job_id": "CD101", "con_id": "CON001", "status": "CD901", "start_dt": "2025-12-18T14:30:15+09", "end_dt": "2025-12-18T14:35:22+09", "rqs_info": "총 요청 수: 10, 실패: 0"}]'),
+        ('get_analytics_success_rate_trend(start_date, end_date, job_ids, all_data)', '고', '성공률 추이 데이터 조회 - 시간별 성공률 변화 추이 계산\n입력: start_date="2025-12-01", end_date="2025-12-31", job_ids=["CD101"]\n출력: [{"date": "2025-12-18", "job_id": "CD101", "success_rate": 95.2, "total_count": 20, "success_count": 19}]'),
+        ('get_trouble_by_code(start_date, end_date, job_ids, all_data)', '중', '장애 코드별 문제 데이터 조회 - 오류 유형별 발생 현황 분석\n입력: start_date="2025-12-01", end_date="2025-12-31", job_ids=["CD101"]\n출력: [{"status": "CD902", "count": 3, "job_id": "CD101", "error_message": "Connection timeout"}]'),
+        ('get_event_log(start_date, end_date, all_data, allowed_job_ids)', '중', '이벤트 로그 조회 - 시스템 이벤트 및 변경 이력 확인\n입력: start_date="2025-12-01", end_date="2025-12-31", all_data=False, allowed_job_ids=["CD101"]\n출력: [{"con_id": "CON001", "job_id": "CD101", "status": "CD901", "start_dt": "2025-12-18T14:30:15+09", "end_dt": "2025-12-18T14:35:22+09", "rqs_info": "총 요청 수: 10, 실패: 0"}]'),
+        ('get_daily_job_counts(job_id, start_date, end_date, all_data, job_ids)', '중', '일별 Job 카운트 조회 - Job별 일간 실행 통계 집계\n입력: job_id="CD101", start_date="2025-12-01", end_date="2025-12-31", all_data=False, job_ids=["CD101"]\n출력: [{"date": "2025-12-18", "job_id": "CD101", "success_count": 2, "fail_count": 0, "total_count": 2}]'),
+        ('save_event(con_id, job_id, status, rqs_info)', '낮음', '이벤트 로그 저장 - 수집 이벤트 정보 기록\n입력: con_id="CON001", job_id="CD101", status="CD901", rqs_info="총 요청 수: 10, 실패: 0"\n출력: None (DB 저장 완료)'),
+        ('get_distinct_job_ids(job_ids)', '낮음', '고유 Job ID 목록 조회 - 중복 제거된 Job ID 리스트 반환\n입력: job_ids=["CD101", "CD102"]\n출력: ["CD101", "CD102"]')
     ]
 
     # 첫 번째 메소드 행 (파일 정보 포함)
@@ -277,6 +291,22 @@ def create_function_manual():
         dao_row[2].text = method
         dao_row[3].text = complexity
         dao_row[4].text = description
+
+    # 이벤트 로그 상세 분석 행 추가
+    event_log_row = dash_table.add_row().cells
+    event_log_row[0].text = 'DAO'
+    event_log_row[1].text = 'mapper/dashboard_mapper.py\nsql/dashboard/get_event_log.sql'
+    event_log_row[2].text = 'get_event_log(start_date, end_date, all_data, allowed_job_ids)'
+    event_log_row[3].text = '중'
+    event_log_row[4].text = '이벤트 로그 조회 - TB_CON_HIST_EVNT_LOG에서 JSON 데이터 추출 및 변환'
+
+    # 이벤트 로그 JavaScript 렌더링 행 추가
+    event_log_js_row = dash_table.add_row().cells
+    event_log_js_row[0].text = 'JS'
+    event_log_js_row[1].text = 'static/js/modules/dashboard/eventLog.js'
+    event_log_js_row[2].text = 'renderEventLogToasts()\nloadEventLogPage()\nfilterEventLogData()'
+    event_log_js_row[3].text = '중'
+    event_log_js_row[4].text = '이벤트 로그 렌더링 - 상태별 아이콘, 시간 포맷팅, 검색 필터링'
 
     # SERVICE 레벨 메소드별 행들 (첫 번째 행에 파일 정보 표시)
     svc_methods = [
@@ -338,10 +368,48 @@ def create_function_manual():
     example.add_run('• JS: dataFlowStatus.apiCallSuccess=true, loadedRecords=45\n')
     example.add_run('• HTML: {{ user.is_admin }} = true, {{ current_date }} = \'2025-12-18\'\n\n')
 
+    # 이벤트 로그 상세 분석 및 실제 데이터 예시
+    doc.add_paragraph('이벤트 로그 데이터 상세 분석:', style='FuncH3')
+    event_log_analysis = doc.add_paragraph()
+    event_log_analysis.add_run('이벤트 로그는 TB_CON_HIST_EVNT_LOG 테이블에서 JSON 형태의 데이터를 추출하여 표시합니다.\n\n')
+
+    event_log_analysis.add_run('SQL 쿼리 분석 (sql/dashboard/get_event_log.sql):\n').bold = True
+    event_log_analysis.add_run('SELECT\n')
+    event_log_analysis.add_run('    (EVNT_CHG_ROW ->> \'con_id\')::text AS con_id,\n')
+    event_log_analysis.add_run('    EVNT_OCCR_TIME AS start_dt,\n')
+    event_log_analysis.add_run('    (EVNT_CHG_ROW ->> \'end_dt\')::timestamptz AS end_dt,\n')
+    event_log_analysis.add_run('    (EVNT_CHG_ROW ->> \'job_id\')::text AS job_id,\n')
+    event_log_analysis.add_run('    (EVNT_CHG_ROW ->> \'rqs_info\')::text AS rqs_info,\n')
+    event_log_analysis.add_run('    (EVNT_CHG_ROW ->> \'status\')::text AS status\n')
+    event_log_analysis.add_run('FROM TB_CON_HIST_EVNT_LOG\n')
+    event_log_analysis.add_run('{where_clause}\n')
+    event_log_analysis.add_run('ORDER BY EVNT_OCCR_TIME DESC\n\n')
+
+    event_log_analysis.add_run('JavaScript 렌더링 로직 (static/js/modules/dashboard/eventLog.js):\n').bold = True
+    event_log_analysis.add_run('• renderEventLogToasts(): 이벤트 로그를 그리드 형태로 표시\n')
+    event_log_analysis.add_run('• formatDurationHr(): 수집 시간 계산 (시작~종료 시간)\n')
+    event_log_analysis.add_run('• filterEventLogData(): 검색어 기반 필터링\n')
+    event_log_analysis.add_run('• 상태별 아이콘 매핑: CD901(🟢), CD902(🔴), CD903(🟠), CD904(🔵)\n\n')
+
+    event_log_analysis.add_run('실제 입력/출력 예시:\n').bold = True
+    event_log_analysis.add_run('• 함수 입력: get_event_log(start_date=\'2025-12-01\', end_date=\'2025-12-31\', all_data=False, allowed_job_ids=[\'CD101\', \'CD102\'])\n')
+    event_log_analysis.add_run('• SQL 파라미터: params = [\'2025-12-01\', \'2025-12-31\', [\'CD101\', \'CD102\']]\n')
+    event_log_analysis.add_run('• SQL 결과: [{\'con_id\': \'CON001\', \'start_dt\': \'2025-12-18T14:30:15+09\', \'job_id\': \'CD101\', \'status\': \'CD901\', \'rqs_info\': \'총 요청 수: 10, 실패: 0\'}, ...]\n')
+    event_log_analysis.add_run('• JavaScript 렌더링: 시간(2025-12-18 14:30:15), 아이콘(🟢), Job ID(CD101), 상태(정상 수집), 수집 건수(10/10), 성공률(100%), 수집 시간(수집시간: 0.5hr)\n\n')
+
     # 2.2 데이터 분석 인터페이스
     doc.add_paragraph('2.2 데이터 분석 인터페이스', style='FuncH2')
     analysis_intro = doc.add_paragraph()
     analysis_intro.add_run('데이터 수집 결과를 심층 분석하고 필터링하여 조회하는 인터페이스입니다.\n\n')
+
+    # 데이터 분석 인터페이스 스크린샷 추가
+    try:
+        doc.add_picture('scrennshot/data_analysis_screenshot.PNG', width=Inches(6))
+        doc.add_paragraph('그림 2.2: 데이터 분석 인터페이스 화면', style='FuncH3')
+    except:
+        doc.add_paragraph('[스크린샷: data_analysis_screenshot.PNG를 찾을 수 없습니다]', style='FuncH3')
+
+    doc.add_paragraph('', style='FuncH3')  # 빈 줄
 
     # 데이터 분석 인터페이스 표
     analysis_table = doc.add_table(rows=1, cols=5)
@@ -483,8 +551,12 @@ def create_function_manual():
     deploy.add_run('4.2 배포 스크립트\n').bold = True
     deploy.add_run('Docker Compose를 활용한 컨테이너화 배포\n\n')
 
-    doc.save('MSYS_Function_Manual_v8.docx')
-    print('기능 매뉴얼 생성 완료: MSYS_Function_Manual_v8.docx')
+    try:
+        doc.save('MSYS_Function_Manual_v8.docx')
+        print('기능 매뉴얼 생성 완료: MSYS_Function_Manual_v8.docx')
+    except PermissionError:
+        doc.save('MSYS_Function_Manual_v9.docx')
+        print('기능 매뉴얼 생성 완료: MSYS_Function_Manual_v9.docx')
 
 def create_operation_manual():
     """운영자용 운영 매뉴얼 생성"""
@@ -521,12 +593,23 @@ def create_operation_manual():
     toc = doc.add_paragraph()
     toc.add_run('1. 일상 운영 절차 ........................ 3\n')
     toc.add_run('2. 모니터링 ............................. 5\n')
-    toc.add_run('3. 백업 및 복원 ........................ 8\n')
-    toc.add_run('4. 장애 대응 ........................... 11\n')
-    toc.add_run('5. 성능 최적화 ........................ 14\n')
-    toc.add_run('6. 인증 시스템 ........................ 17\n')
-    toc.add_run('7. 로그 관리 ........................... 20\n')
-    toc.add_run('부록 A. 점검 체크리스트 .................. 23\n')
+    toc.add_run('   2.1 대시보드 모니터링 .................. 5\n')
+    toc.add_run('   2.2 데이터 분석 모니터링 ................ 15\n')
+    toc.add_run('   2.3 차트 분석 모니터링 .................. 25\n')
+    toc.add_run('   2.4 잔디 현황 모니터링 .................. 35\n')
+    toc.add_run('   2.5 매핑 관리 모니터링 .................. 45\n')
+    toc.add_run('   2.6 데이터 명세서 모니터링 ................ 55\n')
+    toc.add_run('   2.7 관리자 설정 모니터링 ................ 65\n')
+    toc.add_run('   2.8 수집 일정 모니터링 .................. 75\n')
+    toc.add_run('   2.9 카드 요약 모니터링 .................. 85\n')
+    toc.add_run('   2.10 시스템 리소스 모니터링 .............. 95\n')
+    toc.add_run('3. 백업 및 복원 ........................ 105\n')
+    toc.add_run('4. 장애 대응 ........................... 108\n')
+    toc.add_run('5. 성능 최적화 ........................ 111\n')
+    toc.add_run('6. 인증 시스템 ........................ 114\n')
+    toc.add_run('7. 로그 관리 ........................... 125\n')
+    toc.add_run('8. 운영 시나리오 ........................ 140\n')
+    toc.add_run('부록 A. 점검 체크리스트 .................. 200\n')
 
     doc.add_page_break()
 
@@ -641,9 +724,54 @@ def create_operation_manual():
     dash_desc.add_run('  - 관리자가 각 Job별로 개별 설정 가능\n\n')
 
     dash_desc.add_run('• 상태: 현재 작업의 상태 표시 (정상/경고/위험)\n')
-    dash_desc.add_run('  - 정상: 성공률 ≥ 임계값\n')
-    dash_desc.add_run('  - 경고: 성공률 < 임계값이지만 심각하지 않은 상태\n')
-    dash_desc.add_run('  - 위험: 성공률이 매우 낮거나 연속 실패가 많은 상태\n\n')
+    dash_desc.add_run('  - 정상: 성공률 ≥ 임계값 AND 연속 실패 < 3회\n')
+    dash_desc.add_run('  - 경고: (성공률 80-95% 사이) OR (연속 실패 3-5회)\n')
+    dash_desc.add_run('  - 위험: (성공률 < 80%) OR (연속 실패 ≥ 5회)\n\n')
+
+    dash_desc.add_run('2.1.2 관리자 설정과의 연동\n').bold = True
+    dash_desc.add_run('대시보드에 표시되는 모든 값들은 관리자 설정에서 정의된 임계값과 설정을 기반으로 계산됩니다:\n\n')
+
+    dash_desc.add_run('• 연속 실패 임계값 (cnn_failr_thrs_val)\n').bold = True
+    dash_desc.add_run('  - 기본값: 3회\n')
+    dash_desc.add_run('  - 의미: 이 횟수만큼 연속으로 실패하면 위험 상태로 표시\n')
+    dash_desc.add_run('  - 설정 위치: 관리자 설정 → 기본 설정 → 연속 실패(CNT)\n\n')
+
+    dash_desc.add_run('• 경고 임계값 (cnn_warn_thrs_val)\n').bold = True
+    dash_desc.add_run('  - 기본값: 2회\n')
+    dash_desc.add_run('  - 의미: 이 횟수만큼 연속으로 실패하면 경고 상태로 표시\n')
+    dash_desc.add_run('  - 설정 위치: 관리자 설정 → 기본 설정 → 경고(CNT)\n\n')
+
+    dash_desc.add_run('• 일별 성공률 임계값 (dly_sucs_rt_thrs_val)\n').bold = True
+    dash_desc.add_run('  - 기본값: 80%\n')
+    dash_desc.add_run('  - 의미: 일별 성공률이 이 값 미만이면 위험 상태로 표시\n')
+    dash_desc.add_run('  - 설정 위치: 관리자 설정 → 기본 설정 → 일간 임계값\n\n')
+
+    dash_desc.add_run('• 주간 성공률 임계값 (dd7_sucs_rt_thrs_val)\n').bold = True
+    dash_desc.add_run('  - 기본값: 75%\n')
+    dash_desc.add_run('  - 의미: 7일간 성공률이 이 값 미만이면 위험 상태로 표시\n')
+    dash_desc.add_run('  - 설정 위치: 관리자 설정 → 기본 설정 → 주간 임계값\n\n')
+
+    dash_desc.add_run('• 월별 성공률 임계값 (mthl_sucs_rt_thrs_val)\n').bold = True
+    dash_desc.add_run('  - 기본값: 70%\n')
+    dash_desc.add_run('  - 의미: 월별 성공률이 이 값 미만이면 위험 상태로 표시\n')
+    dash_desc.add_run('  - 설정 위치: 관리자 설정 → 기본 설정 → 월간 임계값\n\n')
+
+    dash_desc.add_run('• 상태별 아이콘 설정\n').bold = True
+    dash_desc.add_run('  - 성공 아이콘: 정상 상태 표시 (기본: ✅)\n')
+    dash_desc.add_run('  - 경고 아이콘: 경고 상태 표시 (기본: ⚠️)\n')
+    dash_desc.add_run('  - 실패 아이콘: 위험 상태 표시 (기본: ❌)\n')
+    dash_desc.add_run('  - 설정 위치: 관리자 설정 → 기본 설정 → 각 상태별 아이콘 선택\n\n')
+
+    dash_desc.add_run('• 상태별 색상 설정\n').bold = True
+    dash_desc.add_run('  - 성공 색상: 정상 상태 배경색 (기본: #008000)\n')
+    dash_desc.add_run('  - 경고 색상: 경고 상태 배경색 (기본: #FFA500)\n')
+    dash_desc.add_run('  - 실패 색상: 위험 상태 배경색 (기본: #FF0000)\n')
+    dash_desc.add_run('  - 설정 위치: 관리자 설정 → 기본 설정 → 각 상태별 색상 선택\n\n')
+
+    dash_desc.add_run('• 대시보드 표시 여부 (chrt_dsp_yn)\n').bold = True
+    dash_desc.add_run('  - 기본값: true (표시)\n')
+    dash_desc.add_run('  - 의미: 해당 Job을 대시보드에 표시할지 여부 제어\n')
+    dash_desc.add_run('  - 설정 위치: 관리자 설정 → 기본 설정 → 대시보드 표시 여부\n\n')
 
     dash_desc.add_run('3. 날짜 필터 컨트롤:\n').bold = True
     dash_desc.add_run('• 시작일/종료일: 모니터링할 기간을 선택\n')
@@ -674,7 +802,7 @@ def create_operation_manual():
 
     # 데이터 분석 스크린샷 삽입
     try:
-        doc.add_picture('scrennshot/data_analysis_screenshot.PNG', width=Inches(6))
+        doc.add_picture('d:/dev/msys/scrennshot/data_analysis_screenshot.PNG', width=Inches(6))
         doc.add_paragraph('그림 2.2: 데이터 분석 화면', style='OpH3')
     except:
         doc.add_paragraph('[스크린샷: data_analysis_screenshot.PNG를 찾을 수 없습니다]', style='OpH3')
@@ -719,10 +847,31 @@ def create_operation_manual():
 
     # 차트 분석 스크린샷 삽입
     try:
-        doc.add_picture('scrennshot/chart_analysis_screenshot.PNG', width=Inches(6))
+        doc.add_picture('d:/dev/msys/scrennshot/chart_analysis_screenshot.PNG', width=Inches(6))
         doc.add_paragraph('그림 2.3: 차트 분석 화면', style='OpH3')
     except:
         doc.add_paragraph('[스크린샷: chart_analysis_screenshot.PNG를 찾을 수 없습니다]', style='OpH3')
+
+    # 잔디 현황 스크린샷 삽입
+    try:
+        doc.add_picture('d:/dev/msys/scrennshot/jandi_screenshot.PNG', width=Inches(6))
+        doc.add_paragraph('그림 2.4: 잔디 현황 화면', style='OpH3')
+    except:
+        doc.add_paragraph('[스크린샷: jandi_screenshot.PNG를 찾을 수 없습니다]', style='OpH3')
+
+    # 매핑 관리 스크린샷 삽입
+    try:
+        doc.add_picture('d:/dev/msys/scrennshot/mapping_screenshot.PNG', width=Inches(6))
+        doc.add_paragraph('그림 2.5: 매핑 관리 화면', style='OpH3')
+    except:
+        doc.add_paragraph('[스크린샷: mapping_screenshot.PNG를 찾을 수 없습니다]', style='OpH3')
+
+    # 데이터 명세서 스크린샷 삽입
+    try:
+        doc.add_picture('d:/dev/msys/scrennshot/data_spec_screenshot.PNG', width=Inches(6))
+        doc.add_paragraph('그림 2.6: 데이터 명세서 화면', style='OpH3')
+    except:
+        doc.add_paragraph('[스크린샷: data_spec_screenshot.PNG를 찾을 수 없습니다]', style='OpH3')
 
     doc.add_paragraph('', style='OpH3')  # 빈 줄
 
@@ -920,8 +1069,8 @@ def create_operation_manual():
 
     # 관리자 설정 스크린샷 삽입
     try:
-        doc.add_picture('scrennshot/admin_basic_screenshot.PNG', width=Inches(6))
-        doc.add_paragraph('그림 2.7: 관리자 설정 화면', style='OpH3')
+        doc.add_picture('d:/dev/msys/scrennshot/admin_basic_screenshot.PNG', width=Inches(6))
+        doc.add_paragraph('그림 2.7: 관리자 설정 기본 탭 화면', style='OpH3')
     except:
         doc.add_paragraph('[스크린샷: admin_basic_screenshot.PNG를 찾을 수 없습니다]', style='OpH3')
 
@@ -990,6 +1139,500 @@ def create_operation_manual():
     admin_desc.add_run('• CD101 설정: 연속 실패 3회, 성공률 80%, 빨강/노랑/초록 색상\n')
     admin_desc.add_run('• CD102 설정: 연속 실패 2회, 성공률 75%, 사용자 정의 색상\n\n')
 
+    # 기본 설정 탭
+    doc.add_paragraph('2.7.4.1 기본 설정 탭', style='OpH3')
+
+    # 기본 설정 탭 스크린샷 삽입
+    try:
+        doc.add_picture('d:/dev/msys/scrennshot/admin_basic_screenshot.PNG', width=Inches(6))
+        doc.add_paragraph('그림 2.13: 관리자 설정 - 기본 설정 탭 화면', style='OpH3')
+    except:
+        doc.add_paragraph('[스크린샷: admin_basic_screenshot.PNG를 찾을 수 없습니다]', style='OpH3')
+
+    doc.add_paragraph('', style='OpH3')  # 빈 줄
+
+    # 기본 설정 탭 설명
+    basic_desc = doc.add_paragraph()
+    basic_desc.add_run('2.7.4.1.1 기본 설정 탭 카드 및 변수 설명\n').bold = True
+    basic_desc.add_run('기본 설정 탭에서 설정하는 각 변수의 의미와 사용법:\n\n')
+
+    basic_desc.add_run('• Job ID (cd): 모니터링할 데이터 수집 작업의 고유 식별자\n').bold = True
+    basic_desc.add_run('  - 형식: CD + 3자리 숫자 (예: CD101, CD102)\n')
+    basic_desc.add_run('  - 용도: 대시보드와 각종 모니터링에서 작업을 구분하는 키\n\n')
+
+    basic_desc.add_run('• Job 이름 (cd_nm): Job ID에 대한 사람이 읽기 쉬운 이름\n').bold = True
+    basic_desc.add_run('  - 예시: "기상청 예보 데이터", "실시간 기상 데이터"\n')
+    basic_desc.add_run('  - 용도: UI 표시 및 사용자 이해를 위한 레이블\n\n')
+
+    basic_desc.add_run('• 연속 실패 임계값 (cnn_failr_thrs_val): 기본값 3회\n').bold = True
+    basic_desc.add_run('  - 의미: 이 횟수만큼 연속 실패 시 위험 상태로 표시\n')
+    basic_desc.add_run('  - 영향: 대시보드 카드의 상태 결정 (빨강 표시)\n\n')
+
+    basic_desc.add_run('• 연속 경고 임계값 (cnn_warn_thrs_val): 기본값 2회\n').bold = True
+    basic_desc.add_run('  - 의미: 이 횟수만큼 연속 실패 시 경고 상태로 표시\n')
+    basic_desc.add_run('  - 영향: 대시보드 카드의 상태 결정 (노랑 표시)\n\n')
+
+    basic_desc.add_run('• 일간 성공률 임계값 (dly_sucs_rt_thrs_val): 기본값 80%\n').bold = True
+    basic_desc.add_run('  - 의미: 일별 성공률이 이 값 미만이면 위험 상태\n')
+    basic_desc.add_run('  - 계산: (일별 성공 건수 ÷ 일별 총 건수) × 100\n\n')
+
+    basic_desc.add_run('• 주간 성공률 임계값 (dd7_sucs_rt_thrs_val): 기본값 75%\n').bold = True
+    basic_desc.add_run('  - 의미: 7일간 성공률이 이 값 미만이면 위험 상태\n\n')
+
+    basic_desc.add_run('• 월간 성공률 임계값 (mthl_sucs_rt_thrs_val): 기본값 70%\n').bold = True
+    basic_desc.add_run('  - 의미: 월별 성공률이 이 값 미만이면 위험 상태\n\n')
+
+    basic_desc.add_run('• 상태별 아이콘/색상: 성공/경고/실패 상태 표시 설정\n').bold = True
+    basic_desc.add_run('  - 성공: ✅ 아이콘, #008000 색상\n')
+    basic_desc.add_run('  - 경고: ⚠️ 아이콘, #FFA500 색상\n')
+    basic_desc.add_run('  - 실패: ❌ 아이콘, #FF0000 색상\n\n')
+
+    basic_desc.add_run('• 대시보드 표시 여부 (chrt_dsp_yn): 해당 Job 표시 여부\n').bold = True
+    basic_desc.add_run('  - true: 대시보드에 표시\n')
+    basic_desc.add_run('  - false: 대시보드에서 숨김\n\n')
+
+    # 수집 스케줄 설정 탭
+    doc.add_paragraph('2.7.4.2 수집 스케줄 설정 탭', style='OpH3')
+
+    # 수집 스케줄 설정 탭 스크린샷 삽입
+    try:
+        doc.add_picture('d:/dev/msys/scrennshot/admin_schedule_screenshot.PNG', width=Inches(6))
+        doc.add_paragraph('그림 2.14: 관리자 설정 - 수집 스케줄 설정 탭 화면', style='OpH3')
+    except:
+        doc.add_paragraph('[스크린샷: admin_schedule_screenshot.PNG를 찾을 수 없습니다]', style='OpH3')
+
+    doc.add_paragraph('', style='OpH3')  # 빈 줄
+
+    # 수집 스케줄 설정 탭 설명
+    doc.add_paragraph('2.7.4.2.1 수집 스케줄 설정 탭 카드 및 변수 설명', style='OpH3')
+    doc.add_paragraph('수집 스케줄 설정 탭의 각 설정 항목 설명:', style='OpH3')
+    doc.add_paragraph('', style='OpH3')  # 빈 줄
+
+    doc.add_paragraph('• 그룹 최소 개수 (grp_min_cnt): 기본값 3', style='OpH3')
+    doc.add_paragraph('  - 의미: 그룹화할 최소 Job 개수', style='OpH3')
+    doc.add_paragraph('  - 영향: 카드 요약에서 그룹 생성 조건', style='OpH3')
+    doc.add_paragraph('', style='OpH3')  # 빈 줄
+
+    doc.add_paragraph('• 그룹 외곽선 스타일 (grp_brdr_styl): 기본값 solid', style='OpH3')
+    doc.add_paragraph('  - 옵션: none, solid, dashed, dotted, double', style='OpH3')
+    doc.add_paragraph('  - 의미: 그룹 카드의 테두리 스타일', style='OpH3')
+    doc.add_paragraph('', style='OpH3')  # 빈 줄
+
+    doc.add_paragraph('• 그룹 색상 기준 (grp_colr_crtr): prgr/succ', style='OpH3')
+    doc.add_paragraph('  - prgr: 진행률 기준 색상', style='OpH3')
+    doc.add_paragraph('  - succ: 성공률 기준 색상', style='OpH3')
+    doc.add_paragraph('', style='OpH3')  # 빈 줄
+
+    doc.add_paragraph('• 진행률 임계값: prgs_rt_red_thrsval(30%), prgs_rt_org_thrsval(60%)', style='OpH3')
+    doc.add_paragraph('  - 문제점/경고 기준값 설정', style='OpH3')
+    doc.add_paragraph('', style='OpH3')  # 빈 줄
+
+    doc.add_paragraph('• 성공률 임계값: succ_rt_red_thrsval(30%), succ_rt_org_thrsval(60%)', style='OpH3')
+    doc.add_paragraph('  - 문제점/경고 기준값 설정', style='OpH3')
+    doc.add_paragraph('', style='OpH3')  # 빈 줄
+
+    doc.add_paragraph('• 그룹 아이콘: grp_prgs_icon_id, grp_sucs_icon_id', style='OpH3')
+    doc.add_paragraph('  - 그룹별 대표 아이콘 설정', style='OpH3')
+    doc.add_paragraph('', style='OpH3')  # 빈 줄
+
+    # 아이콘 관리 탭
+    doc.add_paragraph('2.7.4.3 아이콘 관리 탭', style='OpH3')
+
+    # 아이콘 관리 탭 스크린샷 삽입
+    try:
+        doc.add_picture('d:/dev/msys/scrennshot/admin_icon_screenshot.PNG', width=Inches(6))
+        doc.add_paragraph('그림 2.15: 관리자 설정 - 아이콘 관리 탭 화면', style='OpH3')
+    except:
+        doc.add_paragraph('[스크린샷: admin_icon_screenshot.PNG를 찾을 수 없습니다]', style='OpH3')
+
+    doc.add_paragraph('', style='OpH3')  # 빈 줄
+
+    # 아이콘 관리 탭 설명
+    doc.add_paragraph('2.7.4.3.1 아이콘 관리 탭 카드 및 변수 설명', style='OpH3')
+    doc.add_paragraph('아이콘 관리 탭의 각 필드 설명:', style='OpH3')
+    doc.add_paragraph('', style='OpH3')  # 빈 줄
+
+    doc.add_paragraph('• 아이콘 코드 (icon_cd): 이모지 또는 텍스트 심볼', style='OpH3')
+    doc.add_paragraph('  - 예: ✅, ❌, ⚠️, 🔄', style='OpH3')
+    doc.add_paragraph('', style='OpH3')  # 빈 줄
+
+    doc.add_paragraph('• 아이콘 이름 (icon_nm): 아이콘의 의미 설명', style='OpH3')
+    doc.add_paragraph('  - 예: "성공", "실패", "경고", "처리중"', style='OpH3')
+    doc.add_paragraph('', style='OpH3')  # 빈 줄
+
+    doc.add_paragraph('• 아이콘 설명 (icon_expl): 상세 용도 설명', style='OpH3')
+    doc.add_paragraph('  - 아이콘의 사용 예시와 목적', style='OpH3')
+    doc.add_paragraph('', style='OpH3')  # 빈 줄
+
+    doc.add_paragraph('• 표시 여부 (icon_dsp_yn): Y/N', style='OpH3')
+    doc.add_paragraph('  - Y: 아이콘 사용 활성화', style='OpH3')
+    doc.add_paragraph('  - N: 아이콘 사용 비활성화', style='OpH3')
+    doc.add_paragraph('', style='OpH3')  # 빈 줄
+
+    # 차트/시각화 설정 탭
+    doc.add_paragraph('2.7.4.4 차트/시각화 설정 탭', style='OpH3')
+
+    # 차트/시각화 설정 탭 스크린샷 삽입
+    try:
+        doc.add_picture('d:/dev/msys/scrennshot/admin_chart_screenshot.PNG', width=Inches(6))
+        doc.add_paragraph('그림 2.16: 관리자 설정 - 차트/시각화 설정 탭 화면', style='OpH3')
+    except:
+        doc.add_paragraph('[스크린샷: admin_chart_screenshot.PNG를 찾을 수 없습니다]', style='OpH3')
+
+    doc.add_paragraph('', style='OpH3')  # 빈 줄
+
+    # 차트/시각화 설정 탭 설명
+    doc.add_paragraph('2.7.4.4.1 차트/시각화 설정 탭 카드 및 변수 설명', style='OpH3')
+    doc.add_paragraph('차트 설정 탭의 각 설정 항목:', style='OpH3')
+    doc.add_paragraph('', style='OpH3')  # 빈 줄
+
+    doc.add_paragraph('• 차트 색상 (chrt_colr): 16진수 색상 코드', style='OpH3')
+    doc.add_paragraph('  - 용도: 차트에서 해당 Job의 선/바 색상', style='OpH3')
+    doc.add_paragraph('', style='OpH3')  # 빈 줄
+
+    doc.add_paragraph('• 잔디 시작 색상 (grass_chrt_min_colr): #9be9a8', style='OpH3')
+    doc.add_paragraph('  - 용도: 잔디 차트의 최소 활동 색상', style='OpH3')
+    doc.add_paragraph('', style='OpH3')  # 빈 줄
+
+    doc.add_paragraph('• 잔디 끝 색상 (grass_chrt_max_colr): #216e39', style='OpH3')
+    doc.add_paragraph('  - 용도: 잔디 차트의 최대 활동 색상', style='OpH3')
+    doc.add_paragraph('', style='OpH3')  # 빈 줄
+
+    # 사용자 관리 탭
+    doc.add_paragraph('2.7.4.5 사용자 관리 탭', style='OpH3')
+
+    # 사용자 관리 탭 스크린샷 삽입
+    try:
+        doc.add_picture('d:/dev/msys/scrennshot/admin_user_screenshot.PNG', width=Inches(6))
+        doc.add_paragraph('그림 2.17: 관리자 설정 - 사용자 관리 탭 화면', style='OpH3')
+    except:
+        doc.add_paragraph('[스크린샷: admin_user_screenshot.PNG를 찾을 수 없습니다]', style='OpH3')
+
+    doc.add_paragraph('', style='OpH3')  # 빈 줄
+
+    # 사용자 관리 탭 설명
+    doc.add_paragraph('2.7.4.5.1 사용자 관리 탭 카드 및 변수 설명', style='OpH3')
+    doc.add_paragraph('사용자 관리 탭의 각 필드 설명:', style='OpH3')
+    doc.add_paragraph('', style='OpH3')  # 빈 줄
+
+    doc.add_paragraph('• 사용자 ID (user_id): 영문/숫자 조합 식별자', style='OpH3')
+    doc.add_paragraph('  - 시스템 로그인 및 식별용', style='OpH3')
+    doc.add_paragraph('', style='OpH3')  # 빈 줄
+
+    doc.add_paragraph('• 계정 상태 (acc_sts): PENDING/APPROVED/REJECTED/SUSPENDED', style='OpH3')
+    doc.add_paragraph('  - PENDING: 승인 대기 상태', style='OpH3')
+    doc.add_paragraph('  - APPROVED: 정상 사용 가능', style='OpH3')
+    doc.add_paragraph('  - REJECTED: 승인 거부', style='OpH3')
+    doc.add_paragraph('  - SUSPENDED: 일시 정지', style='OpH3')
+    doc.add_paragraph('', style='OpH3')  # 빈 줄
+
+    doc.add_paragraph('• 메뉴 권한: dashboard, data_analysis, chart_analysis, mngr_sett', style='OpH3')
+    doc.add_paragraph('  - 각 메뉴에 대한 접근 권한 설정', style='OpH3')
+    doc.add_paragraph('', style='OpH3')  # 빈 줄
+
+    # 데이터 접근 권한 탭
+    doc.add_paragraph('2.7.4.6 데이터 접근 권한 탭', style='OpH3')
+
+    # 데이터 접근 권한 탭 스크린샷 삽입
+    try:
+        doc.add_picture('d:/dev/msys/scrennshot/admin_permission_screenshot.PNG', width=Inches(6))
+        doc.add_paragraph('그림 2.18: 관리자 설정 - 데이터 접근 권한 탭 화면', style='OpH3')
+    except:
+        doc.add_paragraph('[스크린샷: admin_permission_screenshot.PNG를 찾을 수 없습니다]', style='OpH3')
+
+    doc.add_paragraph('', style='OpH3')  # 빈 줄
+
+    # 데이터 접근 권한 탭 설명
+    doc.add_paragraph('2.7.4.6.1 데이터 접근 권한 탭 카드 및 변수 설명', style='OpH3')
+    doc.add_paragraph('데이터 접근 권한 설정 항목:', style='OpH3')
+    doc.add_paragraph('', style='OpH3')  # 빈 줄
+
+    doc.add_paragraph('• Job ID (job_id): CD로 시작하는 Job 식별자', style='OpH3')
+    doc.add_paragraph('  - 접근을 허용할 데이터 수집 작업', style='OpH3')
+    doc.add_paragraph('', style='OpH3')  # 빈 줄
+
+    doc.add_paragraph('• 접근 권한 (perm_yn): true/false', style='OpH3')
+    doc.add_paragraph('  - true: 데이터 접근 허용', style='OpH3')
+    doc.add_paragraph('  - false: 데이터 접근 거부', style='OpH3')
+    doc.add_paragraph('', style='OpH3')  # 빈 줄
+
+    # 통계 탭
+    doc.add_paragraph('2.7.4.7 통계 탭', style='OpH3')
+
+    # 통계 탭 스크린샷 삽입 (일별 현황)
+    try:
+        doc.add_picture('d:/dev/msys/scrennshot/admin_stats_daily_screenshot.PNG', width=Inches(6))
+        doc.add_paragraph('그림 2.19: 관리자 설정 - 통계 탭 (일별 현황) 화면', style='OpH3')
+    except:
+        doc.add_paragraph('[스크린샷: admin_stats_daily_screenshot.PNG를 찾을 수 없습니다]', style='OpH3')
+
+    doc.add_paragraph('', style='OpH3')  # 빈 줄
+
+    try:
+        doc.add_picture('d:/dev/msys/scrennshot/admin_stats_weekly_screenshot.PNG', width=Inches(6))
+        doc.add_paragraph('그림 2.20: 관리자 설정 - 통계 탭 (주별 현황) 화면', style='OpH3')
+    except:
+        doc.add_paragraph('[스크린샷: admin_stats_weekly_screenshot.PNG를 찾을 수 없습니다]', style='OpH3')
+
+    doc.add_paragraph('', style='OpH3')  # 빈 줄
+
+    try:
+        doc.add_picture('d:/dev/msys/scrennshot/admin_stats_comparison_screenshot.PNG', width=Inches(6))
+        doc.add_paragraph('그림 2.21: 관리자 설정 - 통계 탭 (비교 현황) 화면', style='OpH3')
+    except:
+        doc.add_paragraph('[스크린샷: admin_stats_comparison_screenshot.PNG를 찾을 수 없습니다]', style='OpH3')
+
+    doc.add_paragraph('', style='OpH3')  # 빈 줄
+
+    # 통계 탭 설명
+    doc.add_paragraph('2.7.4.7.1 통계 탭 카드 및 변수 설명', style='OpH3')
+    doc.add_paragraph('통계 분석에 사용되는 필터 및 표시 옵션:', style='OpH3')
+    doc.add_paragraph('', style='OpH3')  # 빈 줄
+
+    doc.add_paragraph('• 연도 선택 (year): 현재 연도 ± 2년 범위', style='OpH3')
+    doc.add_paragraph('  - 분석할 기간의 기준 연도', style='OpH3')
+    doc.add_paragraph('', style='OpH3')  # 빈 줄
+
+    doc.add_paragraph('• 메뉴 선택 (menu_nm): all 또는 특정 메뉴', style='OpH3')
+    doc.add_paragraph('  - all: 전체 메뉴 통계', style='OpH3')
+    doc.add_paragraph('  - 특정 메뉴: 개별 메뉴 통계', style='OpH3')
+    doc.add_paragraph('', style='OpH3')  # 빈 줄
+
+    doc.add_paragraph('• 날짜 범위: start_date, end_date (YYYY-MM-DD)', style='OpH3')
+    doc.add_paragraph('  - 일별 현황용 기간 설정', style='OpH3')
+    doc.add_paragraph('', style='OpH3')  # 빈 줄
+
+    admin_desc.add_run('2.7.4 관리자 설정 하위 탭 상세 설명\n').bold = True
+
+    # 수집 스케줄 설정 탭
+    admin_desc.add_run('2.7.4.1 수집 스케줄 설정 탭\n').bold = True
+    admin_desc.add_run('데이터 수집 작업의 스케줄을 설정하고 관리하는 탭입니다.\n\n')
+
+    admin_desc.add_run('1. 탭 기능 개요:\n').bold = True
+    admin_desc.add_run('• Job별 자동 실행 주기 설정 (cron 표현식 기반)\n')
+    admin_desc.add_run('• 수집 작업 활성화/비활성화 제어\n')
+    admin_desc.add_run('• 실시간 스케줄 상태 모니터링\n')
+    admin_desc.add_run('• 다음 실행 예정 시간 예측 표시\n\n')
+
+    admin_desc.add_run('2. 주요 설정 항목:\n').bold = True
+    admin_desc.add_run('• 그룹 최소 개수: 그룹화할 최소 Job 수 (기본값: 3)\n')
+    admin_desc.add_run('• 그룹 외곽선 스타일: 카드 그룹 테두리 스타일 (solid/dashed/dotted/double)\n')
+    admin_desc.add_run('• 그룹 색상 기준: 그룹 색상 결정 기준 (진행률/성공률)\n')
+    admin_desc.add_run('• 진행률 임계값: 진행률 경고/문제점 기준값 (%)\n')
+    admin_desc.add_run('• 성공률 임계값: 성공률 경고/문제점 기준값 (%)\n')
+    admin_desc.add_run('• 그룹 아이콘: 그룹별 대표 아이콘 설정\n\n')
+
+    admin_desc.add_run('3. 상태별 표시 설정:\n').bold = True
+    admin_desc.add_run('• 성공 상태: 정상 완료된 작업 표시 (아이콘, 배경색, 글자색)\n')
+    admin_desc.add_run('• 실패 상태: 오류로 실패한 작업 표시\n')
+    admin_desc.add_run('• 진행중 상태: 현재 실행 중인 작업 표시\n')
+    admin_desc.add_run('• 미수집 상태: 예정 시간 초과된 작업 표시\n')
+    admin_desc.add_run('• 예정 상태: 아직 실행 예정인 작업 표시\n\n')
+
+    admin_desc.add_run('4. 사용자 인터랙션:\n').bold = True
+    admin_desc.add_run('• 설정 값 변경 후 [스케줄 표시 설정 저장] 버튼 클릭\n')
+    admin_desc.add_run('• 실시간으로 카드 요약 화면에 반영\n')
+    admin_desc.add_run('• 색상 팔레트에서 색상 선택 가능\n\n')
+
+    admin_desc.add_run('5. 실제 데이터 예시:\n').bold = True
+    admin_desc.add_run('• 그룹 최소 개수: 3 (3개 이상 Job이 있을 때 그룹화)\n')
+    admin_desc.add_run('• 진행률 임계값: 문제점 30%, 경고 60%\n')
+    admin_desc.add_run('• 성공 상태: 녹색 배경 (#EBF8FF), 파란색 글자 (#3182CE)\n\n')
+
+    # 아이콘 관리 탭
+    admin_desc.add_run('2.7.4.2 아이콘 관리 탭\n').bold = True
+    admin_desc.add_run('시스템에서 사용하는 아이콘을 관리하는 탭입니다.\n\n')
+
+    admin_desc.add_run('1. 탭 기능 개요:\n').bold = True
+    admin_desc.add_run('• 시스템 아이콘의 중앙 집중 관리\n')
+    admin_desc.add_run('• 이모지 기반 아이콘 코드 사용\n')
+    admin_desc.add_run('• 아이콘 표시 여부 제어\n')
+    admin_desc.add_run('• CSV 기반 일괄 관리 지원\n\n')
+
+    admin_desc.add_run('2. 아이콘 추가 폼:\n').bold = True
+    admin_desc.add_run('• 아이콘 코드: 이모지 또는 텍스트 코드 입력\n')
+    admin_desc.add_run('• 아이콘 이름: 아이콘의 의미 설명\n')
+    admin_desc.add_run('• 설명: 상세한 아이콘 용도 설명\n')
+    admin_desc.add_run('• 표시 여부: 아이콘 사용 활성화/비활성화\n\n')
+
+    admin_desc.add_run('3. 아이콘 관리 테이블:\n').bold = True
+    admin_desc.add_run('• ID: 고유 식별자\n')
+    admin_desc.add_run('• 아이콘: 실제 아이콘 표시\n')
+    admin_desc.add_run('• 이름: 아이콘 이름\n')
+    admin_desc.add_run('• 설명: 상세 설명\n')
+    admin_desc.add_run('• 표시 여부: 사용 상태\n')
+    admin_desc.add_run('• 작업: 수정/삭제 버튼\n\n')
+
+    admin_desc.add_run('4. 일괄 관리 기능:\n').bold = True
+    admin_desc.add_run('• CSV 내보내기: 모든 아이콘 정보를 파일로 저장\n')
+    admin_desc.add_run('• CSV 가져오기: 파일로부터 아이콘 정보 일괄 등록\n')
+    admin_desc.add_run('• 데이터 검증: 중복 코드 및 형식 검증\n\n')
+
+    admin_desc.add_run('5. 실제 데이터 예시:\n').bold = True
+    admin_desc.add_run('• ✅ 성공: 정상 완료 상태 표시\n')
+    admin_desc.add_run('• ❌ 실패: 오류 발생 상태 표시\n')
+    admin_desc.add_run('• ⚠️ 경고: 주의 필요 상태 표시\n')
+    admin_desc.add_run('• 🔄 처리중: 작업 진행 중 표시\n\n')
+
+    # 차트/시각화 설정 탭
+    admin_desc.add_run('2.7.4.3 차트/시각화 설정 탭\n').bold = True
+    admin_desc.add_run('차트 및 시각화 요소의 설정을 관리하는 탭입니다.\n\n')
+
+    admin_desc.add_run('1. 탭 기능 개요:\n').bold = True
+    admin_desc.add_run('• Job별 차트 색상 및 잔디 차트 색상 설정\n')
+    admin_desc.add_run('• 시각화 요소의 색상 테마 관리\n')
+    admin_desc.add_run('• 차트 표시 옵션 제어\n')
+    admin_desc.add_run('• 데이터 포맷 및 레이아웃 설정\n\n')
+
+    admin_desc.add_run('2. 차트 설정 항목:\n').bold = True
+    admin_desc.add_run('• Job ID: 설정할 작업의 식별자\n')
+    admin_desc.add_run('• Job 이름: 작업의 표시 이름 (읽기 전용)\n')
+    admin_desc.add_run('• 차트 색상: 해당 Job의 차트 색상\n')
+    admin_desc.add_run('• 잔디 시작 색상: 잔디 차트의 최소 색상\n')
+    admin_desc.add_run('• 잔디 끝 색상: 잔디 차트의 최대 색상\n\n')
+
+    admin_desc.add_run('3. 색상 선택 방식:\n').bold = True
+    admin_desc.add_run('• 색상 팔레트에서 미리 정의된 색상 선택\n')
+    admin_desc.add_run('• 사용자 정의 색상 직접 입력\n')
+    admin_desc.add_run('• 색상 미리보기 기능\n\n')
+
+    admin_desc.add_run('4. 실제 데이터 예시:\n').bold = True
+    admin_desc.add_run('• CD101: 파란색 계열 (#007bff, #9be9a8, #216e39)\n')
+    admin_desc.add_run('• CD102: 녹색 계열 (#28a745, #c3e6cb, #155724)\n')
+    admin_desc.add_run('• CD103: 주황색 계열 (#fd7e14, #ffeaa7, #d68910)\n\n')
+
+    # 사용자 관리 탭 스크린샷 삽입
+    try:
+        doc.add_picture('d:/dev/msys/scrennshot/admin_user_screenshot.PNG', width=Inches(6))
+        doc.add_paragraph('그림 2.8: 관리자 설정 - 사용자 관리 탭 화면', style='OpH3')
+    except:
+        doc.add_paragraph('[스크린샷: admin_user_screenshot.PNG를 찾을 수 없습니다]', style='OpH3')
+
+    doc.add_paragraph('', style='OpH3')  # 빈 줄
+
+    admin_desc.add_run('2.7.4.4 사용자 관리 탭\n').bold = True
+    admin_desc.add_run('시스템 사용자를 관리하는 탭입니다.\n\n')
+
+    admin_desc.add_run('1. 탭 기능 개요:\n').bold = True
+    admin_desc.add_run('• 사용자 계정 상태 관리 (승인/거부/정지)\n')
+    admin_desc.add_run('• 메뉴 접근 권한 설정\n')
+    admin_desc.add_run('• 비밀번호 초기화 및 재설정\n')
+    admin_desc.add_run('• 사용자 활동 로그 조회\n\n')
+
+    admin_desc.add_run('2. 사용자 목록 테이블:\n').bold = True
+    admin_desc.add_run('• 사용자 ID: 고유 식별자\n')
+    admin_desc.add_run('• 상태: 계정 상태 (PENDING/APPROVED/REJECTED/SUSPENDED)\n')
+    admin_desc.add_run('• 가입일: 계정 생성 일시\n')
+    admin_desc.add_run('• 메뉴 권한: 접근 가능한 메뉴 목록\n')
+    admin_desc.add_run('• 작업: 승인/거부/비밀번호 초기화/삭제 버튼\n\n')
+
+    admin_desc.add_run('3. 권한 설정 방식:\n').bold = True
+    admin_desc.add_run('• 개별 메뉴 권한 체크박스로 제어\n')
+    admin_desc.add_run('• mngr_sett 권한 부여 시 관리자 권한 획득\n')
+    admin_desc.add_run('• 실시간 권한 적용\n\n')
+
+    # 데이터 접근 권한 탭 스크린샷 삽입
+    try:
+        doc.add_picture('d:/dev/msys/scrennshot/admin_permission_screenshot.PNG', width=Inches(6))
+        doc.add_paragraph('그림 2.9: 관리자 설정 - 데이터 접근 권한 탭 화면', style='OpH3')
+    except:
+        doc.add_paragraph('[스크린샷: admin_permission_screenshot.PNG를 찾을 수 없습니다]', style='OpH3')
+
+    doc.add_paragraph('', style='OpH3')  # 빈 줄
+
+    admin_desc.add_run('2.7.4.5 데이터 접근 권한 탭\n').bold = True
+    admin_desc.add_run('사용자별 데이터 접근 권한을 설정하는 탭입니다.\n\n')
+
+    admin_desc.add_run('1. 탭 기능 개요:\n').bold = True
+    admin_desc.add_run('• Job ID별 데이터 접근 제어\n')
+    admin_desc.add_run('• 민감한 데이터에 대한 보안 관리\n')
+    admin_desc.add_run('• 사용자별 데이터 가시성 설정\n')
+    admin_desc.add_run('• 권한 변경 이력 추적\n\n')
+
+    admin_desc.add_run('2. 권한 설정 인터페이스:\n').bold = True
+    admin_desc.add_run('• 미할당 Job ID 목록: 권한 없는 Job들\n')
+    admin_desc.add_run('• 할당된 Job ID 목록: 권한 있는 Job들\n')
+    admin_desc.add_run('• 이동 버튼: Job ID 권한 부여/해제\n')
+    admin_desc.add_run('• 일괄 이동: 전체 권한 부여/해제\n\n')
+
+    # 통계 탭 스크린샷 삽입
+    try:
+        doc.add_picture('d:/dev/msys/scrennshot/admin_stats_daily_screenshot.PNG', width=Inches(6))
+        doc.add_paragraph('그림 2.10: 관리자 설정 - 통계 탭 (일별 현황) 화면', style='OpH3')
+    except:
+        doc.add_paragraph('[스크린샷: admin_stats_daily_screenshot.PNG를 찾을 수 없습니다]', style='OpH3')
+
+    doc.add_paragraph('', style='OpH3')  # 빈 줄
+
+    try:
+        doc.add_picture('d:/dev/msys/scrennshot/admin_stats_weekly_screenshot.PNG', width=Inches(6))
+        doc.add_paragraph('그림 2.11: 관리자 설정 - 통계 탭 (주별 현황) 화면', style='OpH3')
+    except:
+        doc.add_paragraph('[스크린샷: admin_stats_weekly_screenshot.PNG를 찾을 수 없습니다]', style='OpH3')
+
+    doc.add_paragraph('', style='OpH3')  # 빈 줄
+
+    try:
+        doc.add_picture('d:/dev/msys/scrennshot/admin_stats_comparison_screenshot.PNG', width=Inches(6))
+        doc.add_paragraph('그림 2.12: 관리자 설정 - 통계 탭 (비교 현황) 화면', style='OpH3')
+    except:
+        doc.add_paragraph('[스크린샷: admin_stats_comparison_screenshot.PNG를 찾을 수 없습니다]', style='OpH3')
+
+    doc.add_paragraph('', style='OpH3')  # 빈 줄
+
+    admin_desc.add_run('2.7.4.6 통계 탭\n').bold = True
+    admin_desc.add_run('시스템 사용 통계를 분석하는 탭들입니다.\n\n')
+
+    admin_desc.add_run('• 일별 현황: 일별 메뉴 접근 통계\n').bold = True
+    admin_desc.add_run('  - 각 메뉴의 일별 클릭 수\n')
+    admin_desc.add_run('  - 사용자별 활동량 분석\n')
+    admin_desc.add_run('  - 시간대별 사용 패턴\n\n')
+
+    admin_desc.add_run('• 주별/월별 현황: 장기간 사용 통계\n').bold = True
+    admin_desc.add_run('  - 주별/월별 메뉴 사용량 추이\n')
+    admin_desc.add_run('  - 사용자 유지율 분석\n')
+    admin_desc.add_run('  - 계절별/월별 패턴 분석\n\n')
+
+    admin_desc.add_run('• 비교 현황: 기간별 비교 분석\n').bold = True
+    admin_desc.add_run('  - 올해 vs 작년 비교\n')
+    admin_desc.add_run('  - 분기별 성장률 분석\n')
+    admin_desc.add_run('  - 메뉴 사용량 변화 추이\n\n')
+
+    # 사용자 관리 탭
+    admin_desc.add_run('2.7.4.4 사용자 관리 탭\n').bold = True
+    admin_desc.add_run('시스템 사용자를 관리하는 탭입니다.\n')
+    admin_desc.add_run('• 사용자 목록 조회\n')
+    admin_desc.add_run('• 사용자 권한 설정\n')
+    admin_desc.add_run('• 계정 활성화/비활성화\n')
+    admin_desc.add_run('• 비밀번호 초기화\n\n')
+
+    # 데이터 접근 권한 탭
+    admin_desc.add_run('2.7.4.5 데이터 접근 권한 탭\n').bold = True
+    admin_desc.add_run('사용자별 데이터 접근 권한을 설정하는 탭입니다.\n')
+    admin_desc.add_run('• Job ID별 권한 부여/해제\n')
+    admin_desc.add_run('• 사용자 그룹 관리\n')
+    admin_desc.add_run('• 권한 템플릿 적용\n')
+    admin_desc.add_run('• 권한 변경 이력 조회\n\n')
+
+    # 통계 탭들
+    admin_desc.add_run('2.7.4.6 통계 탭\n').bold = True
+    admin_desc.add_run('시스템 사용 통계를 분석하는 탭들입니다.\n\n')
+
+    admin_desc.add_run('• 일별 현황: 일별 메뉴 접근 통계\n').bold = True
+    admin_desc.add_run('  - 각 메뉴의 일별 클릭 수\n')
+    admin_desc.add_run('  - 사용자별 활동량\n')
+    admin_desc.add_run('  - 시간대별 사용 패턴\n\n')
+
+    admin_desc.add_run('• 주별/월별 현황: 장기간 사용 통계\n').bold = True
+    admin_desc.add_run('  - 주별/월별 메뉴 사용량 추이\n')
+    admin_desc.add_run('  - 사용자 유지율 분석\n')
+    admin_desc.add_run('  - 계절별/월별 패턴 분석\n\n')
+
+    admin_desc.add_run('• 비교 현황: 기간별 비교 분석\n').bold = True
+    admin_desc.add_run('  - 올해 vs 작년 비교\n')
+    admin_desc.add_run('  - 분기별 성장률\n')
+    admin_desc.add_run('  - 메뉴 사용량 변화 추이\n\n')
+
     # 2.8 시스템 리소스 모니터링
     doc.add_paragraph('2.8 시스템 리소스 모니터링', style='OpH2')
     sys_monitor = doc.add_paragraph()
@@ -1006,6 +1649,139 @@ def create_operation_manual():
     sys_monitor.add_run('디스크 사용량 확인:\n\n')
     sys_monitor.add_run('df -h\n').font.name = 'Courier New'
     sys_monitor.add_run('du -sh /home/msys/app\n\n').font.name = 'Courier New'
+
+    # 2.9 수집 일정 모니터링
+    doc.add_paragraph('2.9 수집 일정 모니터링', style='OpH2')
+    schedule_monitor = doc.add_paragraph()
+    schedule_monitor.add_run('데이터 수집 작업의 스케줄과 실행 현황을 모니터링하는 메뉴입니다.\n\n')
+
+    schedule_monitor.add_run('2.9.1 화면 구성 요소 상세 설명\n').bold = True
+    schedule_monitor.add_run('1. 기간 선택 컨트롤:\n').bold = True
+    schedule_monitor.add_run('• 주간/월간 뷰 전환: 탭 메뉴로 기간 단위 선택\n')
+    schedule_monitor.add_run('• 날짜 범위 설정: 조회할 기간의 시작일과 종료일 지정\n\n')
+
+    schedule_monitor.add_run('2. 스케줄 테이블:\n').bold = True
+    schedule_monitor.add_run('• Job ID: 데이터 수집 작업의 고유 식별자\n')
+    schedule_monitor.add_run('• Job 이름: 작업의 표시 이름\n')
+    schedule_monitor.add_run('• 스케줄 시간: 예정된 실행 시간\n')
+    schedule_monitor.add_run('• 상태: 현재 실행 상태 (예정/수집중/성공/실패/미수집)\n')
+    schedule_monitor.add_run('• 실행 결과: 실제 실행 결과 및 소요 시간\n\n')
+
+    schedule_monitor.add_run('3. 상태 표시 색상 코드:\n').bold = True
+    schedule_monitor.add_run('• 회색: 예정 - 아직 실행되지 않은 작업\n')
+    schedule_monitor.add_run('• 파랑: 수집중 - 현재 실행 중인 작업\n')
+    schedule_monitor.add_run('• 녹색: 성공 - 정상적으로 완료된 작업\n')
+    schedule_monitor.add_run('• 빨강: 실패 - 오류로 실패한 작업\n')
+    schedule_monitor.add_run('• 노랑: 미수집 - 예정된 시간에 실행되지 않은 작업\n\n')
+
+    schedule_monitor.add_run('2.9.2 데이터 구조 및 의미\n').bold = True
+    schedule_monitor.add_run('• 스케줄 데이터: crontab 형식의 실행 주기 정보\n')
+    schedule_monitor.add_run('• 실행 이력: 각 Job의 과거 실행 결과 기록\n')
+    schedule_monitor.add_run('• 상태 계산: 실시간 실행 상태와 예정 상태의 조합\n\n')
+
+    schedule_monitor.add_run('2.9.3 사용자 인터랙션\n').bold = True
+    schedule_monitor.add_run('1. 기간 선택: 주간 또는 월간 탭 클릭\n')
+    schedule_monitor.add_run('2. 날짜 설정: 시작일과 종료일 입력\n')
+    schedule_monitor.add_run('3. 조회 실행: [조회] 버튼으로 데이터 새로고침\n')
+    schedule_monitor.add_run('4. 상세 정보: Job 행 클릭으로 실행 상세 정보 확인\n\n')
+
+    schedule_monitor.add_run('2.9.4 실제 데이터 예시\n').bold = True
+    schedule_monitor.add_run('• 정상 스케줄: CD101 (06:00 예정 → 06:02 성공, 소요 2분)\n')
+    schedule_monitor.add_run('• 지연 스케줄: CD102 (07:00 예정 → 07:15 성공, 소요 15분)\n')
+    schedule_monitor.add_run('• 실패 스케줄: CD103 (08:00 예정 → 실패, 네트워크 오류)\n\n')
+
+    # 2.10 카드 요약 모니터링
+    doc.add_paragraph('2.10 카드 요약 모니터링', style='OpH2')
+    card_monitor = doc.add_paragraph()
+    card_monitor.add_run('오늘의 데이터 수집 현황을 그룹별로 요약하여 카드 형태로 표시하는 메뉴입니다. 각 카드는 Job ID의 첫 3자리로 그룹화되어 표시되며, 실시간으로 오늘의 수집 상태를 집계하여 보여줍니다.\n\n')
+
+    card_monitor.add_run('2.10.1 화면 구성 요소 상세 설명\n').bold = True
+    card_monitor.add_run('1. 표시 옵션 컨트롤:\n').bold = True
+    card_monitor.add_run('• 명칭: Job의 한글명만 표시 (예: "기상청 예보 데이터")\n')
+    card_monitor.add_run('• 코드: Job ID만 표시 (예: "CD101")\n')
+    card_monitor.add_run('• 명칭+코드: 둘 다 표시 (예: "CD101 (기상청 예보 데이터)")\n\n')
+
+    card_monitor.add_run('2. 그룹별 카드 배치:\n').bold = True
+    card_monitor.add_run('• CD100 그룹: CD101-CD199 범위의 Job들 (기상청, 기상정보 등)\n')
+    card_monitor.add_run('• CD200 그룹: CD201-CD299 범위의 Job들 (외부 API, 타 시스템 등)\n')
+    card_monitor.add_run('• CD300 그룹: CD301-CD399 범위의 Job들 (추가 확장 그룹)\n')
+    card_monitor.add_run('• 기타 그룹: 분류되지 않은 Job들\n\n')
+
+    card_monitor.add_run('3. 각 카드의 상태 표시 및 의미:\n').bold = True
+    card_monitor.add_run('각 카드는 오늘의 수집 스케줄과 실행 결과를 실시간으로 집계하여 5가지 상태별 카운트를 표시합니다:\n\n')
+
+    card_monitor.add_run('• 성공 (Success): status = \'성공\'인 오늘의 Job 수\n').bold = True
+    card_monitor.add_run('  - 의미: 예정된 시간에 정상적으로 데이터 수집이 완료된 작업 수\n')
+    card_monitor.add_run('  - 계산: 오늘 스케줄 중 status 필드가 \'성공\'으로 기록된 Job의 개수\n')
+    card_monitor.add_run('  - 표시 색상: 녹색 배경\n')
+    card_monitor.add_run('  - 세부 정보: 성공한 Job ID 목록과 실행 시간 (예: "CD101(06시)")\n\n')
+
+    card_monitor.add_run('• 수집중 (Progress): status = \'수집중\'인 현재 실행 중인 Job 수\n').bold = True
+    card_monitor.add_run('  - 의미: 현재 데이터 수집 작업이 진행 중인 상태\n')
+    card_monitor.add_run('  - 계산: 오늘 스케줄 중 status 필드가 \'수집중\'인 Job의 개수\n')
+    card_monitor.add_run('  - 표시 색상: 파랑 배경\n')
+    card_monitor.add_run('  - 세부 정보: 진행 중인 Job ID 목록과 시작 시간\n\n')
+
+    card_monitor.add_run('• 실패 (Fail): status = \'실패\'인 오류 발생 Job 수\n').bold = True
+    card_monitor.add_run('  - 의미: 데이터 수집 중 오류가 발생하여 실패한 작업 수\n')
+    card_monitor.add_run('  - 계산: 오늘 스케줄 중 status 필드가 \'실패\'인 Job의 개수\n')
+    card_monitor.add_run('  - 표시 색상: 빨강 배경\n')
+    card_monitor.add_run('  - 세부 정보: 실패한 Job ID 목록과 실패 원인 (가능한 경우)\n\n')
+
+    card_monitor.add_run('• 미수집 (Uncollected): status = \'미수집\'인 누락된 Job 수\n').bold = True
+    card_monitor.add_run('  - 의미: 예정된 수집 시간이 지났으나 아직 실행되지 않은 작업 수\n')
+    card_monitor.add_run('  - 계산: 오늘 스케줄 중 예정 시간 경과 + status가 \'미수집\'인 Job의 개수\n')
+    card_monitor.add_run('  - 표시 색상: 노랑 배경\n')
+    card_monitor.add_run('  - 세부 정보: 미수집된 Job ID 목록과 예정 시간\n\n')
+
+    card_monitor.add_run('• 예정 (Scheduled): status = \'예정\'인 앞으로 실행할 Job 수\n').bold = True
+    card_monitor.add_run('  - 의미: 오늘 예정된 수집 시간에 아직 도달하지 않은 작업 수\n')
+    card_monitor.add_run('  - 계산: 오늘 스케줄 중 예정 시간 미도달 + status가 \'예정\'인 Job의 개수\n')
+    card_monitor.add_run('  - 표시 색상: 회색 배경\n')
+    card_monitor.add_run('  - 세부 정보: 예정된 Job ID 목록과 실행 예정 시간\n\n')
+
+    card_monitor.add_run('4. 카드 헤더 정보:\n').bold = True
+    card_monitor.add_run('• 그룹명: CD100, CD200 등의 그룹 식별자\n')
+    card_monitor.add_run('• 총 건수: 해당 그룹의 전체 Job 수 (성공 + 수집중 + 실패 + 미수집 + 예정)\n\n')
+
+    card_monitor.add_run('2.10.2 데이터 구조 및 의미\n').bold = True
+    card_monitor.add_run('• 그룹 분류: Job ID의 첫 3자리로 자동 그룹화 (CD100, CD200 등)\n')
+    card_monitor.add_run('• 실시간 집계: 오늘의 모든 Job 실행 상태를 실시간으로 집계\n')
+    card_monitor.add_run('• 권한 필터링: 사용자 권한에 따른 데이터 접근 제한 (mngr_sett 권한 제외)\n')
+    card_monitor.add_run('• 시간 기준: Asia/Seoul 타임존 기준 오늘 00:00 ~ 현재 시간까지\n')
+    card_monitor.add_run('• 데이터 소스: collection_schedule_service.get_schedule_and_history() 결과\n\n')
+
+    card_monitor.add_run('2.10.3 사용자 인터랙션\n').bold = True
+    card_monitor.add_run('1. 표시 옵션 선택: 라디오 버튼으로 Job 표시 방식 변경\n')
+    card_monitor.add_run('2. 그룹별 현황 파악: 각 카드의 숫자와 색상으로 상태 파악\n')
+    card_monitor.add_run('3. 세부 정보 확인: 각 상태별 Job ID 목록과 시간 정보 확인\n')
+    card_monitor.add_run('4. 엑셀 양식 다운로드: 수집 요청서 양식 다운로드 버튼 사용\n')
+    card_monitor.add_run('5. 실시간 업데이트: 페이지 방문 시 자동 새로고침\n\n')
+
+    card_monitor.add_run('2.10.4 실제 데이터 예시\n').bold = True
+    card_monitor.add_run('• CD100 그룹 카드:\n')
+    card_monitor.add_run('  - 총 11건 (성공 8건, 실패 1건, 예정 2건)\n')
+    card_monitor.add_run('  - 성공 Job: CD101(06시), CD102(07시), CD103(08시), CD104(09시)\n')
+    card_monitor.add_run('  - 실패 Job: CD105(10시) - 네트워크 타임아웃\n')
+    card_monitor.add_run('  - 예정 Job: CD106(14시), CD107(16시)\n\n')
+
+    card_monitor.add_run('• CD200 그룹 카드:\n')
+    card_monitor.add_run('  - 총 14건 (성공 12건, 수집중 1건, 미수집 1건)\n')
+    card_monitor.add_run('  - 수집중 Job: CD201(현재 11시 시작)\n')
+    card_monitor.add_run('  - 미수집 Job: CD202(10시 예정, 아직 실행 안됨)\n\n')
+
+    card_monitor.add_run('2.10.5 상태별 색상 코드 및 조건\n').bold = True
+    card_monitor.add_run('• 녹색 (●): 성공 - status == \'성공\'\n')
+    card_monitor.add_run('• 파랑 (●): 수집중 - status == \'수집중\'\n')
+    card_monitor.add_run('• 빨강 (●): 실패 - status == \'실패\'\n')
+    card_monitor.add_run('• 노랑 (●): 미수집 - status == \'미수집\'\n')
+    card_monitor.add_run('• 회색 (●): 예정 - status == \'예정\'\n\n')
+
+    card_monitor.add_run('2.10.6 데이터 계산 방식\n').bold = True
+    card_monitor.add_run('• 상태 판별: collection_schedule 테이블의 status 필드 값 기반\n')
+    card_monitor.add_run('• 시간 비교: 현재 시간 vs 예정 실행 시간\n')
+    card_monitor.add_run('• 그룹 집계: Job ID 패턴 (CD1xx → CD100)으로 그룹화\n')
+    card_monitor.add_run('• 실시간성: 매 페이지 로드 시 최신 데이터 조회\n\n')
 
     # 3. 백업 및 복원
     doc.add_paragraph('3. 백업 및 복원', style='OpH1')
@@ -1315,8 +2091,225 @@ def create_operation_manual():
     log_rotate.add_run('6.5.2 수동 로테이션 실행\n').bold = True
     log_rotate.add_run('logrotate -f /etc/logrotate.d/msys\n\n').font.name = 'Courier New'
 
-    doc.save('MSYS_Operation_Manual_v2.docx')
-    print('운영 매뉴얼 생성 완료: MSYS_Operation_Manual_v2.docx')
+    # 8. 운영 시나리오
+    doc.add_paragraph('8. 운영 시나리오', style='OpH1')
+
+    # 8.1 정상 운영 시나리오
+    doc.add_paragraph('8.1 정상 운영 시나리오', style='OpH2')
+    normal_scenario = doc.add_paragraph()
+    normal_scenario.add_run('8.1.1 일일 모니터링 루틴\n').bold = True
+    normal_scenario.add_run('운영자가 매일 수행하는 기본 모니터링 절차입니다.\n\n')
+
+    normal_scenario.add_run('단계별 절차:\n').bold = True
+    normal_scenario.add_run('1. 시스템 로그인 및 대시보드 확인\n').bold = True
+    normal_scenario.add_run('   - 웹 브라우저에서 MSYS 시스템 접속\n')
+    normal_scenario.add_run('   - 사용자 ID/비밀번호로 로그인\n')
+    normal_scenario.add_run('   - 대시보드 페이지로 이동\n\n')
+
+    normal_scenario.add_run('2. 대시보드 현황 파악\n').bold = True
+    normal_scenario.add_run('   - 전체 Job ID 개수 및 총 수집 건수 확인\n')
+    normal_scenario.add_run('   - 평균 성공률이 80% 이상인지 확인\n')
+    normal_scenario.add_run('   - 빨강/노랑 표시된 위험/경고 Job 확인\n')
+    normal_scenario.add_run('   - 연속 실패 횟수가 3회 이상인 Job 식별\n\n')
+
+    normal_scenario.add_run('3. 상세 모니터링 메뉴 점검\n').bold = True
+    normal_scenario.add_run('   - 데이터 분석 메뉴에서 최근 7일간 추이 확인\n')
+    normal_scenario.add_run('   - 차트 분석 메뉴에서 성공률 그래프 패턴 분석\n')
+    normal_scenario.add_run('   - 수집 일정 메뉴에서 오늘 예정된 작업 상태 확인\n\n')
+
+    normal_scenario.add_run('4. 시스템 리소스 점검\n').bold = True
+    normal_scenario.add_run('   - CPU 사용률 80% 미만 유지 확인\n')
+    normal_scenario.add_run('   - 메모리 사용률 85% 미만 유지 확인\n')
+    normal_scenario.add_run('   - 디스크 여유 공간 20% 이상 유지 확인\n\n')
+
+    normal_scenario.add_run('5. 로그 및 이벤트 확인\n').bold = True
+    normal_scenario.add_run('   - 최근 1시간 이내 ERROR 레벨 로그 존재 여부 확인\n')
+    normal_scenario.add_run('   - WARNING 레벨 로그의 주요 내용 파악\n')
+    normal_scenario.add_run('   - 시스템 이벤트 로그에서 비정상 패턴 식별\n\n')
+
+    normal_scenario.add_run('6. 일일 보고서 작성\n').bold = True
+    normal_scenario.add_run('   - 이상 징후 발견 시 관련 팀에 보고\n')
+    normal_scenario.add_run('   - 정상 운영 확인 시 일일 운영 로그 기록\n\n')
+
+    # 8.2 장애 발생 및 대응 시나리오
+    doc.add_paragraph('8.2 장애 발생 및 대응 시나리오', style='OpH2')
+
+    # 8.2.1 데이터 수집 실패 장애
+    doc.add_paragraph('8.2.1 데이터 수집 실패 장애', style='OpH3')
+    data_failure = doc.add_paragraph()
+    data_failure.add_run('증상: 대시보드에서 특정 Job의 성공률 급락 또는 연속 실패 발생\n\n')
+
+    data_failure.add_run('대응 절차:\n').bold = True
+    data_failure.add_run('1. 장애 범위 파악\n').bold = True
+    data_failure.add_run('   - 실패한 Job ID 및 시간대 확인\n')
+    data_failure.add_run('   - 다른 Job에도 영향이 있는지 확인\n')
+    data_failure.add_run('   - 데이터 분석 메뉴에서 실패 패턴 분석\n\n')
+
+    data_failure.add_run('2. 로그 분석\n').bold = True
+    data_failure.add_run('   - 애플리케이션 로그에서 ERROR 메시지 확인\n')
+    data_failure.add_run('   - 데이터베이스 연결 상태 점검\n')
+    data_failure.add_run('   - 외부 API 응답 상태 확인\n\n')
+
+    data_failure.add_run('3. 임시 조치\n').bold = True
+    data_failure.add_run('   - 해당 Job 일시 중지 (관리자 설정에서 비활성화)\n')
+    data_failure.add_run('   - 수동 데이터 수집 시도\n')
+    data_failure.add_run('   - 백업 데이터 활용 검토\n\n')
+
+    data_failure.add_run('4. 근본 원인 분석 및 해결\n').bold = True
+    data_failure.add_run('   - 네트워크 연결 문제 해결\n')
+    data_failure.add_run('   - API 키 또는 인증 정보 갱신\n')
+    data_failure.add_run('   - 데이터 소스 변경 사항 대응\n\n')
+
+    data_failure.add_run('5. 복구 및 재개\n').bold = True
+    data_failure.add_run('   - Job 재활성화\n')
+    data_failure.add_run('   - 누락 데이터 수동 수집\n')
+    data_failure.add_run('   - 모니터링 강화\n\n')
+
+    # 8.2.2 시스템 성능 저하 장애
+    doc.add_paragraph('8.2.2 시스템 성능 저하 장애', style='OpH3')
+    performance_issue = doc.add_paragraph()
+    performance_issue.add_run('증상: 웹 페이지 응답 지연, CPU/메모리 사용률 급증\n\n')
+
+    performance_issue.add_run('대응 절차:\n').bold = True
+    performance_issue.add_run('1. 성능 모니터링\n').bold = True
+    performance_issue.add_run('   - top/htop 명령으로 프로세스별 리소스 사용량 확인\n')
+    performance_issue.add_run('   - CPU 모니터링 로그에서 급격한 증가 패턴 분석\n')
+    performance_issue.add_run('   - 메모리 누수 여부 확인\n\n')
+
+    performance_issue.add_run('2. 프로세스 분석\n').bold = True
+    performance_issue.add_run('   - 고CPU 사용 프로세스 식별\n')
+    performance_issue.add_run('   - 비정상 프로세스 강제 종료 검토\n')
+    performance_issue.add_run('   - Python 애플리케이션 스레드 덤프 분석\n\n')
+
+    performance_issue.add_run('3. 임시 조치\n').bold = True
+    performance_issue.add_run('   - 불필요한 서비스 일시 중지\n')
+    performance_issue.add_run('   - 캐시 클리어 및 재시작\n')
+    performance_issue.add_run('   - 로드 밸런서에서 해당 서버 제외\n\n')
+
+    performance_issue.add_run('4. 근본 해결\n').bold = True
+    performance_issue.add_run('   - 애플리케이션 메모리 누수 수정\n')
+    performance_issue.add_run('   - 데이터베이스 쿼리 최적화\n')
+    performance_issue.add_run('   - 서버 리소스 증설 검토\n\n')
+
+    # 8.2.3 데이터베이스 장애
+    doc.add_paragraph('8.2.3 데이터베이스 장애', style='OpH3')
+    db_failure = doc.add_paragraph()
+    db_failure.add_run('증상: 데이터베이스 연결 실패, 쿼리 타임아웃\n\n')
+
+    db_failure.add_run('대응 절차:\n').bold = True
+    db_failure.add_run('1. 연결 상태 확인\n').bold = True
+    db_failure.add_run('   - PostgreSQL 서비스 상태 확인: systemctl status postgresql\n')
+    db_failure.add_run('   - 데이터베이스 접속 시도: psql -h host -U user dbname\n')
+    db_failure.add_run('   - 네트워크 연결 확인\n\n')
+
+    db_failure.add_run('2. 로그 분석\n').bold = True
+    db_failure.add_run('   - PostgreSQL 로그 파일 확인\n')
+    db_failure.add_run('   - 디스크 공간 부족 여부 확인\n')
+    db_failure.add_run('   - 연결 풀 고갈 여부 분석\n\n')
+
+    db_failure.add_run('3. 복구 조치\n').bold = True
+    db_failure.add_run('   - PostgreSQL 서비스 재시작\n')
+    db_failure.add_run('   - 긴급 백업으로부터 복원 검토\n')
+    db_failure.add_run('   - 읽기 전용 모드로 전환\n\n')
+
+    # 8.3 시스템 점검 시나리오
+    doc.add_paragraph('8.3 시스템 점검 시나리오', style='OpH2')
+    maintenance_scenario = doc.add_paragraph()
+    maintenance_scenario.add_run('8.3.1 주간 점검 절차\n').bold = True
+    maintenance_scenario.add_run('매주 수행하는 시스템 정기 점검 절차입니다.\n\n')
+
+    maintenance_scenario.add_run('점검 항목:\n').bold = True
+    maintenance_scenario.add_run('1. 백업 상태 확인\n').bold = True
+    maintenance_scenario.add_run('   - 자동 백업 스크립트 실행 상태 확인\n')
+    maintenance_scenario.add_run('   - 백업 파일 무결성 검증\n')
+    maintenance_scenario.add_run('   - 백업 저장 공간 충분성 확인\n\n')
+
+    maintenance_scenario.add_run('2. 로그 파일 정리\n').bold = True
+    maintenance_scenario.add_run('   - 오래된 로그 파일 압축 및 아카이브\n')
+    maintenance_scenario.add_run('   - 로그 로테이션 설정 확인\n')
+    maintenance_scenario.add_run('   - 비정상 로그 패턴 분석\n\n')
+
+    maintenance_scenario.add_run('3. 데이터베이스 유지보수\n').bold = True
+    maintenance_scenario.add_run('   - 테이블 및 인덱스 상태 확인\n')
+    maintenance_scenario.add_run('   - VACUUM 및 ANALYZE 실행\n')
+    maintenance_scenario.add_run('   - 불필요한 데이터 정리\n\n')
+
+    maintenance_scenario.add_run('4. 보안 점검\n').bold = True
+    maintenance_scenario.add_run('   - 사용자 계정 상태 확인\n')
+    maintenance_scenario.add_run('   - 비밀번호 정책 준수 여부 검토\n')
+    maintenance_scenario.add_run('   - 접근 로그에서 이상 징후 분석\n\n')
+
+    # 8.4 데이터 복구 시나리오
+    doc.add_paragraph('8.4 데이터 복구 시나리오', style='OpH2')
+    recovery_scenario = doc.add_paragraph()
+    recovery_scenario.add_run('8.4.1 데이터 유실 복구 절차\n').bold = True
+    recovery_scenario.add_run('데이터 유실 발생 시 복구를 위한 절차입니다.\n\n')
+
+    recovery_scenario.add_run('복구 단계:\n').bold = True
+    recovery_scenario.add_run('1. 유실 범위 파악\n').bold = True
+    recovery_scenario.add_run('   - 어떤 데이터가 유실되었는지 확인\n')
+    recovery_scenario.add_run('   - 유실 기간 및 범위 식별\n')
+    recovery_scenario.add_run('   - 영향받는 Job 및 사용자 파악\n\n')
+
+    recovery_scenario.add_run('2. 백업 데이터 확인\n').bold = True
+    recovery_scenario.add_run('   - 가장 최근 백업 파일 식별\n')
+    recovery_scenario.add_run('   - 백업 데이터 무결성 검증\n')
+    recovery_scenario.add_run('   - 복구에 필요한 데이터 범위 확인\n\n')
+
+    recovery_scenario.add_run('3. 복구 실행\n').bold = True
+    recovery_scenario.add_run('   - 테스트 환경에서 복구 시뮬레이션\n')
+    recovery_scenario.add_run('   - 운영 환경으로 복구 적용\n')
+    recovery_scenario.add_run('   - 데이터 일관성 검증\n\n')
+
+    recovery_scenario.add_run('4. 검증 및 보고\n').bold = True
+    recovery_scenario.add_run('   - 복구된 데이터 정확성 확인\n')
+    recovery_scenario.add_run('   - 관련 시스템 정상 작동 확인\n')
+    recovery_scenario.add_run('   - 복구 결과 보고서 작성\n\n')
+
+    # 8.5 사용자 관리 시나리오
+    doc.add_paragraph('8.5 사용자 관리 시나리오', style='OpH2')
+    user_scenario = doc.add_paragraph()
+    user_scenario.add_run('8.5.1 신규 사용자 등록 및 권한 부여\n').bold = True
+    user_scenario.add_run('새로운 사용자가 시스템을 사용할 수 있도록 등록하고 권한을 부여하는 절차입니다.\n\n')
+
+    user_scenario.add_run('등록 절차:\n').bold = True
+    user_scenario.add_run('1. 사용자 회원가입\n').bold = True
+    user_scenario.add_run('   - 사용자가 시스템에 접속하여 회원가입 진행\n')
+    user_scenario.add_run('   - ID, 비밀번호 입력 및 정책 준수 확인\n')
+    user_scenario.add_run('   - 가입 신청 완료 (PENDING 상태로 저장)\n\n')
+
+    user_scenario.add_run('2. 관리자 승인\n').bold = True
+    user_scenario.add_run('   - 관리자가 사용자 관리 메뉴 접근\n')
+    user_scenario.add_run('   - PENDING 상태 사용자 목록 확인\n')
+    user_scenario.add_run('   - 사용자 정보 및 가입 목적 검토\n')
+    user_scenario.add_run('   - 승인 버튼 클릭 (APPROVED 상태로 변경)\n\n')
+
+    user_scenario.add_run('3. 초기 비밀번호 설정\n').bold = True
+    user_scenario.add_run('   - 시스템이 사용자 ID와 동일한 초기 비밀번호 설정\n')
+    user_scenario.add_run('   - 사용자에게 초기 비밀번호 안내\n')
+    user_scenario.add_run('   - 보안 정책 위반으로 인한 강제 변경 유도\n\n')
+
+    user_scenario.add_run('4. 메뉴 권한 설정\n').bold = True
+    user_scenario.add_run('   - 기본 권한 자동 부여 (dashboard, collection_schedule)\n')
+    user_scenario.add_run('   - 업무에 필요한 추가 권한 수동 설정\n')
+    user_scenario.add_run('   - 권한별 메뉴 접근 제어 적용\n\n')
+
+    user_scenario.add_run('5. 데이터 접근 권한 설정\n').bold = True
+    user_scenario.add_run('   - Job ID별 데이터 접근 권한 부여\n')
+    user_scenario.add_run('   - 민감한 데이터에 대한 접근 제한\n')
+    user_scenario.add_run('   - 권한 변경 이력 기록\n\n')
+
+    user_scenario.add_run('6. 사용자 교육 및 안내\n').bold = True
+    user_scenario.add_run('   - 시스템 사용 방법 안내\n')
+    user_scenario.add_run('   - 담당자 연락처 제공\n')
+    user_scenario.add_run('   - 추가 지원 요청 방법 설명\n\n')
+
+    try:
+        doc.save('MSYS_Operation_Manual_v4.docx')
+        print('운영 매뉴얼 생성 완료: MSYS_Operation_Manual_v4.docx')
+    except PermissionError:
+        doc.save('MSYS_Operation_Manual_v5.docx')
+        print('운영 매뉴얼 생성 완료: MSYS_Operation_Manual_v5.docx')
 
 def create_database_manual():
     """DB 관리자용 데이터베이스 매뉴얼 생성"""
@@ -2059,10 +3052,1619 @@ def create_cpu_monitor_manual():
     doc.save('MSYS_CPU_Monitor_Manual.docx')
     print('CPU 모니터링 앱 설명서 생성 완료: MSYS_CPU_Monitor_Manual.docx')
 
+def create_data_flow_debug_guide():
+    """데이터 호출 흐름 디버깅 가이드 생성"""
+    doc = Document()
+
+    # 스타일 설정
+    title_style = doc.styles.add_style('DebugTitle', WD_STYLE_TYPE.PARAGRAPH)
+    title_style.font.size = Pt(28)
+    title_style.font.color.rgb = RGBColor(0, 0, 0)
+    title_style.paragraph_format.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+
+    heading1_style = doc.styles.add_style('DebugH1', WD_STYLE_TYPE.PARAGRAPH)
+    heading1_style.font.size = Pt(18)
+    heading1_style.font.bold = True
+
+    heading2_style = doc.styles.add_style('DebugH2', WD_STYLE_TYPE.PARAGRAPH)
+    heading2_style.font.size = Pt(14)
+    heading2_style.font.bold = True
+
+    heading3_style = doc.styles.add_style('DebugH3', WD_STYLE_TYPE.PARAGRAPH)
+    heading3_style.font.size = Pt(12)
+    heading3_style.font.bold = True
+
+    code_style = doc.styles.add_style('DebugCode', WD_STYLE_TYPE.PARAGRAPH)
+    code_style.font.name = 'Courier New'
+    code_style.font.size = Pt(10)
+
+    # 표지
+    title = doc.add_paragraph('MSYS 데이터 호출 흐름 디버깅 가이드', style='DebugTitle')
+    subtitle = doc.add_paragraph('HTML 중심 데이터 호출 추적 및 문제 해결 가이드', style='DebugTitle')
+    version = doc.add_paragraph('버전 1.0', style='DebugTitle')
+    version.paragraph_format.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+
+    doc.add_page_break()
+
+    # 목차
+    toc_title = doc.add_paragraph('목차', style='DebugH1')
+    toc = doc.add_paragraph()
+    toc.add_run('1. 개요 ........................ 3\n')
+    toc.add_run('2. 메뉴 페이지별 카드 컴포넌트 데이터 호출 가이드 ................ 4\n')
+    toc.add_run('   2.1 대시보드 페이지 .................. 4\n')
+    toc.add_run('   2.2 데이터 분석 페이지 ................ 15\n')
+    toc.add_run('   2.3 차트 분석 페이지 .................. 25\n')
+    toc.add_run('   2.4 카드 요약 페이지 .................. 35\n')
+    toc.add_run('   2.5 관리자 설정 페이지 ................ 45\n')
+    toc.add_run('3. 인증 시스템 ................ 65\n')
+    toc.add_run('   3.1 회원가입 프로세스 .................. 65\n')
+    toc.add_run('   3.2 로그인 프로세스 .................. 75\n')
+    toc.add_run('   3.3 비밀번호 변경 프로세스 ................ 85\n')
+    toc.add_run('   3.4 권한 인증 및 검증 프로세스 ................ 95\n')
+    toc.add_run('4. 디버깅 가이드 ................ 105\n')
+    toc.add_run('부록 A. 데이터 흐름 요약 ................ 110\n')
+
+    doc.add_page_break()
+
+    # 1. 개요
+    doc.add_paragraph('1. 개요', style='DebugH1')
+    overview = doc.add_paragraph()
+    overview.add_run('1.1 목적\n').bold = True
+    overview.add_run('이 가이드는 각 메뉴 페이지의 카드(컴포넌트)를 기준으로 데이터 호출 과정을 TB→DAO→Service→Route→HTML 역순으로 추적하여 설명합니다. 각 단계별 권한 검증, 에러 처리, 예상 결과 등을 포함하여 문제가 발생했을 때 신속한 디버깅을 지원합니다.\n\n')
+
+    overview.add_run('1.2 대상 독자\n').bold = True
+    overview.add_run('• 개발자: 데이터 호출 흐름 이해 및 디버깅\n')
+    overview.add_run('• 운영자: 시스템 문제 해결 및 모니터링\n')
+    overview.add_run('• 테스터: 데이터 흐름 검증 및 테스트 케이스 작성\n\n')
+
+    overview.add_run('1.3 사용 방법\n').bold = True
+    overview.add_run('1. 문제가 발생한 메뉴 페이지와 카드 컴포넌트 확인\n')
+    overview.add_run('2. 해당 섹션에서 HTML → JavaScript → Route → Service → DAO → DB 순으로 추적\n')
+    overview.add_run('3. 각 단계별 권한 검증과 에러 처리 확인\n')
+    overview.add_run('4. 문제 지점 식별 및 해결\n\n')
+
+    # 2. 메뉴 페이지별 카드 컴포넌트 데이터 호출 가이드
+    doc.add_paragraph('2. 메뉴 페이지별 카드 컴포넌트 데이터 호출 가이드', style='DebugH1')
+
+    # 2.1 대시보드 페이지
+    doc.add_paragraph('2.1 대시보드 페이지', style='DebugH2')
+
+    # 요약 카드 컴포넌트
+    doc.add_paragraph('2.1.1 요약 카드 컴포넌트 (dashboard_data)', style='DebugH3')
+    dashboard_desc = doc.add_paragraph()
+    dashboard_desc.add_run('HTML 템플릿 요구사항:\n').bold = True
+    dashboard_desc.add_run('templates/dashboard.html에서 dashboard_data 리스트의 각 항목에 cd_nm(Job 이름), success_rate(성공률) 등이 필요\n\n')
+
+    dashboard_desc.add_run('JavaScript API 호출:\n').bold = True
+    dashboard_desc.add_run('loadDashboardData() 함수가 /api/dashboard/summary API 호출\n\n')
+
+    dashboard_desc.add_run('권한 검증:\n').bold = True
+    dashboard_desc.add_run('• 로그인 상태 확인\n')
+    dashboard_desc.add_run('• dashboard 메뉴 권한 체크\n')
+    dashboard_desc.add_run('• Job ID별 데이터 접근 권한 필터링\n\n')
+
+    dashboard_desc.add_run('Route/Service/DAO/DB 처리:\n').bold = True
+    dashboard_desc.add_run('dashboard_api.summary() → dashboard_service.get_summary() → dashboard_mapper.get_summary() → tb_con_hist + tb_mngr_sett\n\n')
+
+    # 상세 테이블 카드 컴포넌트
+    doc.add_paragraph('2.1.2 상세 테이블 카드 컴포넌트 (dashboard_table_data)', style='DebugH3')
+    table_desc = doc.add_paragraph()
+    table_desc.add_run('동일한 dashboard_data를 테이블 형식으로 표시하는 컴포넌트\n\n')
+
+    # 2.2 데이터 분석 페이지
+    doc.add_paragraph('2.2 데이터 분석 페이지', style='DebugH2')
+
+    # 요약 통계 카드
+    doc.add_paragraph('2.2.1 요약 통계 카드 컴포넌트 (summary_data)', style='DebugH3')
+    analysis_desc = doc.add_paragraph()
+    analysis_desc.add_run('HTML 템플릿 요구사항:\n').bold = True
+    analysis_desc.add_run('total_count(총 건수), avg_success_rate(평균 성공률) 객체 필요\n\n')
+
+    analysis_desc.add_run('JavaScript API 호출:\n').bold = True
+    analysis_desc.add_run('fetchSummaryData() → /api/analysis/summary\n\n')
+
+    analysis_desc.add_run('데이터 흐름:\n').bold = True
+    analysis_desc.add_run('analysis_api.get_summary() → analysis_service.get_summary_data() → analysis_mapper.get_summary_stats() → tb_con_hist\n\n')
+
+    # 추이 차트 카드
+    doc.add_paragraph('2.2.2 추이 차트 카드 컴포넌트 (trend_data)', style='DebugH3')
+    trend_desc = doc.add_paragraph()
+    trend_desc.add_run('시간에 따른 데이터 변화를 차트로 표시하는 컴포넌트\n\n')
+
+    # 원천 데이터 테이블 카드
+    doc.add_paragraph('2.2.3 원천 데이터 테이블 카드 컴포넌트 (raw_data)', style='DebugH3')
+    raw_desc = doc.add_paragraph()
+    raw_desc.add_run('실제 수집 데이터를 테이블로 표시하는 컴포넌트\n\n')
+
+    # 2.3 차트 분석 페이지
+    doc.add_paragraph('2.3 차트 분석 페이지', style='DebugH2')
+
+    # 성공률 추이 차트
+    doc.add_paragraph('2.3.1 성공률 추이 차트 카드 (chart_trend_data)', style='DebugH3')
+    chart_trend_desc = doc.add_paragraph()
+    chart_trend_desc.add_run('시간에 따른 Job별 성공률 추이를 라인 차트로 표시\n\n')
+
+    # 장애 코드 현황 차트
+    doc.add_paragraph('2.3.2 장애 코드 현황 차트 카드 (error_stats_data)', style='DebugH3')
+    error_desc = doc.add_paragraph()
+    error_desc.add_run('장애 코드별 발생 빈도를 파이 차트로 표시\n\n')
+
+    # 2.4 카드 요약 페이지
+    doc.add_paragraph('2.4 카드 요약 페이지', style='DebugH2')
+
+    # 그룹별 요약 카드
+    doc.add_paragraph('2.4.1 그룹별 요약 카드 컴포넌트 (card_summary_data)', style='DebugH3')
+    card_desc = doc.add_paragraph()
+    card_desc.add_run('Job ID별 그룹화된 요약 정보를 카드 형태로 표시\n\n')
+
+    # 2.5 관리자 설정 페이지
+    doc.add_paragraph('2.5 관리자 설정 페이지', style='DebugH2')
+
+    # 각 탭별 카드 컴포넌트들
+    tabs = [
+        ('2.5.1 기본 설정 탭 카드 (admin_basic_data)', '임계값 및 기본 설정 관리'),
+        ('2.5.2 수집 스케줄 설정 탭 카드 (admin_schedule_data)', '데이터 수집 스케줄 설정'),
+        ('2.5.3 아이콘 관리 탭 카드 (admin_icon_data)', '시스템 아이콘 관리'),
+        ('2.5.4 차트/시각화 설정 탭 카드 (admin_chart_data)', '차트 색상 및 시각화 설정'),
+        ('2.5.5 사용자 관리 탭 카드 (admin_user_data)', '사용자 계정 및 권한 관리'),
+        ('2.5.6 데이터 접근 권한 탭 카드 (admin_permission_data)', 'Job별 데이터 접근 권한 설정'),
+        ('2.5.7 통계 탭 카드 (admin_stats_data)', '시스템 사용 통계 조회')
+    ]
+
+    for tab_title, tab_desc in tabs:
+        doc.add_paragraph(tab_title, style='DebugH3')
+        tab_para = doc.add_paragraph()
+        tab_para.add_run(f'{tab_desc}\n\n')
+
+    # 3. 인증 시스템
+    doc.add_paragraph('3. 인증 시스템', style='DebugH1')
+
+    # 3.1 회원가입 프로세스
+    doc.add_paragraph('3.1 회원가입 프로세스', style='DebugH2')
+    register_desc = doc.add_paragraph()
+    register_desc.add_run('HTML 템플릿 요구사항:\n').bold = True
+    register_desc.add_run('사용자 ID, 비밀번호, 비밀번호 확인 입력 폼\n\n')
+
+    register_desc.add_run('JavaScript API 호출:\n').bold = True
+    register_desc.add_run('fetch(\'/api/auth/register\', POST) - 사용자 등록 요청\n\n')
+
+    register_desc.add_run('데이터 흐름:\n').bold = True
+    register_desc.add_run('auth_routes.register() → user_service.create_user() → user_dao.create_user() → tb_user\n\n')
+
+    register_desc.add_run('권한 검증:\n').bold = True
+    register_desc.add_run('• 비밀번호 정책 검증\n')
+    register_desc.add_run('• 사용자 ID 중복 체크\n')
+    register_desc.add_run('• PENDING 상태로 저장\n\n')
+
+    # 3.2 로그인 프로세스
+    doc.add_paragraph('3.2 로그인 프로세스', style='DebugH2')
+    login_desc = doc.add_paragraph()
+    login_desc.add_run('HTML 템플릿 요구사항:\n').bold = True
+    login_desc.add_run('사용자 ID, 비밀번호 입력 폼\n\n')
+
+    login_desc.add_run('JavaScript API 호출:\n').bold = True
+    login_desc.add_run('fetch(\'/api/auth/login\', POST) - 인증 요청\n\n')
+
+    login_desc.add_run('데이터 흐름:\n').bold = True
+    login_desc.add_run('auth_routes.login() → user_service.authenticate_user() → user_dao.get_user_by_id() → tb_user\n\n')
+
+    login_desc.add_run('권한 검증:\n').bold = True
+    login_desc.add_run('• 계정 상태 확인 (APPROVED/PENDING/REJECTED/SUSPENDED)\n')
+    login_desc.add_run('• 세션 생성 및 권한 정보 로드\n\n')
+
+    # 3.3 비밀번호 변경 프로세스
+    doc.add_paragraph('3.3 비밀번호 변경 프로세스', style='DebugH2')
+    pw_desc = doc.add_paragraph()
+    pw_desc.add_run('HTML 템플릿 요구사항:\n').bold = True
+    pw_desc.add_run('현재 비밀번호, 새 비밀번호, 확인 입력 폼\n\n')
+
+    pw_desc.add_run('JavaScript API 호출:\n').bold = True
+    pw_desc.add_run('fetch(\'/api/auth/change_password\', POST) - 비밀번호 변경 요청\n\n')
+
+    pw_desc.add_run('데이터 흐름:\n').bold = True
+    pw_desc.add_run('auth_routes.change_password() → user_service.update_user_password() → user_dao.update_user_password() → tb_user\n\n')
+
+    pw_desc.add_run('권한 검증:\n').bold = True
+    pw_desc.add_run('• 현재 비밀번호 검증\n')
+    pw_desc.add_run('• 새 비밀번호 정책 확인\n')
+    pw_desc.add_run('• 세션 갱신\n\n')
+
+    # 3.4 권한 인증 및 검증 프로세스
+    doc.add_paragraph('3.4 권한 인증 및 검증 프로세스', style='DebugH2')
+    auth_desc = doc.add_paragraph()
+    auth_desc.add_run('미들웨어 적용:\n').bold = True
+    auth_desc.add_run('@app.before_request - 모든 요청에 대한 권한 검증\n\n')
+
+    auth_desc.add_run('검증 단계:\n').bold = True
+    auth_desc.add_run('1. 로그인 상태 확인\n')
+    auth_desc.add_run('2. 계정 상태 검증 (APPROVED)\n')
+    auth_desc.add_run('3. 메뉴 권한 체크\n')
+    auth_desc.add_run('4. 데이터 접근 권한 필터링\n\n')
+
+    auth_desc.add_run('데이터 흐름:\n').bold = True
+    auth_desc.add_run('auth_middleware.check_permissions() → user_service.get_user_permissions() → user_dao.get_user_menu_permissions() → tb_user_auth_ctrl\n\n')
+
+    # 4. 디버깅 가이드
+    doc.add_paragraph('4. 디버깅 가이드', style='DebugH1')
+
+    # 4.1 데이터가 표시되지 않는 경우
+    doc.add_paragraph('4.1 데이터가 표시되지 않는 경우', style='DebugH2')
+    debug1 = doc.add_paragraph()
+    debug1.add_run('1. 브라우저 개발자 도구 Network 탭에서 API 호출 상태 확인\n')
+    debug1.add_run('2. 403/401 에러 시 권한 문제 검토\n')
+    debug1.add_run('3. 로그 파일에서 권한 관련 메시지 확인\n')
+    debug1.add_run('4. 해당 카드 컴포넌트의 HTML 템플릿 변수 검증\n\n')
+
+    # 4.2 권한 문제 해결
+    doc.add_paragraph('4.2 권한 문제 해결', style='DebugH2')
+    debug2 = doc.add_paragraph()
+    debug2.add_run('1. 사용자 관리 메뉴에서 권한 설정 확인\n')
+    debug2.add_run('2. 데이터 접근 권한 탭에서 Job ID 권한 확인\n')
+    debug2.add_run('3. 로그에서 "권한 없음" 메시지 확인\n')
+    debug2.add_run('4. 미들웨어 권한 체크 로직 검증\n\n')
+
+    # 4.3 데이터 이상 시
+    doc.add_paragraph('4.3 데이터 이상 시', style='DebugH2')
+    debug3 = doc.add_paragraph()
+    debug3.add_run('1. DAO 메소드의 SQL 쿼리 확인\n')
+    debug3.add_run('2. DB에서 직접 쿼리 실행하여 결과 확인\n')
+    debug3.add_run('3. Service 레벨의 데이터 가공 로직 검증\n')
+    debug3.add_run('4. Route 레벨의 파라미터 처리 확인\n\n')
+
+    # 부록 A. 데이터 흐름 요약
+    doc.add_paragraph('부록 A. 데이터 흐름 요약', style='DebugH1')
+    summary = doc.add_paragraph()
+    summary.add_run('A.1 일반적인 데이터 호출 패턴\n').bold = True
+    summary.add_run('HTML (템플릿 변수) → JavaScript (API 호출) → Route (권한 체크) → Service (비즈니스 로직) → DAO (SQL 실행) → DB (데이터 저장소)\n\n')
+
+    summary.add_run('A.2 권한 검증 포인트\n').bold = True
+    summary.add_run('• Route 레벨: 메뉴 접근 권한\n')
+    summary.add_run('• Service 레벨: 데이터 접근 권한 필터링\n')
+    summary.add_run('• 미들웨어: 세션 및 계정 상태 검증\n\n')
+
+    summary.add_run('A.3 에러 처리 패턴\n').bold = True
+    summary.add_run('• 401: 로그인 필요\n')
+    summary.add_run('• 403: 권한 부족\n')
+    summary.add_run('• 500: 서버 내부 오류\n')
+    summary.add_run('• 빈 배열: 데이터 접근 권한 없음\n\n')
+
+    try:
+        doc.save('MSYS_Data_Flow_Debug_Guide.docx')
+        print('데이터 호출 흐름 디버깅 가이드 생성 완료: MSYS_Data_Flow_Debug_Guide.docx')
+    except PermissionError:
+        doc.save('MSYS_Data_Flow_Debug_Guide_v2.docx')
+        print('데이터 호출 흐름 디버깅 가이드 생성 완료: MSYS_Data_Flow_Debug_Guide_v2.docx')
+
+def create_complete_function_manual():
+    """전체 MSYS 기능 매뉴얼 생성 - 각 페이지별 상세 기능 설명"""
+    doc = Document()
+
+    # 스타일 설정
+    title_style = doc.styles.add_style('CompleteTitle', WD_STYLE_TYPE.PARAGRAPH)
+    title_style.font.size = Pt(28)
+    title_style.font.color.rgb = RGBColor(0, 0, 0)
+    title_style.paragraph_format.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+
+    heading1_style = doc.styles.add_style('CompleteH1', WD_STYLE_TYPE.PARAGRAPH)
+    heading1_style.font.size = Pt(18)
+    heading1_style.font.bold = True
+
+    heading2_style = doc.styles.add_style('CompleteH2', WD_STYLE_TYPE.PARAGRAPH)
+    heading2_style.font.size = Pt(14)
+    heading2_style.font.bold = True
+
+    heading3_style = doc.styles.add_style('CompleteH3', WD_STYLE_TYPE.PARAGRAPH)
+    heading3_style.font.size = Pt(12)
+    heading3_style.font.bold = True
+
+    code_style = doc.styles.add_style('CompleteCode', WD_STYLE_TYPE.PARAGRAPH)
+    code_style.font.name = 'Courier New'
+    code_style.font.size = Pt(10)
+
+    # 표지
+    title = doc.add_paragraph('MSYS 전체 기능 매뉴얼', style='CompleteTitle')
+    subtitle = doc.add_paragraph('시스템 기능 및 사용자 가이드', style='CompleteTitle')
+    version = doc.add_paragraph('버전 1.14.2', style='CompleteTitle')
+    version.paragraph_format.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+
+    doc.add_page_break()
+
+    # 목차
+    toc_title = doc.add_paragraph('목차', style='CompleteH1')
+    toc = doc.add_paragraph()
+    toc.add_run('1. 시스템 개요 ........................ 3\n')
+    toc.add_run('2. 메뉴 구조 ........................ 5\n')
+    toc.add_run('3. 대시보드 ........................ 7\n')
+    toc.add_run('   3.1 개요 ...................... 7\n')
+    toc.add_run('   3.2 화면 구성 .................. 8\n')
+    toc.add_run('   3.3 주요 기능 .................. 12\n')
+    toc.add_run('   3.4 사용자 인터랙션 .............. 15\n')
+    toc.add_run('4. 데이터 분석 ...................... 18\n')
+    toc.add_run('   4.1 개요 ...................... 18\n')
+    toc.add_run('   4.2 화면 구성 .................. 19\n')
+    toc.add_run('   4.3 주요 기능 .................. 22\n')
+    toc.add_run('   4.4 사용자 인터랙션 .............. 25\n')
+    toc.add_run('5. 차트 분석 ...................... 28\n')
+    toc.add_run('   5.1 개요 ...................... 28\n')
+    toc.add_run('   5.2 화면 구성 .................. 29\n')
+    toc.add_run('   5.3 주요 기능 .................. 32\n')
+    toc.add_run('   5.4 사용자 인터랙션 .............. 35\n')
+    toc.add_run('6. 잔디 현황 ...................... 38\n')
+    toc.add_run('   6.1 개요 ...................... 38\n')
+    toc.add_run('   6.2 화면 구성 .................. 39\n')
+    toc.add_run('   6.3 주요 기능 .................. 42\n')
+    toc.add_run('   6.4 사용자 인터랙션 .............. 45\n')
+    toc.add_run('7. 매핑 관리 ...................... 48\n')
+    toc.add_run('   7.1 개요 ...................... 48\n')
+    toc.add_run('   7.2 화면 구성 .................. 49\n')
+    toc.add_run('   7.3 주요 기능 .................. 52\n')
+    toc.add_run('   7.4 사용자 인터랙션 .............. 55\n')
+    toc.add_run('8. 데이터 명세서 .................... 58\n')
+    toc.add_run('   8.1 개요 ...................... 58\n')
+    toc.add_run('   8.2 화면 구성 .................. 59\n')
+    toc.add_run('   8.3 주요 기능 .................. 62\n')
+    toc.add_run('   8.4 사용자 인터랙션 .............. 65\n')
+    toc.add_run('9. 관리자 설정 .................... 68\n')
+    toc.add_run('   9.1 개요 ...................... 68\n')
+    toc.add_run('   9.2 기본 설정 탭 ................ 69\n')
+    toc.add_run('   9.3 수집 스케줄 설정 탭 ............ 75\n')
+    toc.add_run('   9.4 아이콘 관리 탭 ................ 80\n')
+    toc.add_run('   9.5 차트/시각화 설정 탭 ............ 85\n')
+    toc.add_run('   9.6 사용자 관리 탭 ................ 90\n')
+    toc.add_run('   9.7 데이터 접근 권한 탭 ............ 95\n')
+    toc.add_run('   9.8 통계 탭 .................... 100\n')
+    toc.add_run('10. 수집 일정 ..................... 105\n')
+    toc.add_run('    10.1 개요 ..................... 105\n')
+    toc.add_run('    10.2 화면 구성 ................... 106\n')
+    toc.add_run('    10.3 주요 기능 ................... 109\n')
+    toc.add_run('    10.4 사용자 인터랙션 ............... 112\n')
+    toc.add_run('11. 카드 요약 ..................... 115\n')
+    toc.add_run('    11.1 개요 ..................... 115\n')
+    toc.add_run('    11.2 화면 구성 ................... 116\n')
+    toc.add_run('    11.3 주요 기능 ................... 119\n')
+    toc.add_run('    11.4 사용자 인터랙션 ............... 122\n')
+    toc.add_run('12. 인증 시스템 ................... 125\n')
+    toc.add_run('    12.1 로그인 ..................... 125\n')
+    toc.add_run('    12.2 회원가입 ................... 130\n')
+    toc.add_run('    12.3 비밀번호 변경 ................. 135\n')
+    toc.add_run('부록 A. 단축키 및 팁 ................ 140\n')
+
+    doc.add_page_break()
+
+    # 1. 시스템 개요
+    doc.add_paragraph('1. 시스템 개요', style='CompleteH1')
+    overview = doc.add_paragraph()
+    overview.add_run('1.1 MSYS 소개\n').bold = True
+    overview.add_run('MSYS(Monitoring SYStem)는 데이터 수집 및 모니터링을 위한 웹 기반 시스템입니다. 다양한 데이터 소스로부터 주기적으로 데이터를 수집하고, 실시간 모니터링 및 분석 기능을 제공합니다.\n\n')
+
+    overview.add_run('1.2 주요 특징\n').bold = True
+    overview.add_run('• 실시간 데이터 수집 모니터링\n')
+    overview.add_run('• 다양한 시각화 차트 및 그래프\n')
+    overview.add_run('• 사용자 권한 기반 접근 제어\n')
+    overview.add_run('• 자동화된 데이터 수집 스케줄링\n')
+    overview.add_run('• 관리자 설정을 통한 시스템 커스터마이징\n\n')
+
+    overview.add_run('1.3 시스템 요구사항\n').bold = True
+    overview.add_run('• 웹 브라우저: Chrome, Firefox, Safari, Edge\n')
+    overview.add_run('• 권장 해상도: 1920x1080 이상\n')
+    overview.add_run('• JavaScript 활성화 필수\n\n')
+
+    # 2. 메뉴 구조
+    doc.add_paragraph('2. 메뉴 구조', style='CompleteH1')
+    menu_structure = doc.add_paragraph()
+    menu_structure.add_run('2.1 메인 메뉴\n').bold = True
+    menu_structure.add_run('시스템은 다음과 같은 메뉴 구조로 구성되어 있습니다:\n\n')
+
+    menu_table = doc.add_table(rows=1, cols=3)
+    menu_table.style = 'Table Grid'
+    hdr_cells = menu_table.rows[0].cells
+    hdr_cells[0].text = '메뉴 이름'
+    hdr_cells[1].text = 'URL 경로'
+    hdr_cells[2].text = '설명'
+
+    menus = [
+        ('대시보드', '/dashboard', '시스템 현황 실시간 모니터링'),
+        ('데이터 분석', '/data_analysis', '수집 데이터 심층 분석'),
+        ('차트 분석', '/chart_analysis', '시각화된 데이터 추이 분석'),
+        ('잔디 현황', '/jandi', '히트맵 형태의 활동 현황'),
+        ('매핑 관리', '/mapping', '데이터베이스 컬럼 매핑 관리'),
+        ('데이터 명세서', '/data_spec', '외부 API 명세서 관리'),
+        ('관리자 설정', '/mngr_sett', '시스템 설정 및 관리'),
+        ('수집 일정', '/collection_schedule', '데이터 수집 스케줄 모니터링'),
+        ('카드 요약', '/card_summary', '그룹별 수집 현황 요약')
+    ]
+
+    for menu_name, menu_url, menu_desc in menus:
+        row_cells = menu_table.add_row().cells
+        row_cells[0].text = menu_name
+        row_cells[1].text = menu_url
+        row_cells[2].text = menu_desc
+
+    menu_structure.add_run('\n\n2.2 권한별 메뉴 접근\n').bold = True
+    menu_structure.add_run('각 사용자는 부여된 권한에 따라 접근 가능한 메뉴가 결정됩니다.\n\n')
+
+    # 3. 대시보드
+    doc.add_paragraph('3. 대시보드', style='CompleteH1')
+
+    # 3.1 개요
+    doc.add_paragraph('3.1 개요', style='CompleteH2')
+    dash_overview = doc.add_paragraph()
+    dash_overview.add_run('대시보드는 MSYS 시스템의 메인 페이지로, 전체 데이터 수집 현황을 실시간으로 모니터링할 수 있는 화면입니다. 각 Job별 성공률, 연속 실패 횟수, 현재 상태 등을 한눈에 파악할 수 있습니다.\n\n')
+
+    dash_overview.add_run('주요 목적:\n').bold = True
+    dash_overview.add_run('• 시스템 전체 현황 파악\n')
+    dash_overview.add_run('• 문제 발생 Job 신속 식별\n')
+    dash_overview.add_run('• 데이터 수집 상태 모니터링\n\n')
+
+    # 3.2 화면 구성
+    doc.add_paragraph('3.2 화면 구성', style='CompleteH2')
+    dash_composition = doc.add_paragraph()
+    dash_composition.add_run('3.2.1 레이아웃 구조\n').bold = True
+    dash_composition.add_run('대시보드는 다음과 같은 영역으로 구성되어 있습니다:\n\n')
+
+    dash_composition.add_run('1. 헤더 영역\n').bold = True
+    dash_composition.add_run('• 시스템 로고 및 타이틀\n')
+    dash_composition.add_run('• 사용자 정보 및 로그아웃 버튼\n')
+    dash_composition.add_run('• 현재 시간 표시\n\n')
+
+    dash_composition.add_run('2. 요약 카드 영역\n').bold = True
+    dash_composition.add_run('• 전체 Job 개수 표시\n')
+    dash_composition.add_run('• 총 수집 건수 표시\n')
+    dash_composition.add_run('• 평균 성공률 표시\n\n')
+
+    dash_composition.add_run('3. 상세 테이블 영역\n').bold = True
+    dash_composition.add_run('• Job별 상세 정보 테이블\n')
+    dash_composition.add_run('• 실시간 상태 표시\n')
+    dash_composition.add_run('• 정렬 및 필터링 기능\n\n')
+
+    dash_composition.add_run('4. 컨트롤 패널\n').bold = True
+    dash_composition.add_run('• 기간 선택 (시작일/종료일)\n')
+    dash_composition.add_run('• 조회 버튼\n')
+    dash_composition.add_run('• 자동 새로고침 토글\n\n')
+
+    # 3.3 주요 기능
+    doc.add_paragraph('3.3 주요 기능', style='CompleteH2')
+    dash_features = doc.add_paragraph()
+    dash_features.add_run('3.3.1 실시간 모니터링\n').bold = True
+    dash_features.add_run('• 5초 간격 자동 새로고침\n')
+    dash_features.add_run('• 실시간 데이터 수집 상태 반영\n')
+    dash_features.add_run('• 색상 코드를 통한 상태 구분\n\n')
+
+    dash_features.add_run('3.3.2 상태 표시 시스템\n').bold = True
+    dash_features.add_run('• 녹색: 정상 상태 (성공률 ≥ 임계값)\n')
+    dash_features.add_run('• 노랑: 경고 상태 (성공률 80-95%)\n')
+    dash_features.add_run('• 빨강: 위험 상태 (성공률 < 80%)\n\n')
+
+    dash_features.add_run('3.3.3 데이터 필터링\n').bold = True
+    dash_features.add_run('• 기간별 조회 (일/주/월 단위)\n')
+    dash_features.add_run('• Job별 권한 기반 필터링\n')
+    dash_features.add_run('• 실시간 검색 및 정렬\n\n')
+
+    # 3.4 사용자 인터랙션
+    doc.add_paragraph('3.4 사용자 인터랙션', style='CompleteH2')
+    dash_interaction = doc.add_paragraph()
+    dash_interaction.add_run('3.4.1 기본 조작\n').bold = True
+    dash_interaction.add_run('1. 페이지 접속 시 자동으로 최신 데이터 로드\n')
+    dash_interaction.add_run('2. 기간 선택 후 [조회] 버튼 클릭으로 데이터 필터링\n')
+    dash_interaction.add_run('3. 테이블 헤더 클릭으로 정렬 변경\n')
+    dash_interaction.add_run('4. 자동 새로고침 토글로 실시간 모니터링 제어\n\n')
+
+    dash_interaction.add_run('3.4.2 고급 기능\n').bold = True
+    dash_interaction.add_run('• 테이블 행 클릭으로 상세 정보 팝업\n')
+    dash_interaction.add_run('• Job ID 클릭으로 해당 Job의 상세 분석 페이지 이동\n')
+    dash_interaction.add_run('• 우측 클릭으로 컨텍스트 메뉴 표시\n\n')
+
+    # 4. 데이터 분석
+    doc.add_paragraph('4. 데이터 분석', style='CompleteH1')
+
+    # 4.1 개요
+    doc.add_paragraph('4.1 개요', style='CompleteH2')
+    analysis_overview = doc.add_paragraph()
+    analysis_overview.add_run('데이터 분석 페이지는 수집된 데이터를 심층적으로 분석하고 필터링하여 조회할 수 있는 기능을 제공합니다. 다양한 조건으로 데이터를 검색하고, 추이 분석 및 통계 정보를 확인할 수 있습니다.\n\n')
+
+    analysis_overview.add_run('주요 목적:\n').bold = True
+    analysis_overview.add_run('• 데이터 수집 결과 상세 분석\n')
+    analysis_overview.add_run('• 문제 발생 패턴 식별\n')
+    analysis_overview.add_run('• 데이터 품질 검증\n\n')
+
+    # 4.2 화면 구성
+    doc.add_paragraph('4.2 화면 구성', style='CompleteH2')
+    analysis_composition = doc.add_paragraph()
+    analysis_composition.add_run('4.2.1 탭 메뉴 구조\n').bold = True
+    analysis_composition.add_run('데이터 분석 페이지는 다음과 같은 탭으로 구성되어 있습니다:\n\n')
+
+    analysis_composition.add_run('• 요약 데이터: 전체 통계 요약\n').bold = True
+    analysis_composition.add_run('• 추이 데이터: 시간별 변화 그래프\n')
+    analysis_composition.add_run('• 원천 데이터: 실제 수집 데이터 목록\n')
+    analysis_composition.add_run('• Job 정보: 각 Job의 상세 정보\n\n')
+
+    analysis_composition.add_run('4.2.2 필터 컨트롤\n').bold = True
+    analysis_composition.add_run('• 기간 선택: 시작일과 종료일 설정\n')
+    analysis_composition.add_run('• Job ID 선택: 다중 선택 가능\n')
+    analysis_composition.add_run('• 장애코드 필터: 특정 오류 유형 필터링\n')
+    analysis_composition.add_run('• 상태 필터: 성공/실패 상태 필터링\n\n')
+
+    # 4.3 주요 기능
+    doc.add_paragraph('4.3 주요 기능', style='CompleteH2')
+    analysis_features = doc.add_paragraph()
+    analysis_features.add_run('4.3.1 다중 조건 필터링\n').bold = True
+    analysis_features.add_run('• 기간, Job ID, 상태, 장애코드 등 복합 조건 검색\n')
+    analysis_features.add_run('• 실시간 필터 적용 및 결과 표시\n')
+    analysis_features.add_run('• 필터 조건 저장 및 재사용\n\n')
+
+    analysis_features.add_run('4.3.2 데이터 내보내기\n').bold = True
+    analysis_features.add_run('• CSV 형식 데이터 다운로드\n')
+    analysis_features.add_run('• Excel 형식 보고서 생성\n')
+    analysis_features.add_run('• 필터링된 결과만 선택적 내보내기\n\n')
+
+    analysis_features.add_run('4.3.3 AI 분석 기능\n').bold = True
+    analysis_features.add_run('• 자동화된 데이터 패턴 분석\n')
+    analysis_features.add_run('• 이상 징후 자동 감지\n')
+    analysis_features.add_run('• 분석 결과 텍스트 리포트 생성\n\n')
+
+    # 4.4 사용자 인터랙션
+    doc.add_paragraph('4.4 사용자 인터랙션', style='CompleteH2')
+    analysis_interaction = doc.add_paragraph()
+    analysis_interaction.add_run('4.4.1 기본 분석 절차\n').bold = True
+    analysis_interaction.add_run('1. 분석할 기간 선택\n')
+    analysis_interaction.add_run('2. 관심 있는 Job ID 선택\n')
+    analysis_interaction.add_run('3. 필요한 필터 조건 설정\n')
+    analysis_interaction.add_run('4. [조회] 버튼으로 데이터 로드\n')
+    analysis_interaction.add_run('5. 각 탭에서 분석 결과 확인\n\n')
+
+    analysis_interaction.add_run('4.4.2 고급 분석 기능\n').bold = True
+    analysis_interaction.add_run('• [AI 분석] 버튼으로 자동 분석 실행\n')
+    analysis_interaction.add_run('• 차트 위 마우스 오버로 상세 값 확인\n')
+    analysis_interaction.add_run('• 데이터 행 클릭으로 상세 정보 팝업\n\n')
+
+    # 5. 차트 분석
+    doc.add_paragraph('5. 차트 분석', style='CompleteH1')
+
+    # 5.1 개요
+    doc.add_paragraph('5.1 개요', style='CompleteH2')
+    chart_overview = doc.add_paragraph()
+    chart_overview.add_run('차트 분석 페이지는 데이터 수집 성공률의 시간적 추이와 장애 코드별 현황을 시각적인 차트로 분석하는 기능을 제공합니다. 다양한 차트 유형을 통해 데이터 패턴을 직관적으로 파악할 수 있습니다.\n\n')
+
+    chart_overview.add_run('주요 목적:\n').bold = True
+    chart_overview.add_run('• 데이터 추이 시각화\n')
+    chart_overview.add_run('• 장애 패턴 분석\n')
+    chart_overview.add_run('• 성능 모니터링\n\n')
+
+    # 5.2 화면 구성
+    doc.add_paragraph('5.2 화면 구성', style='CompleteH2')
+    chart_composition = doc.add_paragraph()
+    chart_composition.add_run('5.2.1 차트 영역\n').bold = True
+    chart_composition.add_run('• 성공률 추이 라인 차트\n')
+    chart_composition.add_run('• 장애 코드 현황 파이 차트\n')
+    chart_composition.add_run('• 인터랙티브 차트 컨트롤\n\n')
+
+    chart_composition.add_run('5.2.2 컨트롤 패널\n').bold = True
+    chart_composition.add_run('• 기간 선택 드롭다운\n')
+    chart_composition.add_run('• Job ID 체크박스 그룹\n')
+    chart_composition.add_run('• 차트 옵션 설정\n\n')
+
+    # 5.3 주요 기능
+    doc.add_paragraph('5.3 주요 기능', style='CompleteH2')
+    chart_features = doc.add_paragraph()
+    chart_features.add_run('5.3.1 다중 Job 비교\n').bold = True
+    chart_features.add_run('• 여러 Job의 성공률 동시 비교\n')
+    chart_features.add_run('• 범례 클릭으로 개별 Job 표시/숨김\n')
+    chart_features.add_run('• 색상 코드를 통한 Job 구분\n\n')
+
+    chart_features.add_run('5.3.2 인터랙티브 기능\n').bold = True
+    chart_features.add_run('• 마우스 오버로 상세 값 표시\n')
+    chart_features.add_run('• 줌 인/아웃 기능\n')
+    chart_features.add_run('• 데이터 포인트 클릭으로 상세 정보\n\n')
+
+    # 5.4 사용자 인터랙션
+    doc.add_paragraph('5.4 사용자 인터랙션', style='CompleteH2')
+    chart_interaction = doc.add_paragraph()
+    chart_interaction.add_run('5.4.1 차트 분석 절차\n').bold = True
+    chart_interaction.add_run('1. 분석할 기간 선택\n')
+    chart_interaction.add_run('2. 비교할 Job ID 체크\n')
+    chart_interaction.add_run('3. [조회] 버튼으로 차트 갱신\n')
+    chart_interaction.add_run('4. 차트 위에서 마우스 조작으로 상호작용\n\n')
+
+    # 6. 잔디 현황
+    doc.add_paragraph('6. 잔디 현황', style='CompleteH1')
+
+    # 6.1 개요
+    doc.add_paragraph('6.1 개요', style='CompleteH2')
+    jandi_overview = doc.add_paragraph()
+    jandi_overview.add_run('잔디 현황 페이지는 Github의 잔디밭과 유사하게 각 Job의 일별 데이터 수집 현황을 히트맵 형태로 시각화하여 보여줍니다. 직관적인 색상 코드를 통해 장기간 데이터 수집 패턴을 한눈에 파악할 수 있습니다.\n\n')
+
+    jandi_overview.add_run('주요 목적:\n').bold = True
+    jandi_overview.add_run('• 장기간 활동 패턴 파악\n')
+    jandi_overview.add_run('• 데이터 수집 일관성 모니터링\n')
+    jandi_overview.add_run('• 휴일 및 특이일 패턴 분석\n\n')
+
+    # 6.2 화면 구성
+    doc.add_paragraph('6.2 화면 구성', style='CompleteH2')
+    jandi_composition = doc.add_paragraph()
+    jandi_composition.add_run('6.2.1 히트맵 영역\n').bold = True
+    jandi_composition.add_run('• 월별 캘린더 형태 히트맵\n')
+    jandi_composition.add_run('• 색상 강도로 활동량 표시\n')
+    jandi_composition.add_run('• 날짜별 상세 정보 툴팁\n\n')
+
+    jandi_composition.add_run('6.2.2 Job 목록\n').bold = True
+    jandi_composition.add_run('• Job ID 및 이름 목록\n')
+    jandi_composition.add_run('• 펼치기/접기 토글 버튼\n')
+    jandi_composition.add_run('• 각 Job별 히트맵 표시\n\n')
+
+    # 6.3 주요 기능
+    doc.add_paragraph('6.3 주요 기능', style='CompleteH2')
+    jandi_features = doc.add_paragraph()
+    jandi_features.add_run('6.3.1 패턴 분석\n').bold = True
+    jandi_features.add_run('• 주중/주말 패턴 구분\n')
+    jandi_features.add_run('• 계절별 활동량 변화\n')
+    jandi_features.add_run('• 휴일 및 공휴일 영향 분석\n\n')
+
+    jandi_features.add_run('6.3.2 색상 범례\n').bold = True
+    jandi_features.add_run('• 0건: 흰색 (미수집)\n')
+    jandi_features.add_run('• 1-5건: 연한 녹색 (낮은 활동)\n')
+    jandi_features.add_run('• 6-10건: 중간 녹색 (보통 활동)\n')
+    jandi_features.add_run('• 11건+: 진한 녹색 (높은 활동)\n\n')
+
+    # 6.4 사용자 인터랙션
+    doc.add_paragraph('6.4 사용자 인터랙션', style='CompleteH2')
+    jandi_interaction = doc.add_paragraph()
+    jandi_interaction.add_run('6.4.1 히트맵 탐색\n').bold = True
+    jandi_interaction.add_run('1. 관심 있는 Job 선택\n')
+    jandi_interaction.add_run('2. [펼치기] 버튼으로 히트맵 표시\n')
+    jandi_interaction.add_run('3. 날짜별 색상으로 활동량 파악\n')
+    jandi_interaction.add_run('4. 마우스 오버로 구체적인 수치 확인\n\n')
+
+    # 7. 매핑 관리
+    doc.add_paragraph('7. 매핑 관리', style='CompleteH1')
+
+    # 7.1 개요
+    doc.add_paragraph('7.1 개요', style='CompleteH2')
+    mapping_overview = doc.add_paragraph()
+    mapping_overview.add_run('매핑 관리 페이지는 데이터베이스 테이블 간의 컬럼 매핑 정보를 관리하고 조회하는 기능을 제공합니다. 데이터 변환 규칙을 정의하고 관리할 수 있습니다.\n\n')
+
+    mapping_overview.add_run('주요 목적:\n').bold = True
+    mapping_overview.add_run('• 데이터 변환 규칙 관리\n')
+    mapping_overview.add_run('• 테이블 간 관계 정의\n')
+    mapping_overview.add_run('• 데이터 일관성 유지\n\n')
+
+    # 7.2 화면 구성
+    doc.add_paragraph('7.2 화면 구성', style='CompleteH2')
+    mapping_composition = doc.add_paragraph()
+    mapping_composition.add_run('7.2.1 매핑 테이블\n').bold = True
+    mapping_composition.add_run('• 소스 테이블/컬럼 정보\n')
+    mapping_composition.add_run('• 타겟 테이블/컬럼 정보\n')
+    mapping_composition.add('• 매핑 유형 및 규칙\n\n')
+
+    # 7.3 주요 기능
+    doc.add_paragraph('7.3 주요 기능', style='CompleteH2')
+    mapping_features = doc.add_paragraph()
+    mapping_features.add_run('7.3.1 매핑 CRUD\n').bold = True
+    mapping_features.add_run('• 새로운 매핑 관계 생성\n')
+    mapping_features.add_run('• 기존 매핑 정보 수정\n')
+    mapping_features.add_run('• 불필요한 매핑 삭제\n\n')
+
+    # 7.4 사용자 인터랙션
+    doc.add_paragraph('7.4 사용자 인터랙션', style='CompleteH2')
+    mapping_interaction = doc.add_paragraph()
+    mapping_interaction.add_run('7.4.1 매핑 관리 절차\n').bold = True
+    mapping_interaction.add_run('1. [새 매핑 추가] 버튼 클릭\n')
+    mapping_interaction.add_run('2. 소스 및 타겟 정보 입력\n')
+    mapping_interaction.add_run('3. 매핑 규칙 설정\n')
+    mapping_interaction.add_run('4. [저장]으로 매핑 생성\n\n')
+
+    # 8. 데이터 명세서
+    doc.add_paragraph('8. 데이터 명세서', style='CompleteH1')
+
+    # 8.1 개요
+    doc.add_paragraph('8.1 개요', style='CompleteH2')
+    spec_overview = doc.add_paragraph()
+    spec_overview.add_run('데이터 명세서 페이지는 시스템에서 사용하는 외부 데이터(API 등)의 명세를 관리하는 기능을 제공합니다. API 엔드포인트, 파라미터, 응답 형식 등을 체계적으로 관리할 수 있습니다.\n\n')
+
+    spec_overview.add_run('주요 목적:\n').bold = True
+    spec_overview.add_run('• 외부 API 명세 표준화\n')
+    spec_overview.add_run('• 데이터 인터페이스 문서화\n')
+    spec_overview.add_run('• API 변경 영향도 분석\n\n')
+
+    # 8.2 화면 구성
+    doc.add_paragraph('8.2 화면 구성', style='CompleteH2')
+    spec_composition = doc.add_paragraph()
+    spec_composition.add_run('8.2.1 명세서 목록\n').bold = True
+    spec_composition.add_run('• 명세서 이름 및 설명\n')
+    spec_composition.add_run('• API URL 및 제공자 정보\n')
+    spec_composition.add_run('• 최종 수정일 및 상태\n\n')
+
+    # 8.3 주요 기능
+    doc.add_paragraph('8.3 주요 기능', style='CompleteH2')
+    spec_features = doc.add_paragraph()
+    spec_features.add_run('8.3.1 명세서 관리\n').bold = True
+    spec_features.add_run('• 새로운 API 명세서 등록\n')
+    spec_features.add_run('• 기존 명세서 정보 수정\n')
+    spec_features.add_run('• 명세서 버전 관리\n\n')
+
+    # 8.4 사용자 인터랙션
+    doc.add_paragraph('8.4 사용자 인터랙션', style='CompleteH2')
+    spec_interaction = doc.add_paragraph()
+    spec_interaction.add_run('8.4.1 명세서 관리 절차\n').bold = True
+    spec_interaction.add_run('1. [새 명세서] 버튼 클릭\n')
+    spec_interaction.add_run('2. API 정보 입력\n')
+    spec_interaction.add_run('3. 파라미터 및 응답 형식 정의\n')
+    spec_interaction.add_run('4. [저장]으로 명세서 등록\n\n')
+
+    # 9. 관리자 설정
+    doc.add_paragraph('9. 관리자 설정', style='CompleteH1')
+
+    # 9.1 개요
+    doc.add_paragraph('9.1 개요', style='CompleteH2')
+    admin_overview = doc.add_paragraph()
+    admin_overview.add_run('관리자 설정 페이지는 시스템의 각종 설정을 관리하고 모니터링하는 기능을 제공합니다. Job별 임계값, 사용자 권한, 시스템 설정 등을 중앙 집중적으로 관리할 수 있습니다.\n\n')
+
+    admin_overview.add_run('주요 목적:\n').bold = True
+    admin_overview.add_run('• 시스템 설정 중앙 관리\n')
+    admin_overview.add_run('• 사용자 권한 체계적 관리\n')
+    admin_overview.add_run('• 모니터링 임계값 설정\n\n')
+
+    # 9.2 기본 설정 탭
+    doc.add_paragraph('9.2 기본 설정 탭', style='CompleteH2')
+    basic_settings = doc.add_paragraph()
+    basic_settings.add_run('9.2.1 기능 개요\n').bold = True
+    basic_settings.add_run('Job별 모니터링 임계값과 표시 설정을 관리하는 탭입니다.\n\n')
+
+    basic_settings.add_run('9.2.2 주요 설정 항목\n').bold = True
+    basic_settings.add_run('• 연속 실패 임계값: 3회 (기본값)\n')
+    basic_settings.add_run('• 일별 성공률 임계값: 80% (기본값)\n')
+    basic_settings.add_run('• 주별 성공률 임계값: 75% (기본값)\n')
+    basic_settings.add_run('• 월별 성공률 임계값: 70% (기본값)\n')
+    basic_settings.add_run('• 상태별 아이콘 및 색상 설정\n\n')
+
+    # 9.3 수집 스케줄 설정 탭
+    doc.add_paragraph('9.3 수집 스케줄 설정 탭', style='CompleteH2')
+    schedule_settings = doc.add_paragraph()
+    schedule_settings.add_run('9.3.1 기능 개요\n').bold = True
+    schedule_settings.add_run('데이터 수집 작업의 스케줄을 설정하고 관리하는 탭입니다.\n\n')
+
+    schedule_settings.add_run('9.3.2 주요 설정 항목\n').bold = True
+    schedule_settings.add_run('• 그룹 최소 개수: 3 (기본값)\n')
+    schedule_settings.add_run('• 그룹 외곽선 스타일: solid (기본값)\n')
+    schedule_settings.add_run('• 그룹 색상 기준: prgr/succ\n')
+    schedule_settings.add_run('• 진행률/성공률 임계값 설정\n\n')
+
+    # 9.4 아이콘 관리 탭
+    doc.add_paragraph('9.4 아이콘 관리 탭', style='CompleteH2')
+    icon_settings = doc.add_paragraph()
+    icon_settings.add_run('9.4.1 기능 개요\n').bold = True
+    icon_settings.add_run('시스템에서 사용하는 아이콘을 관리하는 탭입니다.\n\n')
+
+    icon_settings.add_run('9.4.2 주요 기능\n').bold = True
+    icon_settings.add_run('• 아이콘 코드 및 이름 관리\n')
+    icon_settings.add_run('• 표시 여부 설정\n')
+    icon_settings.add_run('• CSV 일괄 관리\n\n')
+
+    # 9.5 차트/시각화 설정 탭
+    doc.add_paragraph('9.5 차트/시각화 설정 탭', style='CompleteH2')
+    chart_settings = doc.add_paragraph()
+    chart_settings.add_run('9.5.1 기능 개요\n').bold = True
+    chart_settings.add_run('차트 및 시각화 요소의 설정을 관리하는 탭입니다.\n\n')
+
+    chart_settings.add_run('9.5.2 주요 설정 항목\n').bold = True
+    chart_settings.add_run('• Job별 차트 색상 설정\n')
+    chart_settings.add_run('• 잔디 차트 색상 범위 설정\n')
+    chart_settings.add_run('• 시각화 옵션 관리\n\n')
+
+    # 9.6 사용자 관리 탭
+    doc.add_paragraph('9.6 사용자 관리 탭', style='CompleteH2')
+    user_settings = doc.add_paragraph()
+    user_settings.add_run('9.6.1 기능 개요\n').bold = True
+    user_settings.add_run('시스템 사용자를 관리하는 탭입니다.\n\n')
+
+    user_settings.add_run('9.6.2 주요 기능\n').bold = True
+    user_settings.add_run('• 사용자 계정 상태 관리\n')
+    user_settings.add_run('• 메뉴 권한 설정\n')
+    user_settings.add_run('• 비밀번호 초기화\n\n')
+
+    # 9.7 데이터 접근 권한 탭
+    doc.add_paragraph('9.7 데이터 접근 권한 탭', style='CompleteH2')
+    permission_settings = doc.add_paragraph()
+    permission_settings.add_run('9.7.1 기능 개요\n').bold = True
+    permission_settings.add_run('사용자별 데이터 접근 권한을 설정하는 탭입니다.\n\n')
+
+    permission_settings.add_run('9.7.2 주요 기능\n').bold = True
+    permission_settings.add_run('• Job ID별 권한 부여/해제\n')
+    permission_settings.add_run('• 권한 템플릿 적용\n')
+    permission_settings.add_run('• 권한 변경 이력 관리\n\n')
+
+    # 9.8 통계 탭
+    doc.add_paragraph('9.8 통계 탭', style='CompleteH2')
+    stats_settings = doc.add_paragraph()
+    stats_settings.add_run('9.8.1 기능 개요\n').bold = True
+    stats_settings.add_run('시스템 사용 통계를 분석하는 탭입니다.\n\n')
+
+    stats_settings.add_run('9.8.2 제공 통계\n').bold = True
+    stats_settings.add_run('• 일별 메뉴 접근 통계\n')
+    stats_settings.add_run('• 주별/월별 사용량 추이\n')
+    stats_settings.add_run('• 사용자별 활동 분석\n\n')
+
+    # 10. 수집 일정
+    doc.add_paragraph('10. 수집 일정', style='CompleteH1')
+
+    # 10.1 개요
+    doc.add_paragraph('10.1 개요', style='CompleteH2')
+    schedule_overview = doc.add_paragraph()
+    schedule_overview.add_run('수집 일정 페이지는 데이터 수집 작업의 스케줄과 실행 현황을 모니터링하는 기능을 제공합니다. 예정된 작업과 실제 실행 결과를 비교하여 시스템의 안정성을 확인할 수 있습니다.\n\n')
+
+    schedule_overview.add_run('주요 목적:\n').bold = True
+    schedule_overview.add_run('• 스케줄 준수율 모니터링\n')
+    schedule_overview.add_run('• 작업 실행 상태 실시간 확인\n')
+    schedule_overview.add_run('• 장애 발생 지점 식별\n\n')
+
+    # 10.2 화면 구성
+    doc.add_paragraph('10.2 화면 구성', style='CompleteH2')
+    schedule_composition = doc.add_paragraph()
+    schedule_composition.add_run('10.2.1 뷰 모드\n').bold = True
+    schedule_composition.add_run('• 주간 뷰: 7일간의 일정 표시\n')
+    schedule_composition.add_run('• 월간 뷰: 한 달간의 일정 표시\n\n')
+
+    schedule_composition.add_run('10.2.2 일정 테이블\n').bold = True
+    schedule_composition.add_run('• Job ID 및 이름\n')
+    schedule_composition.add_run('• 예정 실행 시간\n')
+    schedule_composition.add_run('• 실제 실행 상태\n')
+    schedule_composition.add_run('• 실행 결과 및 소요 시간\n\n')
+
+    # 10.3 주요 기능
+    doc.add_paragraph('10.3 주요 기능', style='CompleteH2')
+    schedule_features = doc.add_paragraph()
+    schedule_features.add_run('10.3.1 상태 모니터링\n').bold = True
+    schedule_features.add_run('• 예정: 아직 실행 예정\n')
+    schedule_features.add_run('• 수집중: 현재 실행 중\n')
+    schedule_features.add_run('• 성공: 정상 완료\n')
+    schedule_features.add_run('• 실패: 오류 발생\n')
+    schedule_features.add_run('• 미수집: 예정 시간 초과\n\n')
+
+    # 10.4 사용자 인터랙션
+    doc.add_paragraph('10.4 사용자 인터랙션', style='CompleteH2')
+    schedule_interaction = doc.add_paragraph()
+    schedule_interaction.add_run('10.4.1 일정 모니터링 절차\n').bold = True
+    schedule_interaction.add_run('1. 주간/월간 뷰 선택\n')
+    schedule_interaction.add_run('2. 기간 설정\n')
+    schedule_interaction.add_run('3. [조회] 버튼으로 데이터 로드\n')
+    schedule_interaction.add_run('4. 상태별 색상으로 문제 식별\n\n')
+
+    # 11. 카드 요약
+    doc.add_paragraph('11. 카드 요약', style='CompleteH1')
+
+    # 11.1 개요
+    doc.add_paragraph('11.1 개요', style='CompleteH2')
+    card_overview = doc.add_paragraph()
+    card_overview.add_run('카드 요약 페이지는 오늘의 데이터 수집 현황을 그룹별로 요약하여 카드 형태로 표시하는 기능을 제공합니다. 각 카드는 Job ID의 첫 3자리로 그룹화되어 실시간으로 수집 상태를 집계하여 보여줍니다.\n\n')
+
+    card_overview.add_run('주요 목적:\n').bold = True
+    card_overview.add_run('• 그룹별 현황 파악\n')
+    card_overview.add_run('• 실시간 상태 모니터링\n')
+    card_overview.add_run('• 문제 발생 그룹 신속 식별\n\n')
+
+    # 11.2 화면 구성
+    doc.add_paragraph('11.2 화면 구성', style='CompleteH2')
+    card_composition = doc.add_paragraph()
+    card_composition.add_run('11.2.1 그룹 카드\n').bold = True
+    card_composition.add_run('• CD100, CD200 등 그룹별 카드\n')
+    card_composition.add_run('• 각 카드별 상태별 카운트\n')
+    card_composition.add_run('• 실시간 업데이트\n\n')
+
+    card_composition.add_run('11.2.2 표시 옵션\n').bold = True
+    card_composition.add_run('• 명칭 표시: Job 이름 표시\n')
+    card_composition.add_run('• 코드 표시: Job ID 표시\n')
+    card_composition.add_run('• 명칭+코드: 둘 다 표시\n\n')
+
+    # 11.3 주요 기능
+    doc.add_paragraph('11.3 주요 기능', style='CompleteH2')
+    card_features = doc.add_paragraph()
+    card_features.add_run('11.3.1 실시간 집계\n').bold = True
+    card_features.add_run('• 오늘의 모든 Job 상태 실시간 집계\n')
+    card_features.add_run('• 5가지 상태별 분류 (성공/수집중/실패/미수집/예정)\n')
+    card_features.add_run('• 권한 기반 데이터 필터링\n\n')
+
+    # 11.4 사용자 인터랙션
+    doc.add_paragraph('11.4 사용자 인터랙션', style='CompleteH2')
+    card_interaction = doc.add_paragraph()
+    card_interaction.add_run('11.4.1 카드 모니터링 절차\n').bold = True
+    card_interaction.add_run('1. 표시 옵션 선택\n')
+    card_interaction.add_run('2. 그룹별 카드 상태 파악\n')
+    card_interaction.add_run('3. 문제 있는 카드 식별\n')
+    card_interaction.add_run('4. 엑셀 양식 다운로드\n\n')
+
+    # 12. 인증 시스템
+    doc.add_paragraph('12. 인증 시스템', style='CompleteH1')
+
+    # 12.1 로그인
+    doc.add_paragraph('12.1 로그인', style='CompleteH2')
+    login_desc = doc.add_paragraph()
+    login_desc.add_run('12.1.1 기능 개요\n').bold = True
+    login_desc.add_run('사용자 인증 및 시스템 접근을 위한 로그인 기능입니다.\n\n')
+
+    login_desc.add_run('12.1.2 로그인 절차\n').bold = True
+    login_desc.add_run('1. 사용자 ID 입력\n')
+    login_desc.add_run('2. 비밀번호 입력\n')
+    login_desc.add_run('3. [로그인] 버튼 클릭\n')
+    login_desc.add_run('4. 인증 성공 시 대시보드 이동\n\n')
+
+    # 12.2 회원가입
+    doc.add_paragraph('12.2 회원가입', style='CompleteH2')
+    register_desc = doc.add_paragraph()
+    register_desc.add_run('12.2.1 기능 개요\n').bold = True
+    register_desc.add_run('신규 사용자의 시스템 등록 기능입니다.\n\n')
+
+    register_desc.add_run('12.2.2 회원가입 절차\n').bold = True
+    register_desc.add_run('1. 사용자 ID 입력\n')
+    register_desc.add_run('2. 비밀번호 및 확인 입력\n')
+    register_desc.add_run('3. 비밀번호 정책 준수 확인\n')
+    register_desc.add_run('4. [가입 신청] 버튼 클릭\n')
+    register_desc.add_run('5. 관리자 승인 대기\n\n')
+
+    # 12.3 비밀번호 변경
+    doc.add_paragraph('12.3 비밀번호 변경', style='CompleteH2')
+    pw_change_desc = doc.add_paragraph()
+    pw_change_desc.add_run('12.3.1 기능 개요\n').bold = True
+    pw_change_desc.add_run('로그인된 사용자의 비밀번호 변경 기능입니다.\n\n')
+
+    pw_change_desc.add_run('12.3.2 변경 절차\n').bold = True
+    pw_change_desc.add_run('1. 현재 비밀번호 입력\n')
+    pw_change_desc.add_run('2. 새 비밀번호 입력\n')
+    pw_change_desc.add_run('3. 새 비밀번호 확인 입력\n')
+    pw_change_desc.add_run('4. [변경] 버튼 클릭\n\n')
+
+    # 부록 A. 단축키 및 팁
+    doc.add_paragraph('부록 A. 단축키 및 팁', style='CompleteH1')
+    tips = doc.add_paragraph()
+    tips.add_run('A.1 유용한 단축키\n').bold = True
+    tips.add_run('• Ctrl+R: 페이지 새로고침\n')
+    tips.add_run('• F12: 개발자 도구 열기\n')
+    tips.add_run('• Ctrl+F: 페이지 내 검색\n\n')
+
+    tips.add_run('A.2 사용 팁\n').bold = True
+    tips.add_run('• 대시보드에서 자동 새로고침을 활용하여 실시간 모니터링\n')
+    tips.add_run('• 데이터 분석 시 필터 조건을 저장하여 재사용\n')
+    tips.add_run('• 차트 분석에서 범례를 클릭하여 특정 Job만 표시\n\n')
+
+    try:
+        doc.save('MSYS_Complete_Function_Manual.docx')
+        print('전체 기능 매뉴얼 생성 완료: MSYS_Complete_Function_Manual.docx')
+    except PermissionError:
+        doc.save('MSYS_Complete_Function_Manual_v2.docx')
+        print('전체 기능 매뉴얼 생성 완료: MSYS_Complete_Function_Manual_v2.docx')
+
+def create_data_flow_debug_manual():
+    """실제 소스 코드 기반 데이터 호출 흐름 디버깅 메뉴얼 생성"""
+    doc = Document()
+
+    # 스타일 설정
+    title_style = doc.styles.add_style('DebugTitle', WD_STYLE_TYPE.PARAGRAPH)
+    title_style.font.size = Pt(28)
+    title_style.font.color.rgb = RGBColor(0, 0, 0)
+    title_style.paragraph_format.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+
+    heading1_style = doc.styles.add_style('DebugH1', WD_STYLE_TYPE.PARAGRAPH)
+    heading1_style.font.size = Pt(18)
+    heading1_style.font.bold = True
+
+    heading2_style = doc.styles.add_style('DebugH2', WD_STYLE_TYPE.PARAGRAPH)
+    heading2_style.font.size = Pt(14)
+    heading2_style.font.bold = True
+
+    heading3_style = doc.styles.add_style('DebugH3', WD_STYLE_TYPE.PARAGRAPH)
+    heading3_style.font.size = Pt(12)
+    heading3_style.font.bold = True
+
+    code_style = doc.styles.add_style('DebugCode', WD_STYLE_TYPE.PARAGRAPH)
+    code_style.font.name = 'Courier New'
+    code_style.font.size = Pt(10)
+
+    # 표지
+    title = doc.add_paragraph('MSYS 데이터 호출 흐름 디버깅 가이드', style='DebugTitle')
+    subtitle = doc.add_paragraph('실제 소스 코드 기반 데이터 호출 추적 및 문제 해결 가이드', style='DebugTitle')
+    version = doc.add_paragraph('버전 1.0', style='DebugTitle')
+    version.paragraph_format.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+
+    doc.add_page_break()
+
+    # 목차
+    toc_title = doc.add_paragraph('목차', style='DebugH1')
+    toc = doc.add_paragraph()
+    toc.add_run('1. 개요 ........................ 3\n')
+    toc.add_run('2. 메뉴 페이지별 데이터 호출 흐름 ................ 4\n')
+    toc.add_run('   2.1 대시보드 페이지 .................. 4\n')
+    toc.add_run('   2.2 데이터 분석 페이지 ................ 15\n')
+    toc.add_run('   2.3 차트 분석 페이지 .................. 25\n')
+    toc.add_run('   2.4 카드 요약 페이지 .................. 35\n')
+    toc.add_run('   2.5 관리자 설정 페이지 ................ 45\n')
+    toc.add_run('   2.6 인증 시스템 ................ 65\n')
+    toc.add_run('3. 디버깅 가이드 ................ 105\n')
+    toc.add_run('부록 A. 데이터 흐름 요약 ................ 110\n')
+
+    doc.add_page_break()
+
+    # 1. 개요
+    doc.add_paragraph('1. 개요', style='DebugH1')
+    overview = doc.add_paragraph()
+    overview.add_run('1.1 목적\n').bold = True
+    overview.add_run('이 가이드는 실제 MSYS 소스 코드를 분석하여 각 메뉴 페이지의 데이터 호출 과정을 추적하고 설명합니다. HTML 템플릿에서 어떤 변수를 사용하는지, JavaScript가 어떤 API를 호출하는지, 백엔드에서 어떻게 데이터를 처리하는지를 실제 코드 기반으로 상세히 설명합니다.\n\n')
+
+    overview.add_run('1.2 대상 독자\n').bold = True
+    overview.add_run('• 개발자: 데이터 호출 흐름 이해 및 디버깅\n')
+    overview.add_run('• 운영자: 시스템 문제 해결 및 모니터링\n')
+    overview.add_run('• 테스터: 데이터 흐름 검증 및 테스트 케이스 작성\n\n')
+
+    overview.add_run('1.3 사용 방법\n').bold = True
+    overview.add_run('1. 문제가 발생한 메뉴 페이지 확인\n')
+    overview.add_run('2. 해당 섹션에서 HTML → JavaScript → API → Service → DAO → DB 순으로 추적\n')
+    overview.add_run('3. 각 단계별 실제 코드와 권한 검증 확인\n')
+    overview.add_run('4. 문제 지점 식별 및 해결\n\n')
+
+    # 2. 메뉴 페이지별 데이터 호출 흐름
+    doc.add_paragraph('2. 메뉴 페이지별 데이터 호출 흐름', style='DebugH1')
+
+    # 2.1 대시보드 페이지
+    doc.add_paragraph('2.1 대시보드 페이지', style='DebugH2')
+
+    # 대시보드 데이터 호출 흐름 설명
+    dashboard_desc = doc.add_paragraph()
+    dashboard_desc.add_run('대시보드 페이지의 주요 데이터 호출 흐름:\n\n').bold = True
+
+    # HTML 레벨
+    dashboard_desc.add_run('HTML 레벨 (templates/dashboard.html):\n').bold = True
+    dashboard_desc.add_run('• JavaScript 모듈 로드: /static/js/pages/dashboard.js\n')
+    dashboard_desc.add_run('• 서버 사이드 변수: is_admin 권한 정보\n')
+    dashboard_desc.add_run('• DOM 요소: totalJobsCount, totalCollectionsCount, daySuccessRate 등\n')
+    dashboard_desc.add_run('• 날짜 범위 표시: minDateDisplay, maxDateDisplay, summary-min-date, summary-max-date, eventlog-min-date, eventlog-max-date\n')
+    dashboard_desc.add_run('• 이벤트 로그: event-log-ul, eventLogPagination, eventLogStartDate, eventLogEndDate\n')
+    dashboard_desc.add_run('• 차트 컨테이너: dashboardChartContainer\n')
+    dashboard_desc.add_run('• 페이징 컨트롤: detailTablePagination\n\n')
+
+    # JavaScript 레벨
+    dashboard_desc.add_run('JavaScript 레벨:\n').bold = True
+    dashboard_desc.add_run('• static/js/pages/dashboard.js: 진입점, 모듈 초기화\n')
+    dashboard_desc.add_run('• static/js/modules/dashboard/events.js: 데이터 로드 및 UI 업데이트\n')
+    dashboard_desc.add_run('• static/js/modules/dashboard/ui.js: UI 렌더링 및 업데이트\n')
+    dashboard_desc.add_run('• static/js/modules/dashboard/eventLog.js: 이벤트 로그 관리\n')
+    dashboard_desc.add_run('• static/js/modules/common/api/dashboard.js: API 호출 함수\n\n')
+
+    # API 레벨
+    dashboard_desc.add_run('API 레벨:\n').bold = True
+    dashboard_desc.add_run('• /api/dashboard/summary: 대시보드 요약 데이터 API\n')
+    dashboard_desc.add_run('• /api/dashboard/min-max-dates: 날짜 범위 조회 API\n')
+    dashboard_desc.add_run('• /api/dashboard/event-log: 이벤트 로그 조회 API\n')
+    dashboard_desc.add_run('• 권한 검증: @login_required, @check_password_change_required\n')
+    dashboard_desc.add_run('• 파라미터: start_date, end_date, all_data\n\n')
+
+    # Service 레벨
+    dashboard_desc.add_run('Service 레벨 (service/dashboard_service.py):\n').bold = True
+    dashboard_desc.add_run('• get_summary(): 메인 비즈니스 로직 메소드\n')
+    dashboard_desc.add_run('• _fetch_manager_settings_with_icons(): 관리자 설정 로드\n')
+    dashboard_desc.add_run('• _get_allowed_job_ids(): 권한 기반 Job ID 필터링\n')
+    dashboard_desc.add_run('• _combine_historical_and_today_data(): 과거+오늘 데이터 결합\n\n')
+
+    # DAO 레벨
+    dashboard_desc.add_run('DAO 레벨 (mapper/dashboard_mapper.py):\n').bold = True
+    dashboard_desc.add_run('• get_summary(): SQL 쿼리 실행 및 결과 변환\n')
+    dashboard_desc.add_run('• DashboardSQL.get_dashboard_summary(): 동적 SQL 생성\n')
+    dashboard_desc.add_run('• convert_to_new_columns(): 컬럼명 변환\n\n')
+
+    # DB 레벨
+    dashboard_desc.add_run('DB 레벨:\n').bold = True
+    dashboard_desc.add_run('• tb_con_hist: 수집 이력 데이터\n')
+    dashboard_desc.add_run('• tb_mngr_sett: 관리자 설정\n')
+    dashboard_desc.add_run('• tb_con_hist_evnt_log: 이벤트 로그\n')
+    dashboard_desc.add_run('• 복합 집계 쿼리: Job별 성공률, 상태별 카운트 등\n\n')
+
+    # 대시보드 화면의 주요 표시 요소별 데이터 흐름 설명
+    doc.add_paragraph('대시보드 화면의 주요 표시 요소별 데이터 흐름 설명:', style='DebugH3')
+
+    # 대시보드 스크린샷 삽입
+    try:
+        doc.add_picture('scrennshot/dashboard_screenshot.PNG', width=Inches(6))
+        doc.add_paragraph('그림: 대시보드 화면 스크린샷', style='DebugH3')
+    except:
+        doc.add_paragraph('[스크린샷: dashboard_screenshot.PNG를 찾을 수 없습니다]', style='DebugH3')
+
+    doc.add_paragraph('', style='DebugH3')  # 빈 줄
+
+    # 1. "총 Job ID 개수" 표시 요소
+    doc.add_paragraph('1. "총 Job ID 개수" 표시 요소 (파란색 큰 숫자)', style='DebugH3')
+
+    intro1 = doc.add_paragraph()
+    intro1.add_run('화면 좌측 상단에 "총 Job ID 개수"라고 표시되는 값은 시스템에 등록된 데이터 수집 작업의 총 개수를 나타냅니다.\n\n')
+
+    intro1.add_run('이 값의 계산 과정:\n').bold = True
+    intro1.add_run('1. 데이터베이스에서 모든 Job의 기본 정보를 조회합니다.\n')
+    intro1.add_run('2. 사용자의 접근 권한에 따라 허용된 Job만 필터링합니다.\n')
+    intro1.add_run('3. 필터링된 Job 목록의 개수를 계산합니다.\n')
+    intro1.add_run('4. 계산된 개수를 화면에 표시합니다.\n\n')
+
+    # 단계별 코드 설명
+    doc.add_paragraph('단계별 코드 흐름:', style='DebugH3')
+
+    # DB 단계
+    db_step = doc.add_paragraph(style='DebugCode')
+    db_step.add_run('1. DB 단계 - mapper/dashboard_mapper.py의 get_summary() 함수 호출\n')
+    db_step.add_run('SELECT DISTINCT job_id FROM tb_con_hist WHERE [조건들...]  -- results 배열 생성\n')
+    db_step.add_run('results = [{"job_id": "CD101"}, {"job_id": "CD102"}, ...]  # 각 딕셔너리에 job_id 키를 가진 데이터 구조\n\n')
+
+    # Service 단계
+    service_step = doc.add_paragraph(style='DebugCode')
+    service_step.add_run('2. Service 단계 - service/dashboard_service.py의 _get_allowed_job_ids() 함수 호출\n')
+    service_step.add_run('allowed_job_ids = self._get_allowed_job_ids(user)  # ["CD101", "CD102"] 형태의 Job ID 목록 반환\n')
+    service_step.add_run('filtered_data = [item for item in raw_data if item[\'job_id\'] in allowed_job_ids]  # 권한 필터링\n')
+    service_step.add_run('job_count = len(filtered_data)  # filtered_data 리스트의 길이로 Job 개수 계산\n\n')
+
+    # API 단계
+    api_step = doc.add_paragraph(style='DebugCode')
+    api_step.add_run('3. API 단계 - routes/api/dashboard_api.py의 get_dashboard_summary() 함수\n')
+    api_step.add_run('summary_data = dashboard_service.get_summary(...)  # Service에서 계산된 데이터 수신\n')
+    api_step.add_run('return jsonify({\'total_jobs\': job_count, \'job_list\': filtered_data})  # JSON 객체 형태로 반환\n\n')
+
+    # JavaScript 단계
+    js_step = doc.add_paragraph(style='DebugCode')
+    js_step.add_run('4. JavaScript 단계 - static/js/modules/dashboard/ui.js의 updateSummaryCards() 함수\n')
+    js_step.add_run('const totalJobsCount = summaryData.length;  # summaryData 배열의 길이\n')
+    js_step.add_run('totalJobsElement.textContent = totalJobsCount;  // HTML 요소에 숫자 값 표시\n\n')
+
+    # 2. "총 호출 건수" 표시 요소
+    doc.add_paragraph('2. "총 호출 건수" 표시 요소 (보라색 큰 숫자)', style='DebugH3')
+
+    intro2 = doc.add_paragraph()
+    intro2.add_run('화면 좌측 중간에 "총 호출 건수"라고 표시되는 값은 선택된 기간 동안의 총 데이터 수집 시도 건수를 나타냅니다.\n\n')
+
+    intro2.add_run('이 값의 계산 과정:\n').bold = True
+    intro2.add_run('1. 각 Job별로 성공, 실패, 미수집 건수를 조회합니다.\n')
+    intro2.add_run('2. 모든 Job의 건수를 합산합니다.\n')
+    intro2.add_run('3. 천 단위 구분자(쉼표)를 추가하여 표시합니다.\n\n')
+
+    # 단계별 코드 설명
+    doc.add_paragraph('단계별 코드 흐름:', style='DebugH3')
+
+    # DB 단계
+    db_step2 = doc.add_paragraph(style='DebugCode')
+    db_step2.add_run('1. DB 단계 - 각 Job별 통계 조회\n')
+    db_step2.add_run('SELECT job_id,\n')
+    db_step2.add_run('       SUM(CASE WHEN status = \'CD901\' THEN 1 ELSE 0 END) as success_count,\n')
+    db_step2.add_run('       SUM(CASE WHEN status = \'CD902\' THEN 1 ELSE 0 END) as fail_count,\n')
+    db_step2.add_run('       SUM(CASE WHEN status = \'CD903\' THEN 1 ELSE 0 END) as no_data_count\n')
+    db_step2.add_run('FROM tb_con_hist GROUP BY job_id  -- 각 Job별 통계\n\n')
+
+    # Service 단계
+    service_step2 = doc.add_paragraph(style='DebugCode')
+    service_step2.add_run('2. Service 단계 - 총합 계산\n')
+    service_step2.add_run('total_collections = 0\n')
+    service_step2.add_run('for job in job_list:\n')
+    service_step2.add_run('    total_collections += job.success_count + job.fail_count + job.no_data_count\n\n')
+
+    # JavaScript 단계
+    js_step2 = doc.add_paragraph(style='DebugCode')
+    js_step2.add_run('3. JavaScript 단계 - 천 단위 구분 및 표시\n')
+    js_step2.add_run('function formatNumberWithKoreanUnits(num) {\n')
+    js_step2.add_run('    return num.toLocaleString(\'ko-KR\');  // 1,234,567 형태로 변환\n')
+    js_step2.add_run('}\n')
+    js_step2.add_run('totalCollectionsElement.textContent = formatNumberWithKoreanUnits(total_collections);\n\n')
+
+    # 3. "일간 성공률" 표시 요소
+    doc.add_paragraph('3. "일간 성공률" 표시 요소 (하단 기간별 현황의 첫 번째)', style='DebugH3')
+
+    intro3 = doc.add_paragraph()
+    intro3.add_run('화면 하단의 기간별 현황에서 "일간"이라고 표시되는 성공률은 오늘 하루 동안의 데이터 수집 성공률을 나타냅니다.\n\n')
+
+    intro3.add_run('이 값의 계산 과정:\n').bold = True
+    intro3.add_run('1. 오늘 예정된 모든 수집 작업을 확인합니다.\n')
+    intro3.add_run('2. 오늘 성공한 작업 수를 계산합니다.\n')
+    intro3.add_run('3. (성공 건수 ÷ 예정 건수) × 100으로 성공률을 계산합니다.\n\n')
+
+    # 단계별 코드 설명
+    doc.add_paragraph('단계별 코드 흐름:', style='DebugH3')
+
+    # Service 단계
+    service_step3 = doc.add_paragraph(style='DebugCode')
+    service_step3.add_run('1. Service 단계 - 오늘 데이터 집계\n')
+    service_step3.add_run('today_scheduled = get_today_schedule_count()  # 오늘 예정된 작업 수\n')
+    service_step3.add_run('today_success = get_today_success_count()  # 오늘 성공한 작업 수\n')
+    service_step3.add_run('day_success_rate = (today_success / today_scheduled * 100) if today_scheduled > 0 else 0\n\n')
+
+    # JavaScript 단계
+    js_step3 = doc.add_paragraph(style='DebugCode')
+    js_step3.add_run('2. JavaScript 단계 - 백분율 표시\n')
+    js_step3.add_run('daySuccessRateElement.textContent = day_success_rate.toFixed(2) + \'%\';\n\n')
+
+    # 4. Job별 상세 현황 테이블
+    doc.add_paragraph('4. Job별 상세 현황 테이블 (화면 중앙의 표)', style='DebugH3')
+
+    intro4 = doc.add_paragraph()
+    intro4.add_run('화면 중앙의 큰 테이블은 각 Job별 상세 현황을 보여줍니다. Job ID, 데이터명, 주기, 성공률 등의 정보를 포함합니다.\n\n')
+
+    intro4.add_run('이 테이블의 데이터 흐름:\n').bold = True
+    intro4.add_run('1. DB에서 각 Job의 통계 정보를 조회합니다.\n')
+    intro4.add_run('2. 권한에 따라 접근 가능한 Job만 필터링합니다.\n')
+    intro4.add_run('3. 페이징을 적용하여 현재 페이지의 데이터만 표시합니다.\n')
+    intro4.add_run('4. HTML 테이블 형태로 렌더링합니다.\n\n')
+
+    # 단계별 코드 설명
+    doc.add_paragraph('단계별 코드 흐름:', style='DebugH3')
+
+    # DB 단계
+    db_step4 = doc.add_paragraph(style='DebugCode')
+    db_step4.add_run('1. DB 단계 - Job별 통계 조회\n')
+    db_step4.add_run('SELECT job_id, cd_nm, frequency,\n')
+    db_step4.add_run('       (SUM(CASE WHEN status = \'CD901\' THEN 1 ELSE 0 END) * 100.0 / COUNT(*)) as success_rate\n')
+    db_step4.add_run('FROM tb_con_hist h JOIN tb_con_mst m ON h.job_id = m.cd\n')
+    db_step4.add_run('WHERE [기간 조건] AND job_id IN (권한 있는 Job 목록)\n')
+    db_step4.add_run('GROUP BY job_id, cd_nm, frequency\n')
+    db_step4.add_run('ORDER BY job_id  -- job_stats 배열 생성\n\n')
+
+    # JavaScript 단계
+    js_step4 = doc.add_paragraph(style='DebugCode')
+    js_step4.add_run('2. JavaScript 단계 - 테이블 렌더링\n')
+    js_step4.add_run('function renderDashboardSummaryTable(jobStats) {\n')
+    js_step4.add_run('    const tbody = document.getElementById(\'dashboardTableBody\');\n')
+    js_step4.add_run('    tbody.innerHTML = jobStats.map(job => `\n')
+    js_step4.add_run('        <tr>\n')
+    js_step4.add_run('            <td>${job.job_id}</td>\n')
+    js_step4.add_run('            <td>${job.cd_nm}</td>\n')
+    js_step4.add_run('            <td>${job.frequency}</td>\n')
+    js_step4.add_run('            <td>${job.success_rate.toFixed(2)}%</td>\n')
+    js_step4.add_run('        </tr>\n')
+    js_step4.add_run('    `).join(\'\');\n')
+    js_step4.add_run('}\n\n')
+
+    doc.add_paragraph('※ 위 설명은 대시보드 화면의 주요 표시 요소들을 중심으로 한 것입니다. 각 값들은 실시간으로 업데이트되며, 사용자의 권한에 따라 표시되는 데이터가 달라집니다.', style='DebugH3')
+
+    # 실제 코드 예제 추가
+    doc.add_paragraph('실제 API 호출 및 데이터 처리 코드:', style='DebugH3')
+
+    # JavaScript API 호출 코드
+    js_api = doc.add_paragraph(style='DebugCode')
+    js_api.add_run('// static/js/modules/common/api/dashboard.js\n')
+    js_api.add_run('export async function fetchDashboardSummary(startDate, endDate, allData) {\n')
+    js_api.add_run('    const params = new URLSearchParams({\n')
+    js_api.add_run('        start_date: startDate,\n')
+    js_api.add_run('        end_date: endDate,\n')
+    js_api.add_run('        all_data: allData\n')
+    js_api.add_run('    });\n')
+    js_api.add_run('    const url = `${BASE_URL}/api/dashboard/summary?${params.toString()}`;\n')
+    js_api.add_run('    const response = await fetch(url);\n')
+    js_api.add_run('    if (!response.ok) {\n')
+    js_api.add_run('        const errorText = await response.text();\n')
+    js_api.add_run('        throw new Error(`HTTP error! status: ${response.status}`);\n')
+    js_api.add_run('    }\n')
+    js_api.add_run('    const data = await response.json();\n')
+    js_api.add_run('    return data;\n')
+    js_api.add_run('}\n\n')
+
+    # API Route 코드
+    api_route = doc.add_paragraph(style='DebugCode')
+    api_route.add_run('# routes/api/dashboard_api.py\n')
+    api_route.add_run('@dashboard_api_bp.route(\'/summary\', methods=[\'GET\'])\n')
+    api_route.add_run('@login_required\n')
+    api_route.add_run('@check_password_change_required\n')
+    api_route.add_run('def get_dashboard_summary():\n')
+    api_route.add_run('    try:\n')
+    api_route.add_run('        start_date_str = request.args.get(\'start_date\')\n')
+    api_route.add_run('        end_date_str = request.args.get(\'end_date\')\n')
+    api_route.add_run('        all_data_str = request.args.get(\'all_data\', \'false\')\n')
+    api_route.add_run('        all_data = all_data_str.lower() == \'true\'\n')
+    api_route.add_run('        \n')
+    api_route.add_run('        user = session.get(\'user\')\n')
+    api_route.add_run('        summary_data = dashboard_service.get_summary(\n')
+    api_route.add_run('            start_date_str, end_date_str, all_data, user=user)\n')
+    api_route.add_run('        \n')
+    api_route.add_run('        return jsonify(summary_data), 200\n')
+    api_route.add_run('    except Exception as e:\n')
+    api_route.add_run('        return jsonify({"message": "데이터 조회 실패"}), 500\n\n')
+
+    # Service 메소드 코드
+    service_method = doc.add_paragraph(style='DebugCode')
+    service_method.add_run('# service/dashboard_service.py\n')
+    service_method.add_run('def get_summary(self, start_date, end_date, all_data, user):\n')
+    service_method.add_run('    # 1. 권한 검증\n')
+    service_method.add_run('    allowed_job_ids = self._get_allowed_job_ids(user)\n')
+    service_method.add_run('    if allowed_job_ids is not None and not allowed_job_ids:\n')
+    service_method.add_run('        return []  # 권한 없음\n')
+    service_method.add_run('    \n')
+    service_method.add_run('    # 2. 데이터 조회\n')
+    service_method.add_run('    historical_data = self.dashboard_mapper.get_summary(\n')
+    service_method.add_run('        start_date, end_date, all_data, allowed_job_ids)\n')
+    service_method.add_run('    \n')
+    service_method.add_run('    # 3. 오늘 데이터 결합\n')
+    service_method.add_run('    today_data = self._get_today_schedule_data()\n')
+    service_method.add_run('    \n')
+    service_method.add_run('    # 4. 최종 데이터 가공\n')
+    service_method.add_run('    return self._process_summary_data(historical_data, today_data)\n\n')
+
+    # DAO 메소드 코드
+    dao_method = doc.add_paragraph(style='DebugCode')
+    dao_method.add_run('# mapper/dashboard_mapper.py\n')
+    dao_method.add_run('def get_summary(self, start_date, end_date, all_data, job_ids):\n')
+    dao_method.add_run('    query, params = DashboardSQL.get_dashboard_summary(\n')
+    dao_method.add_run('        start_date, end_date, all_data, job_ids)\n')
+    dao_method.add_run('    \n')
+    dao_method.add_run('    with self.conn.cursor() as cur:\n')
+    dao_method.add_run('        cur.execute(query, params)\n')
+    dao_method.add_run('        results = [dict(zip([desc[0] for desc in cur.description], row)) \n')
+    dao_method.add_run('                  for row in cur.fetchall()]\n')
+    dao_method.add_run('    \n')
+    dao_method.add_run('    return convert_to_new_columns(\'TB_CON_HIST\', results)\n\n')
+
+    # 2.2 데이터 분석 페이지
+    doc.add_paragraph('2.2 데이터 분석 페이지', style='DebugH2')
+
+    # 데이터 분석 데이터 호출 흐름 설명
+    analysis_desc = doc.add_paragraph()
+    analysis_desc.add_run('데이터 분석 페이지의 주요 데이터 호출 흐름:\n\n').bold = True
+
+    # HTML 레벨
+    analysis_desc.add_run('HTML 레벨 (templates/data_analysis.html):\n').bold = True
+    analysis_desc.add_run('• 탭 메뉴: 요약 데이터, 추이 데이터, 원천 데이터\n')
+    analysis_desc.add_run('• 필터 컨트롤: 기간, Job ID, 상태 선택\n')
+    analysis_desc.add_run('• JavaScript 모듈: /static/js/pages/data_analysis.js\n\n')
+
+    # JavaScript 레벨
+    analysis_desc.add_run('JavaScript 레벨:\n').bold = True
+    analysis_desc.add_run('• static/js/modules/data_analysis/data.js: 데이터 조회 함수들\n')
+    analysis_desc.add_run('• fetchSummaryData(), fetchTrendData(), fetchRawData()\n')
+    analysis_desc.add_run('• API 호출 및 결과 처리\n\n')
+
+    # API 레벨
+    analysis_desc.add_run('API 레벨 (routes/api/analysis_api.py):\n').bold = True
+    analysis_desc.add_run('• /api/analysis/summary: 요약 통계 데이터\n')
+    analysis_desc.add_run('• /api/analysis/trend: 추이 차트 데이터\n')
+    analysis_desc.add_run('• /api/analysis/raw: 원천 데이터\n\n')
+
+    # Service/DAO 레벨
+    analysis_desc.add_run('Service/DAO 레벨:\n').bold = True
+    analysis_desc.add_run('• service/analysis_service.py: 분석 비즈니스 로직\n')
+    analysis_desc.add_run('• dao/analytics_dao.py: 분석 데이터 조회\n')
+    analysis_desc.add_run('• 복합 쿼리: 기간별 집계, 필터링 등\n\n')
+
+    # 2.3 차트 분석 페이지
+    doc.add_paragraph('2.3 차트 분석 페이지', style='DebugH2')
+
+    # 차트 분석 데이터 호출 흐름 설명
+    chart_desc = doc.add_paragraph()
+    chart_desc.add_run('차트 분석 페이지의 주요 데이터 호출 흐름:\n\n').bold = True
+
+    # HTML 레벨
+    chart_desc.add_run('HTML 레벨 (templates/chart_analysis.html):\n').bold = True
+    chart_desc.add_run('• Chart.js 기반 시각화 컴포넌트\n')
+    chart_desc.add_run('• 성공률 추이 라인 차트\n')
+    chart_desc.add_run('• 장애 코드 현황 파이 차트\n\n')
+
+    # JavaScript 레벨
+    chart_desc.add_run('JavaScript 레벨:\n').bold = True
+    chart_desc.add_run('• static/js/modules/chart_analysis/chart.js\n')
+    chart_desc.add_run('• Chart.js 라이브러리 연동\n')
+    chart_desc.add_run('• 인터랙티브 차트 기능\n\n')
+
+    # API/Service 레벨
+    chart_desc.add_run('API/Service 레벨:\n').bold = True
+    chart_desc.add_run('• /api/chart/trend: 성공률 추이 데이터\n')
+    chart_desc.add_run('• /api/chart/errors: 장애 코드 현황 데이터\n')
+    chart_desc.add_run('• 시계열 데이터 처리 및 집계\n\n')
+
+    # 2.4 카드 요약 페이지
+    doc.add_paragraph('2.4 카드 요약 페이지', style='DebugH2')
+
+    # 카드 요약 데이터 호출 흐름 설명
+    card_desc = doc.add_paragraph()
+    card_desc.add_run('카드 요약 페이지의 주요 데이터 호출 흐름:\n\n').bold = True
+
+    # HTML 레벨
+    card_desc.add_run('HTML 레벨 (templates/card_summary.html):\n').bold = True
+    card_desc.add_run('• 그룹별 카드 레이아웃 (CD100, CD200 등)\n')
+    card_desc.add_run('• 실시간 상태 표시 (성공/수집중/실패/미수집/예정)\n')
+    card_desc.add_run('• 표시 옵션 (명칭/코드 선택)\n\n')
+
+    # JavaScript 레벨
+    card_desc.add_run('JavaScript 레벨:\n').bold = True
+    card_desc.add_run('• static/js/pages/card_summary.js\n')
+    card_desc.add_run('• 실시간 데이터 업데이트\n')
+    card_desc.add_run('• 그룹별 데이터 집계\n\n')
+
+    # API/Service 레벨
+    card_desc.add_run('API/Service 레벨:\n').bold = True
+    card_desc.add_run('• collection_schedule_service: 오늘의 스케줄 데이터\n')
+    card_desc.add_run('• 실시간 상태 계산 및 표시\n\n')
+
+    # 2.5 관리자 설정 페이지
+    doc.add_paragraph('2.5 관리자 설정 페이지', style='DebugH2')
+
+    # 관리자 설정 데이터 호출 흐름 설명
+    admin_desc = doc.add_paragraph()
+    admin_desc.add_run('관리자 설정 페이지의 주요 데이터 호출 흐름:\n\n').bold = True
+
+    # HTML 레벨
+    admin_desc.add_run('HTML 레벨 (templates/mngr_sett.html):\n').bold = True
+    admin_desc.add_run('• 탭 메뉴: 기본 설정, 수집 스케줄, 아이콘, 차트, 사용자, 권한, 통계\n')
+    admin_desc.add_run('• 동적 폼 생성 및 설정 값 표시\n')
+    admin_desc.add_run('• 실시간 설정 저장 및 적용\n\n')
+
+    # JavaScript 레벨
+    admin_desc.add_run('JavaScript 레벨:\n').bold = True
+    admin_desc.add_run('• static/js/pages/mngr_sett.js\n')
+    admin_desc.add_run('• 각 탭별 데이터 로드 및 저장\n')
+    admin_desc.add_run('• 설정 값 검증 및 적용\n\n')
+
+    # API/Service 레벨
+    admin_desc.add_run('API/Service 레벨:\n').bold = True
+    admin_desc.add_run('• /api/admin/basic: 기본 설정 CRUD\n')
+    admin_desc.add_run('• /api/admin/schedule: 수집 스케줄 설정\n')
+    admin_desc.add_run('• /api/admin/users: 사용자 관리\n')
+    admin_desc.add_run('• tb_mngr_sett 테이블 조작\n\n')
+
+    # 2.6 인증 시스템
+    doc.add_paragraph('2.6 인증 시스템', style='DebugH2')
+
+    # 인증 시스템 데이터 호출 흐름 설명
+    auth_desc = doc.add_paragraph()
+    auth_desc.add_run('인증 시스템의 주요 데이터 호출 흐름:\n\n').bold = True
+
+    # HTML 레벨
+    auth_desc.add_run('HTML 레벨:\n').bold = True
+    auth_desc.add_run('• templates/login.html: 로그인 폼\n')
+    auth_desc.add_run('• templates/change_password.html: 비밀번호 변경 폼\n')
+    auth_desc.add_run('• 세션 기반 사용자 정보 표시\n\n')
+
+    # JavaScript 레벨
+    auth_desc.add_run('JavaScript 레벨:\n').bold = True
+    auth_desc.add_run('• static/js/pages/login.js: 로그인 처리\n')
+    auth_desc.add_run('• static/js/pages/change_password.js: 비밀번호 변경\n')
+    auth_desc.add_run('• 폼 검증 및 API 호출\n\n')
+
+    # API/Service 레벨
+    auth_desc.add_run('API/Service 레벨:\n').bold = True
+    auth_desc.add_run('• /api/auth/login: 사용자 인증\n')
+    auth_desc.add_run('• /api/auth/register: 사용자 등록\n')
+    auth_desc.add_run('• /api/auth/change_password: 비밀번호 변경\n')
+    auth_desc.add_run('• tb_user 테이블 조작\n\n')
+
+    # 3. 디버깅 가이드
+    doc.add_paragraph('3. 디버깅 가이드', style='DebugH1')
+
+    # 3.1 데이터가 표시되지 않는 경우
+    doc.add_paragraph('3.1 데이터가 표시되지 않는 경우', style='DebugH2')
+    debug1 = doc.add_paragraph()
+    debug1.add_run('1. 브라우저 개발자 도구 Network 탭에서 API 호출 상태 확인\n')
+    debug1.add_run('2. 403/401 에러 시 권한 문제 검토\n')
+    debug1.add_run('3. 로그 파일에서 권한 관련 메시지 확인\n')
+    debug1.add_run('4. 해당 페이지의 HTML 템플릿과 JavaScript 코드 검증\n\n')
+
+    # 3.2 권한 문제 해결
+    doc.add_paragraph('3.2 권한 문제 해결', style='DebugH2')
+    debug2 = doc.add_paragraph()
+    debug2.add_run('1. 사용자 관리 메뉴에서 권한 설정 확인\n')
+    debug2.add_run('2. 데이터 접근 권한 탭에서 Job ID 권한 확인\n')
+    debug2.add_run('3. 로그에서 "권한 없음" 메시지 확인\n')
+    debug2.add_run('4. 미들웨어 권한 체크 로직 검증\n\n')
+
+    # 3.3 데이터 이상 시
+    doc.add_paragraph('3.3 데이터 이상 시', style='DebugH2')
+    debug3 = doc.add_paragraph()
+    debug3.add_run('1. DAO 메소드의 SQL 쿼리 확인\n')
+    debug3.add_run('2. DB에서 직접 쿼리 실행하여 결과 확인\n')
+    debug3.add_run('3. Service 레벨의 데이터 가공 로직 검증\n')
+    debug3.add_run('4. Route 레벨의 파라미터 처리 확인\n\n')
+
+    # 부록 A. 데이터 흐름 요약
+    doc.add_paragraph('부록 A. 데이터 흐름 요약', style='DebugH1')
+    summary = doc.add_paragraph()
+    summary.add_run('A.1 일반적인 데이터 호출 패턴\n').bold = True
+    summary.add_run('HTML (템플릿) → JavaScript (API 호출) → Route (권한 체크) → Service (비즈니스 로직) → DAO (SQL 실행) → DB (데이터 저장소)\n\n')
+
+    summary.add_run('A.2 권한 검증 포인트\n').bold = True
+    summary.add_run('• Route 레벨: 메뉴 접근 권한\n')
+    summary.add_run('• Service 레벨: 데이터 접근 권한 필터링\n')
+    summary.add_run('• 미들웨어: 세션 및 계정 상태 검증\n\n')
+
+    summary.add_run('A.3 에러 처리 패턴\n').bold = True
+    summary.add_run('• 401: 로그인 필요\n')
+    summary.add_run('• 403: 권한 부족\n')
+    summary.add_run('• 500: 서버 내부 오류\n')
+    summary.add_run('• 빈 배열: 데이터 접근 권한 없음\n\n')
+
+    try:
+        doc.save('MSYS_Data_Flow_Debug_Guide.docx')
+        print('실제 소스 코드 기반 데이터 호출 흐름 디버깅 가이드 생성 완료: MSYS_Data_Flow_Debug_Guide.docx')
+    except PermissionError:
+        doc.save('MSYS_Data_Flow_Debug_Guide_v3.docx')
+        print('실제 소스 코드 기반 데이터 호출 흐름 디버깅 가이드 생성 완료: MSYS_Data_Flow_Debug_Guide_v3.docx')
+
+
+def process_subsection(doc, subsection, code_style):
+    """MD 서브섹션을 DOCX로 변환 - MD 파일의 모든 코드 블록을 포함"""
+    lines = subsection.strip().split('\n')
+
+    # 코드 블록과 일반 텍스트 분리하여 처리
+    in_code_block = False
+    current_para = None
+    code_language = ""
+
+    for line in lines:
+        if line.strip().startswith('```'):
+            if in_code_block:
+                # 코드 블록 끝
+                in_code_block = False
+                if current_para:
+                    current_para.add_run('\n')
+                code_language = ""
+            else:
+                # 코드 블록 시작
+                in_code_block = True
+                code_language = line.strip()[3:]  # ```javascript 등에서 언어 추출
+                current_para = doc.add_paragraph(style='DebugCode')
+                # 코드 블록 시작 표시
+                current_para.add_run(f'```{code_language}\n')
+        elif in_code_block:
+            # 코드 내용
+            if current_para:
+                current_para.add_run(line + '\n')
+        else:
+            # 일반 텍스트
+            if line.strip():
+                if '**' in line:
+                    # 볼드 텍스트 처리
+                    parts = line.split('**')
+                    para = doc.add_paragraph()
+                    for i, part in enumerate(parts):
+                        if i % 2 == 1:  # 홀수 인덱스는 볼드
+                            para.add_run(part).bold = True
+                        else:
+                            para.add_run(part)
+                elif line.startswith('#### ') or line.startswith('### ') or line.startswith('## ') or line.startswith('# '):
+                    # 헤딩 처리
+                    heading_text = line.strip()
+                    if heading_text.startswith('#### '):
+                        para = doc.add_paragraph(heading_text[5:], style='DebugH3')
+                    elif heading_text.startswith('### '):
+                        para = doc.add_paragraph(heading_text[4:], style='DebugH2')
+                    elif heading_text.startswith('## '):
+                        para = doc.add_paragraph(heading_text[3:], style='DebugH1')
+                    else:
+                        para = doc.add_paragraph(heading_text[2:], style='DebugTitle')
+                elif line.startswith('1. ') or line.startswith('2. ') or line.startswith('3. ') or line.startswith('4. ') or line.startswith('5. ') or line.startswith('6. ') or line.startswith('7. '):
+                    # 번호 매기기 항목
+                    para = doc.add_paragraph()
+                    para.add_run(line)
+                elif line.startswith('• ') or line.startswith('- '):
+                    # 글머리 기호
+                    para = doc.add_paragraph()
+                    para.add_run(line)
+                elif line.strip() == '---':
+                    # 구분선
+                    doc.add_paragraph('---')
+                elif line.strip().startswith('**') and line.strip().endswith('**'):
+                    # 전체 볼드 라인
+                    para = doc.add_paragraph()
+                    para.add_run(line.strip()[2:-2]).bold = True
+                else:
+                    # 일반 텍스트
+                    para = doc.add_paragraph()
+                    para.add_run(line)
+
+
+def process_debug_guide(doc, debug_content, code_style):
+    """디버깅 가이드 섹션 처리"""
+    lines = debug_content.split('\n')
+
+    for line in lines:
+        if line.strip().startswith('### 1. 데이터가 표시되지 않는 경우'):
+            doc.add_paragraph('3.1 데이터가 표시되지 않는 경우', style='DebugH2')
+        elif line.strip().startswith('### 2. 권한 문제 해결'):
+            doc.add_paragraph('3.2 권한 문제 해결', style='DebugH2')
+        elif line.strip().startswith('### 3. 데이터 이상 시'):
+            doc.add_paragraph('3.3 데이터 이상 시', style='DebugH2')
+        elif line.strip():
+            para = doc.add_paragraph()
+            para.add_run(line)
+
 if __name__ == '__main__':
     create_installation_manual()
     create_function_manual()
     create_operation_manual()
     create_database_manual()
     create_cpu_monitor_manual()
+    create_data_flow_debug_guide()
+    create_data_flow_debug_manual()
     print('모든 메뉴얼 생성이 완료되었습니다.')

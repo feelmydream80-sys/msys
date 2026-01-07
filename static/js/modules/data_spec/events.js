@@ -189,6 +189,35 @@ async function handleSaveWithCheck() {
 }
 
 /**
+ * @description 비밀번호 확인 후 저장 실행
+ */
+async function handleSaveWithPasswordCheck() {
+    const password = ui.elements.savePasswordInput.value;
+
+    if (!password || password.length < 4) {
+        ui.elements.savePasswordErrorMsg.textContent = '4자리 이상의 비밀번호를 입력해주세요.';
+        ui.elements.savePasswordErrorMsg.classList.remove('hidden');
+        return;
+    }
+
+    ui.elements.confirmSaveBtn.disabled = true;
+    ui.elements.savePasswordErrorMsg.classList.add('hidden');
+
+    try {
+        // 비밀번호를 폼에 설정하고 저장
+        ui.elements.passwordInput.value = password;
+        await handleSave();
+        ui.closeSavePasswordModal();
+    } catch (error) {
+        console.error('Save error:', error);
+        ui.elements.savePasswordErrorMsg.textContent = `저장 실패: ${error.message}`;
+        ui.elements.savePasswordErrorMsg.classList.remove('hidden');
+    } finally {
+        ui.elements.confirmSaveBtn.disabled = false;
+    }
+}
+
+/**
  * @description 삭제 버튼 클릭 이벤트 핸들러
  */
 async function handleDelete() {
@@ -300,6 +329,13 @@ function initializeEventListeners() {
     ui.elements.saveBtn.addEventListener('click', handleSaveWithCheck);
     ui.elements.deleteBtn.addEventListener('click', handleDelete);
 
+    // 모달 배경 클릭으로 닫기
+    ui.elements.modal.addEventListener('click', (e) => {
+        if (e.target === ui.elements.modal) {
+            ui.closeModal();
+        }
+    });
+
     document.getElementById('specSearch').addEventListener('input', handleSearch);
 
     // 메타데이터 불러오기 이벤트
@@ -311,6 +347,26 @@ function initializeEventListeners() {
     ui.elements.confirmDeleteBtn.addEventListener('click', handleConfirmDelete);
     ui.elements.passwordConfirmInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') handleConfirmDelete();
+    });
+
+    // Save password confirm modal events
+    ui.elements.cancelSaveBtn.addEventListener('click', ui.closeSavePasswordModal);
+    ui.elements.confirmSaveBtn.addEventListener('click', handleSaveWithPasswordCheck);
+    ui.elements.savePasswordInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') handleSaveWithPasswordCheck();
+    });
+
+    // Modal backdrop click to close
+    ui.elements.savePasswordConfirmModal.addEventListener('click', (e) => {
+        if (e.target === ui.elements.savePasswordConfirmModal) {
+            ui.closeSavePasswordModal();
+        }
+    });
+
+    ui.elements.passwordConfirmModal.addEventListener('click', (e) => {
+        if (e.target === ui.elements.passwordConfirmModal) {
+            ui.closeDeletePasswordModal();
+        }
     });
 }
 
@@ -445,9 +501,10 @@ function parseAndFill(text) {
  */
 export function initializePage() {
     ui.initializeDOMElements();
+
     initializeEventListeners();
     loadSpecs();
-    
+
     // 카드 접기/펴기 기능 초기화
     initCollapsibleFeatures();
 

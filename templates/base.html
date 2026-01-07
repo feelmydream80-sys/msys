@@ -11,6 +11,11 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='vendor/css/flatpickr.min.css') }}?v={{ now.timestamp() }}">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='vendor/css/dataTables.tailwindcss.min.css') }}?v={{ now.timestamp() }}">
 
+    <!-- UI 표준화 CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}?v={{ now.timestamp() }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/utilities.css') }}?v={{ now.timestamp() }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}?v={{ now.timestamp() }}">
+
     <link rel="stylesheet" href="{{ url_for('static', filename='css/common.css') }}?v={{ now.timestamp() }}">
     
     {% block head %}{% endblock %}
@@ -114,6 +119,7 @@
     <script src="{{ url_for('static', filename='js/session_timer.js') }}?v={{ now.timestamp() }}"></script>
     <script type="module" src="{{ url_for('static', filename='js/router.js') }}?v={{ now.timestamp() }}"></script>
     <script type="module" src="{{ url_for('static', filename='js/utils/toast.js') }}?v={{ now.timestamp() }}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/components/card.js') }}?v={{ now.timestamp() }}"></script>
     {% block scripts %}{% endblock %}
 </body>
 </html>
