@@ -1,5 +1,6 @@
 {
     "TB_MNGR_SETT": {
+        "job_id": "cd",
         "sett_id": "cd",
         "CNN_FAILR_THRS_VAL": "cnn_failr_thrs_val",
         "CNN_WARN_THRS_VAL": "cnn_warn_thrs_val",
