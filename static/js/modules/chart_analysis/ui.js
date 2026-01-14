@@ -84,9 +84,9 @@ export function renderJobCheckboxes(labelDisplayType = 'name', dataPermissions =
         : baseFilteredList;
 
     const sortedJobList = [...filteredJobList].sort((a, b) => {
-        const idA = a.job_id;
-        const idB = b.job_id;
-        return idA.localeCompare(idB);
+        const numA = parseInt(a.job_id.replace('CD', ''), 10);
+        const numB = parseInt(b.job_id.replace('CD', ''), 10);
+        return numA - numB;
     });
 
     sortedJobList.forEach(job => {

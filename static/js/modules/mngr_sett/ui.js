@@ -59,14 +59,23 @@ export function renderSettingsTable(allMngrSett, allIcons) {
     if (!settingsTableBody) return;
 
     settingsTableBody.innerHTML = '';
-    renderChartSettingsTable(allMngrSett); // 차트 설정 테이블도 함께 렌더링
 
     if (!allMngrSett || allMngrSett.length === 0) {
         settingsTableBody.innerHTML = '<tr><td colspan="20" class="text-center py-4">표시할 Job ID가 없습니다. (tb_con_hist에 이력이 있는 Job ID만 표시됩니다.)</td></tr>';
+        renderChartSettingsTable([]); // 차트 설정 테이블도 함께 렌더링
         return;
     }
 
-    allMngrSett.forEach(setting => {
+    // Job ID를 숫자 값 기준으로 정렬 (CD100, CD300, CD1000 순서)
+    const sortedMngrSett = allMngrSett.slice().sort((a, b) => {
+        const aNum = parseInt(a.cd.replace('CD', ''));
+        const bNum = parseInt(b.cd.replace('CD', ''));
+        return aNum - bNum;
+    });
+
+    renderChartSettingsTable(sortedMngrSett); // 차트 설정 테이블도 함께 렌더링
+
+    sortedMngrSett.forEach(setting => {
         const row = settingsTableBody.insertRow();
         row.dataset.cd = String(setting.cd);
 

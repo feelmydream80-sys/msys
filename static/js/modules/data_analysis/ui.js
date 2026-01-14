@@ -435,7 +435,11 @@ function renderJobInfoTablePage(pageData) {
  */
 export function renderJobInfoTable() {
     const jobMstInfoMap = getJobMstInfoMap();
-    const jobInfoData = Object.keys(jobMstInfoMap).map(jobId => ({
+    const jobInfoData = Object.keys(jobMstInfoMap).sort((a, b) => {
+        const numA = parseInt(a.replace('CD', ''), 10);
+        const numB = parseInt(b.replace('CD', ''), 10);
+        return numA - numB;
+    }).map(jobId => ({
         job_id: jobId,
         cd_nm: jobMstInfoMap[jobId].cd_nm || '',
         item6: jobMstInfoMap[jobId].item6 || '',

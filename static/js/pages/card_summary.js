@@ -68,7 +68,11 @@ async function fetchAndRenderCardSummary() {
             
             const fragment = document.createDocumentFragment();
 
-            Object.keys(summaryData).sort().forEach(cd => {
+            Object.keys(summaryData).sort((a, b) => {
+                const numA = parseInt(a.replace('CD', ''), 10);
+                const numB = parseInt(b.replace('CD', ''), 10);
+                return numA - numB;
+            }).forEach(cd => {
                 const data = summaryData[cd];
                 const totalJobs = data.success.count + data.progress.count + data.fail.count;
 

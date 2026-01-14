@@ -39,6 +39,8 @@ class CollectionScheduleService:
 
         # 스케줄 외 실행은 표시하지 않음 (매칭되지 않은 히스토리 추가하지 않음)
 
+        # Job ID 숫자 값 기준 오름차순 정렬 적용
+        scheduled_tasks.sort(key=lambda x: int(x['job_id'][2:]))
         return scheduled_tasks
 
     def _fetch_and_group_history_data(self, start_date, end_date, allowed_job_ids: Optional[List[str]], user: Optional[Dict]) -> Dict[str, List[Dict]]:

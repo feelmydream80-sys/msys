@@ -45,6 +45,12 @@ async function loadDashboardSummary(initialLoad = false) {
 
     try {
         const summaryData = await fetchDashboardSummary(startDate, endDate, allData);
+        // Job ID 숫자 값 기준 오름차순 정렬 적용
+        summaryData.sort((a, b) => {
+            const numA = parseInt(a.job_id.replace('CD', ''), 10);
+            const numB = parseInt(b.job_id.replace('CD', ''), 10);
+            return numA - numB;
+        });
         setDashboardSummaryData(summaryData); // 전체 데이터 저장
         dataFlowStatus.dashboardSummaryFetch.apiResponseCount = summaryData.length;
 

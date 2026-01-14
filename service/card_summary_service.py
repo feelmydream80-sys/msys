@@ -81,4 +81,9 @@ class CardSummaryService:
                     summary_data[group]['scheduled']['count'] += 1
                     summary_data[group]['scheduled']['jobs'].append(formatted_job)
 
+        # Job ID 숫자 값 기준 오름차순 정렬 적용
+        for group in summary_data:
+            for status_key in ['success', 'progress', 'fail', 'uncollected', 'scheduled']:
+                summary_data[group][status_key]['jobs'].sort(key=lambda x: int(x.split('(')[0][2:]))
+
         return summary_data

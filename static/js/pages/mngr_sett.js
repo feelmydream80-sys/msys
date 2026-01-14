@@ -1920,7 +1920,14 @@ function populatePermissionLists(allJobs, allowedJobIds = []) {
     const allowedSet = new Set(allowedJobIds);
     const allJobsMap = new Map(allJobs.map(job => [job.cd, job]));
 
-    allJobs.forEach(job => {
+    // Job ID를 숫자 값 기준으로 정렬
+    const sortedJobs = allJobs.slice().sort((a, b) => {
+        const aNum = parseInt(a.cd.replace('CD', ''));
+        const bNum = parseInt(b.cd.replace('CD', ''));
+        return aNum - bNum;
+    });
+
+    sortedJobs.forEach(job => {
         // 100단위 코드는 목록에 표시하지 않음
         if (job.cd.endsWith('00')) return;
 

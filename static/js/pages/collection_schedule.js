@@ -268,7 +268,11 @@ export function init() {
                 return acc;
             }, {});
 
-            Object.keys(jobsByGroup).sort().forEach(groupName => {
+            Object.keys(jobsByGroup).sort((a, b) => {
+                const numA = parseInt(a.replace('CD', ''), 10);
+                const numB = parseInt(b.replace('CD', ''), 10);
+                return numA - numB;
+            }).forEach(groupName => {
                 const groupJobs = jobsByGroup[groupName];
                 const groupingThreshold = settingsManager.get('grpMinCnt');
 
@@ -326,7 +330,11 @@ export function init() {
 
                     const popup = document.createElement('div');
                     popup.className = 'popup';
-                    groupJobs.sort((a, b) => a.job_id.localeCompare(b.job_id)).forEach(job => {
+                    groupJobs.sort((a, b) => {
+                        const numA = parseInt(a.job_id.replace('CD', ''), 10);
+                        const numB = parseInt(b.job_id.replace('CD', ''), 10);
+                        return numA - numB;
+                    }).forEach(job => {
                         const popupDisplayMode = document.querySelector('input[name="displayMode"]:checked').value;
                         let originalName = popupDisplayMode === 'name' && mstData[job.job_id] ? mstData[job.job_id] : job.job_id;
                         const statusInfo = statusMap[job.status] || { key: 'schd', class: 'status-scheduled' };
@@ -420,7 +428,11 @@ export function init() {
                    groupPill.addEventListener('click', togglePopup);
                 } else {
                     // Render individual job pills
-                    groupJobs.sort((a, b) => a.job_id.localeCompare(b.job_id));
+                    groupJobs.sort((a, b) => {
+                        const numA = parseInt(a.job_id.replace('CD', ''), 10);
+                        const numB = parseInt(b.job_id.replace('CD', ''), 10);
+                        return numA - numB;
+                    });
                     
                     groupJobs.forEach(job => {
                         const jobItem = document.createElement('div');

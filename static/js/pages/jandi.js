@@ -101,7 +101,11 @@ export function init() {
                 cd_nm: job.cd_nm,
                 cron: job.cron, // Use 'cron' from the new DAO response
                 description: job.description // Use 'description' from the new DAO response
-            }));
+            })).sort((a, b) => {
+                const numA = parseInt(a.job_id.replace('CD', ''), 10);
+                const numB = parseInt(b.job_id.replace('CD', ''), 10);
+                return numA - numB;
+            });
             initJobInfo(allJobInfoData, 5);
 
             renderPagedHeatmaps(true);
@@ -125,7 +129,11 @@ export function init() {
                 (jobMstInfoMap[id].cd_nm && jobMstInfoMap[id].cd_nm.toLowerCase().includes(lowerCaseSearchTerm))
             );
         }
-        jobIds.sort((a, b) => sortOrder === 'asc' ? a.localeCompare(b) : b.localeCompare(a));
+        jobIds.sort((a, b) => {
+            const numA = parseInt(a.replace('CD', ''), 10);
+            const numB = parseInt(b.replace('CD', ''), 10);
+            return sortOrder === 'asc' ? numA - numB : numB - numA;
+        });
 
         const totalItems = jobIds.length;
         const totalPages = Math.ceil(totalItems / pageSize);
