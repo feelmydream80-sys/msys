@@ -142,6 +142,10 @@ class CollectionScheduleService:
         if not user:
             return None
 
+        # 게스트 사용자는 모든 Job 허용
+        if user.get('is_guest') or user.get('id') == 'guest':
+            return None
+
         is_admin = 'mngr_sett' in user.get('permissions', [])
         if is_admin:
             return None  # 모든 Job 허용

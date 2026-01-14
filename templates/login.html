@@ -61,6 +61,7 @@
                 <button type="submit">로그인</button>
             </form>
             <div class="text-center mt-1">
+                <button onclick="guestLogin()" style="background: none; color: #28a745; text-decoration: underline; font-size: 0.9rem; margin-right: 1rem;">게스트로 입장</button>
                 <button onclick="openTab(event, 'reset-password-request')" style="background: none; color: #007bff; text-decoration: underline; font-size: 0.9rem;">비밀번호 초기화 요청</button>
             </div>
         </div>
@@ -132,6 +133,10 @@
                 document.querySelector('.tab-button[onclick*="\'login\'"]').className += " active";
             }
         }
+        function guestLogin() {
+            window.location.href = '/guest_login';
+        }
+
         // Initialize the default tab
         document.addEventListener('DOMContentLoaded', function() {
             openTab(null, 'login');

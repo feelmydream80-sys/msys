@@ -114,7 +114,7 @@ def setup_auth_middleware(app, auth_enabled=True):
             log_operation("인증", "세션 검증", "사용자 ID 누락", "강제 로그아웃", "WARNING")
             return redirect(url_for('auth.login'))
 
-        excluded_endpoints = ['auth.login', 'auth.logout', 'auth.register', 'auth.request_reset_password', 'static', 'index']
+        excluded_endpoints = ['auth.login', 'auth.logout', 'auth.register', 'auth.request_reset_password', 'auth.guest_login', 'static', 'index']
 
         if g.user:
             log_operation("인증", "권한 체크", "메뉴 접근", f"경로: {request.path}")

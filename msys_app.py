@@ -52,7 +52,11 @@ def create_app():
         from msys.database import get_db_connection
         from service.auth_service import AuthService
         from models.user import User
-        
+
+        # 게스트 사용자 처리
+        if user_id == 'guest':
+            return User('guest', ['collection_schedule'])
+
         conn = get_db_connection()
         auth_service = AuthService(conn)
         user_info = auth_service.get_user_by_id(user_id)
@@ -102,6 +106,12 @@ def create_app():
 
     # 블루프린트 초기화
     init_routes(app)
+
+    @app.before_request
+    def before_request():
+        # 세션에서 사용자 정보를 g 객체에 복원
+        if 'user' in session:
+            g.user = session['user']
 
     @app.route('/')
     def index():

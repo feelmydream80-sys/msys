@@ -552,18 +552,20 @@ export function init() {
         }
     }
 
-    weeklyBtn.addEventListener('click', () => {
-        if (!weeklyBtn.classList.contains('active')) {
-            weeklyBtn.classList.add('active');
-            monthlyBtn.classList.remove('active');
-            fetchData('weekly');
-        }
-    });
+    if (weeklyBtn) {
+        weeklyBtn.addEventListener('click', () => {
+            if (!weeklyBtn.classList.contains('active')) {
+                weeklyBtn.classList.add('active');
+                monthlyBtn.classList.remove('active');
+                fetchData('weekly');
+            }
+        });
+    }
 
     monthlyBtn.addEventListener('click', () => {
         if (!monthlyBtn.classList.contains('active')) {
             monthlyBtn.classList.add('active');
-            weeklyBtn.classList.remove('active');
+            if (weeklyBtn) weeklyBtn.classList.remove('active');
             fetchData('monthly');
         }
     });
@@ -602,6 +604,9 @@ export function init() {
         downloadExcelTemplateBtn.addEventListener('click', downloadExcelTemplate);
     }
 
-    // Initial load
-    fetchData('weekly');
+    // Initial load - 게스트는 월간으로 고정
+    const urlParams = new URLSearchParams(window.location.search);
+    const isGuest = urlParams.get('guest') === '1';
+    const initialView = isGuest ? 'monthly' : 'weekly';
+    fetchData(initialView);
 }

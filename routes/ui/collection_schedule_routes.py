@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, current_app, request, jsonify, session
+from flask import Blueprint, render_template, current_app, request, jsonify, session, g
 from ..auth_routes import login_required, check_password_change_required, collection_schedule_required
 from .dashboard_routes import log_menu_access
 from msys.database import get_db_connection
@@ -16,6 +16,12 @@ collection_schedule_bp = Blueprint('collection_schedule', __name__)
 @log_menu_access
 def collection_schedule():
     """데이터 수집 일정 페이지를 렌더링합니다."""
+    from flask_login import current_user
+    current_app.logger.info("=== COLLECTION_SCHEDULE PAGE ACCESS ===")
+    current_app.logger.info(f"current_user: id={current_user.id if current_user else None}, is_authenticated={current_user.is_authenticated if current_user else False}")
+    current_app.logger.info(f"session user: {session.get('user')}")
+    current_app.logger.info(f"g.user: {getattr(g, 'user', None)}")
+    current_app.logger.info("로그인 체크 통과, collection_schedule.html 렌더링")
     return render_template("collection_schedule.html")
 
 
@@ -23,8 +29,15 @@ def collection_schedule():
 @login_required
 def api_collection_schedule():
     """데이터 수집 일정 데이터를 API로 제공합니다."""
+    from flask_login import current_user
+    current_app.logger.info("=== COLLECTION_SCHEDULE API ACCESS ===")
+    current_app.logger.info(f"current_user: id={current_user.id if current_user else None}, is_authenticated={current_user.is_authenticated if current_user else False}")
+    current_app.logger.info(f"session user: {session.get('user')}")
+    current_app.logger.info(f"g.user: {getattr(g, 'user', None)}")
+
     user = session.get('user')
     view_type = request.args.get('view', 'weekly')
+    current_app.logger.info(f"view_type: {view_type}, user permissions: {user.get('permissions') if user else None}")
     
     today = datetime.now(pytz.timezone('Asia/Seoul')).date()
     

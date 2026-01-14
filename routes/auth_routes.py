@@ -406,6 +406,48 @@ def change_password():
     response.headers['Expires'] = '0'
     return response
 
+@auth_bp.route('/guest_login')
+def guest_login():
+    current_app.logger.info("=== GUEST LOGIN START ===")
+    # 게스트 세션 생성
+    guest_user = {
+        'user_id': 'guest',
+        'permissions': ['collection_schedule'],  # 히트맵만 접근 허용
+        'data_permissions': [],  # 데이터 권한 없음
+        'is_guest': True
+    }
+    current_app.logger.info(f"게스트 사용자 생성: {guest_user}")
+
+    from flask_login import login_user
+    from models.user import User
+
+    user = User(guest_user['user_id'], guest_user.get('permissions', []))
+    current_app.logger.info(f"User 객체 생성: id={user.id}, permissions={user.permissions}")
+
+    login_user(user)
+    current_app.logger.info("login_user() 호출 완료")
+
+    session['user'] = guest_user
+    current_app.logger.info(f"세션에 사용자 저장: {session.get('user')}")
+
+    # g 객체에 사용자 정보 설정
+    from flask import g
+    g.user = guest_user
+    current_app.logger.info(f"g.user 설정: {g.user}")
+
+    # 세션 유지 시간 설정 (일반 사용자와 동일)
+    from datetime import datetime, timedelta
+    import os
+    default_session_minutes = int(os.getenv('DEFAULT_SESSION_LIFETIME_MINUTES', '20'))
+    lifetime = timedelta(minutes=default_session_minutes)
+    session.permanent = True
+    session['expiry_time'] = (datetime.utcnow() + lifetime).isoformat()
+    current_app.logger.info(f"세션 만료 시간 설정: {session.get('expiry_time')}")
+
+    flash("게스트로 로그인되었습니다. 제한된 기능만 사용 가능합니다.", "info")
+    current_app.logger.info("=== GUEST LOGIN END: 리다이렉트 to collection_schedule ===")
+    return redirect(url_for('collection_schedule.collection_schedule') + '?guest=1')
+
 @auth_bp.route('/request-reset-password', methods=['POST'])
 def request_reset_password():
     data = request.json
