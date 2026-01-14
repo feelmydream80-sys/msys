@@ -91,6 +91,14 @@ export async function init() {
        
         await loadAnalyticsPageData();
 
+        // 엑셀 템플릿 다운로드 버튼 이벤트 리스너
+        const downloadExcelTemplateBtn = document.getElementById('downloadExcelTemplateBtn');
+        if (downloadExcelTemplateBtn) {
+            downloadExcelTemplateBtn.addEventListener('click', () => {
+                import('../utils/excelDownload.js').then(module => module.downloadExcelTemplate());
+            });
+        }
+
         dataFlowStatus.overallStatus = "success";
         showMessage('분석 페이지 로드 완료.', 'success');
 

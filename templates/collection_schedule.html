@@ -68,6 +68,8 @@
         z-index: 1000; /* Increased z-index */
         width: max-content;
         max-width: 350px; /* Added max-width to prevent excessively wide popups */
+        max-height: 60vh; /* Limit height to 60% of viewport height */
+        overflow-y: auto; /* Add vertical scroll when content exceeds max-height */
         box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
         text-align: left;
         transition: opacity 0.2s;

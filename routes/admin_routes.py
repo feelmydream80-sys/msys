@@ -424,19 +424,55 @@ def upload_excel_template():
         excel_template_dir = get_excel_template_dir()
         os.makedirs(excel_template_dir, exist_ok=True)
 
-        # 파일 저장 (항상 같은 이름으로 덮어쓰기)
-        excel_template_path = get_excel_template_path()
+        # 기존 파일들을 legacy 폴더로 이동
+        legacy_dir = os.path.join(excel_template_dir, 'legacy')
+        os.makedirs(legacy_dir, exist_ok=True)
+
+        import shutil
+        from datetime import datetime
+
+        for filename in os.listdir(excel_template_dir):
+            if filename.endswith(('.xlsx', '.xls')) and filename != 'legacy':
+                src_path = os.path.join(excel_template_dir, filename)
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                legacy_filename = f"{timestamp}_{filename}"
+                dst_path = os.path.join(legacy_dir, legacy_filename)
+                shutil.move(src_path, dst_path)
+                current_app.logger.info(f"Moved existing file {filename} to legacy: {legacy_filename}")
+
+        # 파일 저장 (원래 파일명으로)
+        excel_template_path = os.path.join(excel_template_dir, file.filename)
         file.save(excel_template_path)
 
         return jsonify({
             'success': True,
             'message': '엑셀 템플릿이 성공적으로 업로드되었습니다.',
-            'filename': 'excel_template.xlsx'
+            'filename': file.filename
         })
 
     except Exception as e:
         logging.error(f"Error uploading Excel template: {e}", exc_info=True)
         return jsonify({'error': '파일 업로드 중 오류가 발생했습니다.'}), 500
+
+    # 기존 코드 (주석처리)
+    # try:
+    #     # 디렉토리 생성
+    #     excel_template_dir = get_excel_template_dir()
+    #     os.makedirs(excel_template_dir, exist_ok=True)
+
+    #     # 파일 저장 (항상 같은 이름으로 덮어쓰기)
+    #     excel_template_path = get_excel_template_path()
+    #     file.save(excel_template_path)
+
+    #     return jsonify({
+    #         'success': True,
+    #         'message': '엑셀 템플릿이 성공적으로 업로드되었습니다.',
+    #         'filename': 'excel_template.xlsx'
+    #     })
+
+    # except Exception as e:
+    #     logging.error(f"Error uploading Excel template: {e}", exc_info=True)
+    #     return jsonify({'error': '파일 업로드 중 오류가 발생했습니다.'}), 500
 
 @admin_bp.route('/api/excel_template/info', methods=['GET'])
 @login_required
@@ -474,20 +510,55 @@ def download_excel_template():
     """엑셀 템플릿 파일 다운로드"""
 
     try:
-        excel_template_path = get_excel_template_path()
-        if not os.path.exists(excel_template_path):
+        excel_template_dir = get_excel_template_dir()
+
+        # 폴더에서 엑셀 파일 찾기
+        excel_files = [f for f in os.listdir(excel_template_dir) if f.endswith(('.xlsx', '.xls')) and f != 'legacy']
+        if not excel_files:
             return jsonify({'error': '다운로드할 파일이 없습니다.'}), 404
 
-        return send_file(
+        # 가장 최근 파일 선택 (여러 개일 경우)
+        filename = excel_files[0]  # 현재는 하나만 있다고 가정
+        excel_template_path = os.path.join(excel_template_dir, filename)
+
+        current_app.logger.info(f"Excel template download - Found files: {excel_files}")
+        current_app.logger.info(f"Excel template download - Selected file: {filename}")
+        current_app.logger.info(f"Excel template download - File path: {excel_template_path}")
+        current_app.logger.info(f"Excel template download - Download name: {filename}")
+
+        response = send_file(
             excel_template_path,
             as_attachment=True,
-            download_name='excel_template.xlsx',
+            download_name=filename,
             mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
+
+        # Content-Disposition 헤더 확인
+        content_disposition = response.headers.get('Content-Disposition', '')
+        current_app.logger.info(f"Excel template download - Content-Disposition: {content_disposition}")
+
+        return response
 
     except Exception as e:
         logging.error(f"Error downloading Excel template: {e}", exc_info=True)
         return jsonify({'error': '파일 다운로드 중 오류가 발생했습니다.'}), 500
+
+    # 기존 코드 (주석처리)
+    # try:
+    #     excel_template_path = get_excel_template_path()
+    #     if not os.path.exists(excel_template_path):
+    #         return jsonify({'error': '다운로드할 파일이 없습니다.'}), 404
+
+    #     return send_file(
+    #         excel_template_path,
+    #         as_attachment=True,
+    #         download_name='excel_template.xlsx',
+    #         mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    #     )
+
+    # except Exception as e:
+    #     logging.error(f"Error downloading Excel template: {e}", exc_info=True)
+    #     return jsonify({'error': '파일 다운로드 중 오류가 발생했습니다.'}), 500
 
 @admin_bp.route('/api/excel_template/delete', methods=['DELETE'])
 @login_required

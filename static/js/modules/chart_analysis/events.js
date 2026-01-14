@@ -6,6 +6,7 @@ import { fetchAnalyticsSuccessRateTrend, fetchAnalyticsTroubleByCode } from '../
 import { showMessage } from '../common/utils.js';
 import { renderSuccessRateChart, renderTroublePieChart } from './ui.js';
 import { allMngrSettings } from './data.js';
+import { downloadExcelTemplate } from '../../utils/excelDownload.js';
 
 /**
  * @DOC: 분석 페이지의 모든 데이터를 로드하고 차트를 렌더링하는 메인 함수입니다.

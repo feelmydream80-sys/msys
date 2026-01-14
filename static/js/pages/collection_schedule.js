@@ -1,4 +1,5 @@
 import { showToast } from '../utils/toast.js';
+import { downloadExcelTemplate } from '../utils/excelDownload.js';
 export function init() {
     // DOM Elements
     const weeklyBtn = document.getElementById('weekly-btn');
@@ -391,33 +392,36 @@ export function init() {
                            // 팝업을 임시로 표시해서 크기를 측정
                            popup.style.display = 'block';
                            popup.style.visibility = 'hidden'; // 화면에 보이지 않게
-                           popup.style.position = 'absolute'; // 그룹 컨테이너 기준 절대 위치
+                           popup.style.position = 'fixed'; // 화면 기준 고정 위치
                            const popupRect = popup.getBoundingClientRect();
                            popup.style.visibility = 'visible';
 
-                           // 그룹 컨테이너 내에서의 상대적 위치 계산
-                           let top = pillRect.height + 5; // 그룹 필 아래 5px
-                           let left = 0; // 그룹 컨테이너 왼쪽 기준
+                           // 팝업 위치 우선순위: 아래쪽 → 위쪽 → 중앙
+                           let top, left;
 
-                           // 팝업이 그룹 컨테이너 오른쪽으로 벗어나면 왼쪽으로 이동
-                           if (containerRect.left + left + popupRect.width > viewportWidth) {
-                               left = pillRect.width - popupRect.width;
+                           // 1. 아래쪽 공간 확인 (기본 우선순위)
+                           const belowSpace = viewportHeight - (containerRect.bottom + 5);
+                           if (belowSpace >= popupRect.height) {
+                               // 아래쪽에 충분한 공간이 있음
+                               top = containerRect.bottom + 5;
+                               left = Math.max(10, Math.min(containerRect.left, viewportWidth - popupRect.width - 10));
+                           } else {
+                               // 2. 위쪽 공간 확인
+                               const aboveSpace = containerRect.top - 5;
+                               if (aboveSpace >= popupRect.height) {
+                                   // 위쪽에 충분한 공간이 있음
+                                   top = containerRect.top - popupRect.height - 5;
+                                   left = Math.max(10, Math.min(containerRect.left, viewportWidth - popupRect.width - 10));
+                               } else {
+                                   // 3. 양쪽 모두 공간 부족 - 화면 중앙에 표시
+                                   top = Math.max(10, (viewportHeight - popupRect.height) / 2);
+                                   left = Math.max(10, (viewportWidth - popupRect.width) / 2);
+                               }
                            }
 
-                           // 팝업이 아래쪽으로 벗어나면 위쪽으로 이동
-                           if (containerRect.top + top + popupRect.height > viewportHeight) {
-                               top = -popupRect.height - 5;
-                           }
-
-                           // 팝업이 왼쪽으로 벗어나면 오른쪽으로 이동
-                           if (containerRect.left + left < 0) {
-                               left = 0;
-                           }
-
-                           // 팝업이 위쪽으로 벗어나면 아래쪽으로 이동
-                           if (containerRect.top + top < 0) {
-                               top = pillRect.height + 5;
-                           }
+                           // 최종 위치 설정 (화면 경계 보장)
+                           top = Math.max(10, Math.min(top, viewportHeight - popupRect.height - 10));
+                           left = Math.max(10, Math.min(left, viewportWidth - popupRect.width - 10));
 
                            popup.style.top = `${top}px`;
                            popup.style.left = `${left}px`;
@@ -595,34 +599,7 @@ export function init() {
     // 엑셀 템플릿 다운로드 버튼 이벤트 리스너
     const downloadExcelTemplateBtn = document.getElementById('downloadExcelTemplateBtn');
     if (downloadExcelTemplateBtn) {
-        downloadExcelTemplateBtn.addEventListener('click', async () => {
-            try {
-                const response = await fetch('/api/excel_template/download');
-                if (!response.ok) {
-                    if (response.status === 404) {
-                        showToast('다운로드할 엑셀 템플릿이 없습니다.', 'warning');
-                    } else {
-                        throw new Error('다운로드에 실패했습니다.');
-                    }
-                    return;
-                }
-
-                // 파일 다운로드 처리
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'excel_template.xlsx';
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(a);
-
-                showToast('수집 요청서 양식 다운로드가 시작되었습니다.', 'success');
-            } catch (error) {
-                showToast(error.message, 'error');
-            }
-        });
+        downloadExcelTemplateBtn.addEventListener('click', downloadExcelTemplate);
     }
 
     // Initial load

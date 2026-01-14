@@ -21,11 +21,12 @@ import {
     toggleIconDisplayStatus,
     saveBasicSettings,
     saveChartSettings,
-    exportSettings, 
+    exportSettings,
     importSettings,
     exportIcons,
     importIcons
 } from '../modules/mngr_sett/events.js';
+import { downloadExcelTemplate } from '../utils/excelDownload.js';
 
 // --- START: Statistics Tab Logic ---
 
@@ -2198,31 +2199,7 @@ async function uploadExcelTemplate() {
     }
 }
 
-/**
- * 엑셀 템플릿 파일을 다운로드합니다.
- */
-async function downloadExcelTemplate() {
-    try {
-        const response = await fetch('/api/excel_template/download');
-        if (!response.ok) throw new Error('다운로드에 실패했습니다.');
 
-        // 파일 다운로드 처리
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'excel_template.xlsx';
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-
-        showToast('파일 다운로드가 시작되었습니다.', 'success');
-
-    } catch (error) {
-        showToast(error.message, 'error');
-    }
-}
 
 /**
  * 엑셀 템플릿 파일을 삭제합니다.

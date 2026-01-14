@@ -4,6 +4,7 @@ import { initJobInfo } from '../modules/dashboard/jobInfo.js';
 import { initCollapsibleFeatures, initSingleCollapsibleCard } from '../modules/ui_components/collapsible.js';
 import { initPagination } from '../modules/ui_components/pagination.js';
 import { setDefaultDates } from '../modules/common/dateUtils.js';
+import { downloadExcelTemplate } from '../utils/excelDownload.js';
 
 export function init() {
     const jandiPageContainer = document.getElementById('jandi-page-container');
@@ -227,34 +228,7 @@ export function init() {
     // 엑셀 템플릿 다운로드 버튼 이벤트 리스너
     const downloadExcelTemplateBtn = document.getElementById('downloadExcelTemplateBtn');
     if (downloadExcelTemplateBtn) {
-        downloadExcelTemplateBtn.addEventListener('click', async () => {
-            try {
-                const response = await fetch('/api/excel_template/download');
-                if (!response.ok) {
-                    if (response.status === 404) {
-                        showMessage('다운로드할 엑셀 템플릿이 없습니다.', 'warning');
-                    } else {
-                        throw new Error('다운로드에 실패했습니다.');
-                    }
-                    return;
-                }
-
-                // 파일 다운로드 처리
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'excel_template.xlsx';
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(a);
-
-                showMessage('수집 요청서 양식 다운로드가 시작되었습니다.', 'success');
-            } catch (error) {
-                showMessage(error.message, 'error');
-            }
-        });
+        downloadExcelTemplateBtn.addEventListener('click', downloadExcelTemplate);
     }
 
 

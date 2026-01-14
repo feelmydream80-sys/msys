@@ -13,11 +13,11 @@
  * document.addEventListener('DOMContentLoaded', initializeAnalysisPage);
  */
 
-import { 
-    initializeData, 
-    fetchSummaryData, 
-    fetchTrendData, 
-    fetchRawData, 
+import {
+    initializeData,
+    fetchSummaryData,
+    fetchTrendData,
+    fetchRawData,
     updateJobMstInfoMap,
     getChartColorMap,
     setRawData,
@@ -25,13 +25,13 @@ import {
     getJobInfoData,
     getErrorCodeMap
 } from './data.js';
-import { 
-    setDefaultDates, 
-    renderSummaryCards, 
-    renderTrendChart, 
-    renderRawTable, 
+import {
+    setDefaultDates,
+    renderSummaryCards,
+    renderTrendChart,
+    renderRawTable,
     renderJobInfoTable,
-    renderInsight, 
+    renderInsight,
     renderAiAnswer,
     initRawDataPaging,
     initJobInfoPaging
@@ -39,6 +39,7 @@ import {
 import { initCollapsibleFeatures } from '../ui_components/collapsible.js';
 import { updatePaginationData } from '../ui_components/pagination.js';
 import { displayMinMaxDates } from '../dashboard/ui.js';
+import { downloadExcelTemplate } from '../../utils/excelDownload.js';
 
 // DOM 요소 캐싱
 const elements = {
@@ -217,6 +218,12 @@ function initializeEventListeners() {
             });
             updatePaginationData('rawPagination', filtered);
         });
+    }
+
+    // 엑셀 템플릿 다운로드 버튼 이벤트 리스너
+    const downloadExcelTemplateBtn = document.getElementById('downloadExcelTemplateBtn');
+    if (downloadExcelTemplateBtn) {
+        downloadExcelTemplateBtn.addEventListener('click', downloadExcelTemplate);
     }
 }
 

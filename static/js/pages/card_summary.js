@@ -1,5 +1,7 @@
 // static/js/pages/card_summary.js
 
+import { downloadExcelTemplate } from '../utils/excelDownload.js';
+
 let mstData = {}; // For mapping job_id to name
 
 function getDisplayName(cd) {
@@ -135,34 +137,7 @@ async function fetchAndRenderCardSummary() {
 function initDownloadButton() {
     const downloadExcelTemplateBtn = document.getElementById('downloadExcelTemplateBtn');
     if (downloadExcelTemplateBtn) {
-        downloadExcelTemplateBtn.addEventListener('click', async () => {
-            try {
-                const response = await fetch('/api/excel_template/download');
-                if (!response.ok) {
-                    if (response.status === 404) {
-                        alert('다운로드할 카드 요약 양식이 없습니다.');
-                    } else {
-                        throw new Error('다운로드에 실패했습니다.');
-                    }
-                    return;
-                }
-
-                // 파일 다운로드 처리
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'card_summary_template.xlsx';
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(a);
-
-                alert('카드 요약 양식 다운로드가 시작되었습니다.');
-            } catch (error) {
-                alert(error.message);
-            }
-        });
+        downloadExcelTemplateBtn.addEventListener('click', downloadExcelTemplate);
     }
 }
 
