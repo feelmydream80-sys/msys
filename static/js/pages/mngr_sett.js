@@ -552,12 +552,18 @@ async function initializePage() {
         scheduleSettingsTab.addEventListener('click', loadScheduleSettings);
     }
 
-    // 데이터정의 탭 전환 시 초기화
+    // 데이터정의 탭 전환 시 초기화 (중복 호출 방지)
     const dataDefinitionTab = container.querySelector('button[data-tab="dataDefinition"]');
     if (dataDefinitionTab) {
+        let hasBeenInitialized = false;
         dataDefinitionTab.addEventListener('click', () => {
-            console.log('🔍 Tab clicked: dataDefinition, calling init');
-            initDataDefinition();
+            if (!hasBeenInitialized) {
+                console.log('🔍 Tab clicked: dataDefinition, calling init');
+                initDataDefinition();
+                hasBeenInitialized = true;
+            } else {
+                console.log('🔍 Tab clicked: dataDefinition, already initialized');
+            }
         });
     }
 

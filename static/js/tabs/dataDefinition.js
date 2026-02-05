@@ -489,7 +489,7 @@ export async function init() {
         const row = document.createElement('tr');
         
         // use_yn이 'N'인 경우 시각적 구분 적용
-        if (item.use_yn && item.use_yn.trim() !== 'Y') {
+        if (item.use_yn && item.use_yn.trim() === 'N') {
             row.className = 'inactive-row';
         }
         
@@ -1073,11 +1073,17 @@ export async function init() {
     // 10. 그룹 수정 모달 표시
     async function showEditGroupModal(group) {
         try {
-            // API에서 현재 그룹의 모든 데이터를 가져옴
+            // API에서 현재 그룹의 헤더 데이터를 직접 가져오기
             const allData = await callAPI('data_definition/groups');
-            // 현재 그룹에 해당하는 데이터만 필터링
-            const groupData = allData.filter(item => item.cd_cl === group.cd && item.CD === group.cd);
-            const firstDetail = groupData.length > 0 ? groupData[0] : {};
+            const groupHeader = allData.find(item => item.cd_cl === group.cd && item.CD === group.cd);
+            
+            // 모달에 사용할 데이터 로그 출력 (디버깅용)
+            console.log('그룹 수정 모달 사용 데이터:', {
+                group: group,
+                groupHeader: groupHeader,
+                use_yn: group.use_yn,
+                trimmed_use_yn: group.use_yn ? group.use_yn.trim() : 'undefined'
+            });
             
             // 모달 폼 생성 (그룹 추가 모달과 동일한 형식)
             let formHTML = `
@@ -1086,7 +1092,7 @@ export async function init() {
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                         <div style="margin-bottom: 10px;">
                             <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #555;">그룹 코드 (cd_cl)</label>
-                            <input type="text" id="editGroupCdCl" value="${firstDetail.cd_cl || ''}" 
+                            <input type="text" id="editGroupCdCl" value="${groupHeader?.cd_cl || group.cd}" 
                                    style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
                         </div>
                         <div style="margin-bottom: 10px;">
@@ -1101,64 +1107,64 @@ export async function init() {
                         </div>
                         <div style="margin-bottom: 10px;">
                             <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #555;">활용목적 (cd_desc)</label>
-                            <input type="text" id="editGroupDesc" value="${firstDetail.cd_desc || ''}" 
+                            <input type="text" id="editGroupDesc" value="${groupHeader?.cd_desc || ''}" 
                                    style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
                         </div>
                         <div style="margin-bottom: 10px;">
                             <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #555;">item1</label>
-                            <input type="text" id="editGroupItem1" value="${firstDetail.item1 || ''}" 
+                            <input type="text" id="editGroupItem1" value="${groupHeader?.item1 || ''}" 
                                    style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
                         </div>
                         <div style="margin-bottom: 10px;">
                             <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #555;">item2</label>
-                            <input type="text" id="editGroupItem2" value="${firstDetail.item2 || ''}" 
+                            <input type="text" id="editGroupItem2" value="${groupHeader?.item2 || ''}" 
                                    style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
                         </div>
                         <div style="margin-bottom: 10px;">
                             <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #555;">item3</label>
-                            <input type="text" id="editGroupItem3" value="${firstDetail.item3 || ''}" 
+                            <input type="text" id="editGroupItem3" value="${groupHeader?.item3 || ''}" 
                                    style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
                         </div>
                         <div style="margin-bottom: 10px;">
                             <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #555;">item4</label>
-                            <input type="text" id="editGroupItem4" value="${firstDetail.item4 || ''}" 
+                            <input type="text" id="editGroupItem4" value="${groupHeader?.item4 || ''}" 
                                    style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
                         </div>
                         <div style="margin-bottom: 10px;">
                             <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #555;">item5</label>
-                            <input type="text" id="editGroupItem5" value="${firstDetail.item5 || ''}" 
+                            <input type="text" id="editGroupItem5" value="${groupHeader?.item5 || ''}" 
                                    style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
                         </div>
                         <div style="margin-bottom: 10px;">
                             <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #555;">item6</label>
-                            <input type="text" id="editGroupItem6" value="${firstDetail.item6 || ''}" 
+                            <input type="text" id="editGroupItem6" value="${groupHeader?.item6 || ''}" 
                                    style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
                         </div>
                         <div style="margin-bottom: 10px;">
                             <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #555;">item7</label>
-                            <input type="text" id="editGroupItem7" value="${firstDetail.item7 || ''}" 
+                            <input type="text" id="editGroupItem7" value="${groupHeader?.item7 || ''}" 
                                    style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
                         </div>
                         <div style="margin-bottom: 10px;">
                             <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #555;">item8</label>
-                            <input type="text" id="editGroupItem8" value="${firstDetail.item8 || ''}" 
+                            <input type="text" id="editGroupItem8" value="${groupHeader?.item8 || ''}" 
                                    style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
                         </div>
                         <div style="margin-bottom: 10px;">
                             <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #555;">item9</label>
-                            <input type="text" id="editGroupItem9" value="${firstDetail.item9 || ''}" 
+                            <input type="text" id="editGroupItem9" value="${groupHeader?.item9 || ''}" 
                                    style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
                         </div>
                         <div style="margin-bottom: 10px;">
                             <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #555;">item10</label>
-                            <input type="text" id="editGroupItem10" value="${firstDetail.item10 || ''}" 
+                            <input type="text" id="editGroupItem10" value="${groupHeader?.item10 || ''}" 
                                    style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
                         </div>
                         <div style="margin-bottom: 10px;">
                             <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #555;">사용여부</label>
                             <select id="editGroupUseYn" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
-                                <option value="Y" ${firstDetail.use_yn === 'Y' ? 'selected' : ''}>사용중</option>
-                                <option value="N" ${firstDetail.use_yn === 'N' ? 'selected' : ''}>사용안함</option>
+                                <option value="Y" ${group.use_yn && group.use_yn.trim() === 'Y' ? 'selected' : ''}>사용중</option>
+                                <option value="N" ${group.use_yn && group.use_yn.trim() === 'N' ? 'selected' : ''}>사용안함</option>
                             </select>
                         </div>
                     </div>
@@ -1253,7 +1259,7 @@ export async function init() {
                 cd_nm: cd_nm,
                 cd_desc: cd_desc || '',
                 ...itemValues,
-                use_yn: document.getElementById('editGroupUseYn').value
+                use_yn: document.getElementById('editGroupUseYn').value.trim() === 'Y' ? 'Y' : 'N'
             };
 
             try {
