@@ -38,8 +38,8 @@ export async function init() {
         setupGroupActionButtons();
     }
     
-    // Mock 데이터로 바로 카드 렌더링 (API 호출 없이)
-    renderGroupCards();
+    // API 데이터로 카드 렌더링
+    await renderGroupCards();
     
     console.log('데이터 정의 탭 초기화 완료');
 }
@@ -59,14 +59,18 @@ export async function init() {
         const displayOptions = document.createElement('div');
         displayOptions.style.cssText = 'display: flex; gap: 15px; align-items: center; font-size: 14px;';
         
-        const codeLabel = document.createElement('label');
-        codeLabel.innerHTML = '<input type="radio" name="displayOption" value="code" checked> 코드';
+        const codeNameLabel = document.createElement('label');
+        codeNameLabel.innerHTML = '<input type="radio" name="displayOption" value="codeName" checked> 코드+명칭';
         
         const nameLabel = document.createElement('label');
         nameLabel.innerHTML = '<input type="radio" name="displayOption" value="name"> 명칭';
         
-        displayOptions.appendChild(codeLabel);
+        const deletedLabel = document.createElement('label');
+        deletedLabel.innerHTML = '<input type="radio" name="displayOption" value="deleted"> 삭제그룹';
+        
+        displayOptions.appendChild(codeNameLabel);
         displayOptions.appendChild(nameLabel);
+        displayOptions.appendChild(deletedLabel);
         
         searchContainer.appendChild(searchInput);
         searchContainer.appendChild(displayOptions);
@@ -120,15 +124,12 @@ export async function init() {
             }
             
             // 선택된 옵션에 따라 텍스트 업데이트
-            if (selectedOption === 'code') {
-                // 코드만 표시 (CDXXX - 전체명칭에서 CDXXX만 추출)
-                const codeMatch = originalText.match(/(CD\d+)/);
-                if (codeMatch) {
-                    titleElement.textContent = codeMatch[1];
-                } else {
-                    titleElement.textContent = originalText;
-                }
-            } else {
+            if (selectedOption === 'codeName') {
+                // 코드+명칭 표시 (원본 텍스트 그대로)
+                titleElement.textContent = originalText;
+                // 모든 카드 표시
+                card.style.display = 'block';
+            } else if (selectedOption === 'name') {
                 // 명칭만 표시 (CDXXX - 전체명칭에서 전체명칭만 추출)
                 const nameMatch = originalText.match(/- (.+)$/);
                 if (nameMatch) {
@@ -136,8 +137,29 @@ export async function init() {
                 } else {
                     titleElement.textContent = originalText;
                 }
+                // 모든 카드 표시
+                card.style.display = 'block';
+            } else if (selectedOption === 'deleted') {
+                // 삭제 그룹만 표시 (use_yn = 'N'인 그룹)
+                const isInactive = card.classList.contains('inactive-group');
+                if (isInactive) {
+                    // 삭제 그룹은 코드로 표시
+                    const codeMatch = originalText.match(/(CD\d+)/);
+                    if (codeMatch) {
+                        titleElement.textContent = codeMatch[1];
+                    } else {
+                        titleElement.textContent = originalText;
+                    }
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
             }
         });
+        
+        // 검색 필터 적용 (삭제 그룹 필터와 함께 작동)
+        const searchTerm = document.getElementById('dataDefinitionSearch').value.toLowerCase();
+        filterGroups(searchTerm);
     }
 
     // API 호출 함수
@@ -182,7 +204,9 @@ export async function init() {
 
         try {
             // API에서 전체 데이터 가져오기
+            console.log('API에서 데이터 정의 그룹 정보 가져오기');
             const allData = await callAPI('data_definition/groups');
+            console.log('API 응답 데이터:', allData);
             
             if (allData && allData.length > 0) {
                 // 전체 데이터를 그룹별로 분류
@@ -211,7 +235,8 @@ export async function init() {
                                 count: 0,
                                 activeCount: 0,
                                 inactiveCount: 0,
-                                details: []
+                                details: [],
+                                use_yn: groupHeader ? groupHeader.use_yn : 'Y' // 그룹 헤더의 use_yn 추가
                             };
                         }
                     }
@@ -228,7 +253,7 @@ export async function init() {
                         if (groupedData[cd_cl]) {
                             groupedData[cd_cl].details.push(item);
                             groupedData[cd_cl].count++;
-                            if (item.use_yn === 'Y') {
+                            if (item.use_yn && item.use_yn.trim() === 'Y') {
                                 groupedData[cd_cl].activeCount++;
                             } else {
                                 groupedData[cd_cl].inactiveCount++;
@@ -239,6 +264,7 @@ export async function init() {
                 
                 // 그룹 배열로 변환
                 const groups = Object.values(groupedData);
+                console.log('분류된 그룹 데이터:', groups);
                 
                 // 그룹 코드 순서로 정렬 (오름차순) - 숫자 기반 정렬
                 groups.sort((a, b) => {
@@ -253,7 +279,7 @@ export async function init() {
                     card.className = 'card';
                     
                     // use_yn에 따른 시각적 구분 적용
-                    if (group.inactiveCount > 0 && group.activeCount === 0) {
+                    if (group.use_yn && group.use_yn.trim() === 'N') {
                         card.className = 'card inactive-group'; // 전체 비활성화
                     }
                     
@@ -276,6 +302,9 @@ export async function init() {
                     card.addEventListener('click', () => selectGroup(group));
                     container.appendChild(card);
                 });
+                
+                // 카드 렌더링 후 표시 옵션 적용
+                updateDisplayOption();
             } else {
                 // API에서 데이터를 못 가져왔을 경우 에러 처리
                 container.innerHTML = '<div style="text-align: center; color: #94a3b8; padding: 20px;">그룹 데이터를 불러오지 못했습니다.</div>';
@@ -460,7 +489,7 @@ export async function init() {
         const row = document.createElement('tr');
         
         // use_yn이 'N'인 경우 시각적 구분 적용
-        if (item.use_yn !== 'Y') {
+        if (item.use_yn && item.use_yn.trim() !== 'Y') {
             row.className = 'inactive-row';
         }
         
@@ -470,7 +499,7 @@ export async function init() {
         row.innerHTML = `
             <td>${item.CD}</td>
             <td>${item.cd_nm}</td>
-            <td>${item.use_yn === 'Y' ? '사용중' : '사용안함'}</td>
+            <td>${item.use_yn && item.use_yn.trim() === 'Y' ? '사용중' : '사용안함'}</td>
             <td>${item.update_dt || ''}</td>
         `;
         
@@ -699,18 +728,39 @@ export async function init() {
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div style="margin-bottom: 10px;">
                         <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #555;">그룹 코드 (cd_cl)</label>
-                        <input type="text" id="newGroupCdCl" placeholder="" 
-                               style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
+                        <div style="position: relative; height: 40px;">
+                            <span style="position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: #666; font-weight: 600;">CD</span>
+                            <input type="text" id="newGroupCdCl" placeholder="숫자만 입력하세요" 
+                                   style="width: 100%; padding: 8px 8px 8px 35px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;"
+                                   oninput="this.value = this.value.replace(/[^0-9]/g, ''); validateAddGroupModal();">
+                        </div>
+                        <div id="newGroupCdClError" style="color: #dc3545; font-size: 0.85rem; margin-top: 3px; display: none;">
+                            기존에 존재하는 그룹 코드입니다.
+                        </div>
+                        <div id="newGroupCdClFormatError" style="color: #dc3545; font-size: 0.85rem; margin-top: 3px; display: none;">
+                            그룹 코드는 100배수로 입력해주세요 (예: 100, 200, 300...)
+                        </div>
                     </div>
                     <div style="margin-bottom: 10px;">
                         <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #555;">데이터 코드 (cd)</label>
-                        <input type="text" id="newGroupCd" placeholder="" 
-                               style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
+                        <div style="position: relative; height: 40px;">
+                            <span style="position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: #666; font-weight: 600;">CD</span>
+                            <input type="text" id="newGroupCd" placeholder="숫자만 입력하세요" 
+                                   style="width: 100%; padding: 8px 8px 8px 35px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;"
+                                   oninput="this.value = this.value.replace(/[^0-9]/g, ''); validateAddGroupModal();">
+                        </div>
+                        <div id="newGroupCdError" style="color: #dc3545; font-size: 0.85rem; margin-top: 3px; display: none;">
+                            기존에 존재하는 데이터 코드입니다.
+                        </div>
+                        <div id="newGroupCdRangeError" style="color: #dc3545; font-size: 0.85rem; margin-top: 3px; display: none;">
+                            데이터 코드는 그룹 코드 + 99 이내로 입력해주세요
+                        </div>
                     </div>
                     <div style="margin-bottom: 10px;">
                         <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #555;">데이터 명칭 (cd_nm)</label>
                         <input type="text" id="newGroupNm" placeholder="" 
-                               style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
+                               style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;"
+                               oninput="validateAddGroupModal();">
                     </div>
                     <div style="margin-bottom: 10px;">
                         <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #555;">활용목적 (cd_desc)</label>
@@ -805,6 +855,7 @@ export async function init() {
         saveBtn.textContent = '추가';
         saveBtn.className = 'btn btn-primary';
         saveBtn.style.cssText = 'padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;';
+        saveBtn.disabled = true;
 
         const cancelBtn = document.createElement('button');
         cancelBtn.textContent = '취소';
@@ -817,16 +868,111 @@ export async function init() {
         modal.appendChild(modalContent);
         document.body.appendChild(modal);
 
-
         // 이벤트 핸들러
         cancelBtn.addEventListener('click', () => {
             isModalOpen = false;
             document.body.removeChild(modal);
         });
 
+        // 유효성 검증 함수 - 비밀번호 변경 창의 실시간 검증 방식 적용
+        async function validateAddGroupModal() {
+            const cdClInput = document.getElementById('newGroupCdCl');
+            const cdInput = document.getElementById('newGroupCd');
+            const cdNmInput = document.getElementById('newGroupNm');
+            
+            const cdClValue = cdClInput.value.trim();
+            const cdValue = cdInput.value.trim();
+            const cdNmValue = cdNmInput.value.trim();
+            
+            let isValid = true;
+            
+            // 1. cd_cl 필수값 체크
+            if (!cdClValue) {
+                isValid = false;
+            } else {
+                // 3. cd_cl 100배수 체크
+                const cdClNum = parseInt(cdClValue);
+                if (isNaN(cdClNum) || cdClNum % 100 !== 0) {
+                    document.getElementById('newGroupCdClFormatError').style.display = 'block';
+                    cdClInput.style.borderColor = '#dc3545';
+                    isValid = false;
+                } else {
+                    document.getElementById('newGroupCdClFormatError').style.display = 'none';
+                    // 4. cd_cl 중복 체크
+                    try {
+                        const allData = await callAPI('data_definition/groups');
+                        const exists = allData.some(item => item.CD === 'CD' + cdClValue);
+                        if (exists) {
+                            document.getElementById('newGroupCdClError').style.display = 'block';
+                            cdClInput.style.borderColor = '#dc3545';
+                            isValid = false;
+                        } else {
+                            document.getElementById('newGroupCdClError').style.display = 'none';
+                            cdClInput.style.borderColor = '#ddd';
+                        }
+                    } catch (error) {
+                        console.log('중복 체크 실패:', error);
+                        document.getElementById('newGroupCdClError').style.display = 'none';
+                        cdClInput.style.borderColor = '#ddd';
+                    }
+                }
+            }
+            
+            // 2. cd 필수값 체크
+            if (!cdValue) {
+                isValid = false;
+            } else {
+                // 6. cd 값이 cd_cl + 99 이내 체크
+                if (cdClValue) {
+                    const cdClNum = parseInt(cdClValue);
+                    const cdNum = parseInt(cdValue);
+                    if (cdNum < cdClNum || cdNum > cdClNum + 99) {
+                        document.getElementById('newGroupCdRangeError').style.display = 'block';
+                        cdInput.style.borderColor = '#dc3545';
+                        isValid = false;
+                    } else {
+                        document.getElementById('newGroupCdRangeError').style.display = 'none';
+                        // 5. cd 중복 체크
+                        try {
+                            const allData = await callAPI('data_definition/groups');
+                            const exists = allData.some(item => item.CD === 'CD' + cdValue);
+                            if (exists) {
+                                document.getElementById('newGroupCdError').style.display = 'block';
+                                cdInput.style.borderColor = '#dc3545';
+                                isValid = false;
+                            } else {
+                                document.getElementById('newGroupCdError').style.display = 'none';
+                                cdInput.style.borderColor = '#ddd';
+                            }
+                        } catch (error) {
+                            console.log('중복 체크 실패:', error);
+                            document.getElementById('newGroupCdError').style.display = 'none';
+                            cdInput.style.borderColor = '#ddd';
+                        }
+                    }
+                }
+            }
+            
+            // 2. cd_nm 필수값 체크
+            if (!cdNmValue) {
+                isValid = false;
+            }
+            
+            // 추가 버튼 활성화/비활성화
+            saveBtn.disabled = !isValid;
+        }
+        
+        // 입력 필드에 이벤트 리스너 추가 (비밀번호 변경 창의 접근 방식 적용)
+        document.getElementById('newGroupCdCl').addEventListener('input', validateAddGroupModal);
+        document.getElementById('newGroupCd').addEventListener('input', validateAddGroupModal);
+        document.getElementById('newGroupNm').addEventListener('input', validateAddGroupModal);
+        
+        // 초기 상태 버튼 비활성화
+        saveBtn.disabled = true;
+
         saveBtn.addEventListener('click', async () => {
-            const cd_cl = document.getElementById('newGroupCdCl').value.trim();
-            const cd = document.getElementById('newGroupCd').value.trim();
+            const cd_cl = 'CD' + document.getElementById('newGroupCdCl').value.trim();
+            const cd = 'CD' + document.getElementById('newGroupCd').value.trim();
             const cd_nm = document.getElementById('newGroupNm').value.trim();
             const cd_desc = document.getElementById('newGroupDesc').value.trim();
             const item1 = document.getElementById('newGroupItem1').value.trim();
@@ -840,69 +986,87 @@ export async function init() {
             const item9 = document.getElementById('newGroupItem9').value.trim();
             const item10 = document.getElementById('newGroupItem10').value.trim();
 
-            if (!cd_cl || !cd || !cd_nm) {
-                alert('그룹 코드(cd_cl), 데이터 코드(cd), 데이터 명칭(cd_nm)을 모두 입력해주세요.');
-                return;
-            }
-
-            // 100단위 그룹 코드 규칙 검증
-            const cdNum = parseInt(cd.replace('CD', ''));
-            if (isNaN(cdNum) || cdNum % 100 !== 0) {
-                alert('그룹 코드는 100단위로 입력해주세요. (예: CD100, CD200, CD300...)');
-                return;
-            }
-
-            // 중복 체크 (DB에서 가져온 전체 데이터를 기준으로 확인)
+            // 기존 데이터 확인 (비활성화된 그룹인지)
             const allData = await callAPI('data_definition/groups');
-            const exists = allData.some(item => item.cd_cl === cd && item.CD === cd);
-            if (exists) {
-                alert('이미 존재하는 그룹 코드입니다.');
-                return;
-            }
-
-            // 새 그룹 추가를 위한 데이터 준비
-            const newGroupData = {
-                cd_cl: cd,
-                cd: cd,
-                cd_nm: cd_nm,
-                cd_desc: cd_desc || '',
-                item1: item1 || '',
-                item2: item2 || '',
-                item3: item3 || '',
-                item4: item4 || '',
-                item5: item5 || '',
-                item6: item6 || '',
-                item7: item7 || '',
-                item8: item8 || '',
-                item9: item9 || '',
-                item10: item10 || '',
-                use_yn: 'Y'
-            };
-
-            // 새 그룹 추가 API 호출
-            try {
-                await callAPI('data_definition/group', 'POST', newGroupData);
-                alert('새 그룹이 추가되었습니다.');
-                
-                // 모달 닫기
-                isModalOpen = false;
-                document.body.removeChild(modal);
-                
-                // 화면 업데이트
-                await renderGroupCards();
-            } catch (error) {
-                console.error('그룹 추가 실패:', error);
-                alert('그룹 추가에 실패했습니다.');
-            }
-
-            // 모달 닫기
-            isModalOpen = false;
-            document.body.removeChild(modal);
-
-            // 화면 업데이트
-            renderGroupCards();
+            const existingGroup = allData.find(item => item.CD === cd && item.use_yn === 'N');
             
-            alert('새 그룹이 추가되었습니다.');
+            if (existingGroup) {
+                // 비활성화된 그룹인 경우 활성화 여부 확인
+                const confirmActivate = confirm(`이 그룹은 이미 비활성화된 상태입니다.\n그룹을 활성화하시겠습니까?`);
+                if (confirmActivate) {
+                    // 그룹 활성화 (수정) API 호출
+                    const updateData = {
+                        cd_cl: cd_cl,
+                        cd: cd,
+                        cd_nm: cd_nm,
+                        cd_desc: cd_desc || '',
+                        item1: item1 || '',
+                        item2: item2 || '',
+                        item3: item3 || '',
+                        item4: item4 || '',
+                        item5: item5 || '',
+                        item6: item6 || '',
+                        item7: item7 || '',
+                        item8: item8 || '',
+                        item9: item9 || '',
+                        item10: item10 || '',
+                        use_yn: 'Y'
+                    };
+                    
+                    try {
+                        await callAPI(`data_definition/group/${cd}`, 'PUT', updateData);
+                        alert('그룹이 활성화되었습니다.');
+                        
+                        // 모달 닫기
+                        isModalOpen = false;
+                        document.body.removeChild(modal);
+                        
+                        // 화면 업데이트
+                        await renderGroupCards();
+                    } catch (error) {
+                        console.error('그룹 활성화 실패:', error);
+                        alert('그룹 활성화에 실패했습니다.');
+                    }
+                } else {
+                    // 활성화를 선택하지 않은 경우 모달 유지
+                    return;
+                }
+            } else {
+                // 새 그룹 추가를 위한 데이터 준비
+                const newGroupData = {
+                    cd_cl: cd,
+                    cd: cd,
+                    cd_nm: cd_nm,
+                    cd_desc: cd_desc || '',
+                    item1: item1 || '',
+                    item2: item2 || '',
+                    item3: item3 || '',
+                    item4: item4 || '',
+                    item5: item5 || '',
+                    item6: item6 || '',
+                    item7: item7 || '',
+                    item8: item8 || '',
+                    item9: item9 || '',
+                    item10: item10 || '',
+                    use_yn: 'Y'
+                };
+
+                // 새 그룹 추가 API 호출
+                try {
+                    await callAPI('data_definition/create', 'POST', newGroupData);
+                    alert('새 그룹이 추가되었습니다.');
+                    
+                    // 모달 닫기
+                    isModalOpen = false;
+                    document.body.removeChild(modal);
+                    
+                    // 화면 업데이트
+                    await renderGroupCards();
+                } catch (error) {
+                    console.error('그룹 추가 실패:', error);
+                    alert('그룹 추가에 실패했습니다.');
+                }
+            }
         });
     }
 
@@ -940,31 +1104,63 @@ export async function init() {
                             <input type="text" id="editGroupDesc" value="${firstDetail.cd_desc || ''}" 
                                    style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
                         </div>
-            `;
-            
-        // item1~10 필드 표시 (null 또는 빈 값인 경우 표시하지 않음)
-            const itemFields = ['item1', 'item2', 'item3', 'item4', 'item5', 'item6', 'item7', 'item8', 'item9', 'item10'];
-        
-        itemFields.forEach((key, index) => {
-            // 대소문자를 구분하지 않는 키 찾기
-            const actualKey = Object.keys(firstDetail).find(k => k.toLowerCase() === key.toLowerCase());
-            const value = actualKey ? firstDetail[actualKey] : undefined;
-            
-            if (value === null || value === undefined || value.toString().trim() === '') {
-                // 빈 값 처리
-                return;
-            }
-                
-                formHTML += `
-                    <div style="margin-bottom: 10px;">
-                        <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #555;">${key}</label>
-                        <input type="text" id="editGroup${key.charAt(0).toUpperCase() + key.slice(1)}" value="${value}" 
-                               style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
-                    </div>
-                `;
-            });
-
-            formHTML += `
+                        <div style="margin-bottom: 10px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #555;">item1</label>
+                            <input type="text" id="editGroupItem1" value="${firstDetail.item1 || ''}" 
+                                   style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
+                        </div>
+                        <div style="margin-bottom: 10px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #555;">item2</label>
+                            <input type="text" id="editGroupItem2" value="${firstDetail.item2 || ''}" 
+                                   style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
+                        </div>
+                        <div style="margin-bottom: 10px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #555;">item3</label>
+                            <input type="text" id="editGroupItem3" value="${firstDetail.item3 || ''}" 
+                                   style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
+                        </div>
+                        <div style="margin-bottom: 10px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #555;">item4</label>
+                            <input type="text" id="editGroupItem4" value="${firstDetail.item4 || ''}" 
+                                   style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
+                        </div>
+                        <div style="margin-bottom: 10px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #555;">item5</label>
+                            <input type="text" id="editGroupItem5" value="${firstDetail.item5 || ''}" 
+                                   style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
+                        </div>
+                        <div style="margin-bottom: 10px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #555;">item6</label>
+                            <input type="text" id="editGroupItem6" value="${firstDetail.item6 || ''}" 
+                                   style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
+                        </div>
+                        <div style="margin-bottom: 10px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #555;">item7</label>
+                            <input type="text" id="editGroupItem7" value="${firstDetail.item7 || ''}" 
+                                   style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
+                        </div>
+                        <div style="margin-bottom: 10px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #555;">item8</label>
+                            <input type="text" id="editGroupItem8" value="${firstDetail.item8 || ''}" 
+                                   style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
+                        </div>
+                        <div style="margin-bottom: 10px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #555;">item9</label>
+                            <input type="text" id="editGroupItem9" value="${firstDetail.item9 || ''}" 
+                                   style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
+                        </div>
+                        <div style="margin-bottom: 10px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #555;">item10</label>
+                            <input type="text" id="editGroupItem10" value="${firstDetail.item10 || ''}" 
+                                   style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
+                        </div>
+                        <div style="margin-bottom: 10px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #555;">사용여부</label>
+                            <select id="editGroupUseYn" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
+                                <option value="Y" ${firstDetail.use_yn === 'Y' ? 'selected' : ''}>사용중</option>
+                                <option value="N" ${firstDetail.use_yn === 'N' ? 'selected' : ''}>사용안함</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
             `;
@@ -1035,15 +1231,10 @@ export async function init() {
             const cd_nm = document.getElementById('editGroupNm').value.trim();
             const cd_desc = document.getElementById('editGroupDesc').value.trim();
             
-            // item1~10 값 수집 (CD100 그룹의 경우 item9, item10 제외)
+            // item1~10 값 수집 (모든 item 필드 포함)
             const itemValues = {};
             const itemFields = ['item1', 'item2', 'item3', 'item4', 'item5', 'item6', 'item7', 'item8', 'item9', 'item10'];
             itemFields.forEach(key => {
-                // CD100 그룹의 경우 item9, item10은 제외
-                if (group.cd === 'CD100' && (key === 'item9' || key === 'item10')) {
-                    return;
-                }
-                
                 const element = document.getElementById(`editGroup${key.charAt(0).toUpperCase() + key.slice(1)}`);
                 if (element) {
                     itemValues[key] = element.value.trim();
@@ -1062,7 +1253,7 @@ export async function init() {
                 cd_nm: cd_nm,
                 cd_desc: cd_desc || '',
                 ...itemValues,
-                use_yn: 'Y'
+                use_yn: document.getElementById('editGroupUseYn').value
             };
 
             try {
@@ -1458,7 +1649,7 @@ export async function init() {
 
             try {
                 // 새 데이터 추가 API 호출
-                await callAPI('data_definition/detail', 'POST', newDetailData);
+                await callAPI('data_definition/create', 'POST', newDetailData);
                 alert('새 데이터가 추가되었습니다.');
                 
                 // 모달 닫기
@@ -1485,6 +1676,36 @@ function getDefinedFieldsForGroup(groupCd) {
     };
     
     return fieldDefinitions[groupCode] || [];
+}
+
+// 그룹 코드 중복 체크 함수
+async function checkGroupCodeDuplicate(inputId) {
+    const inputElement = document.getElementById(inputId);
+    const errorElement = document.getElementById(inputId + 'Error');
+    const code = 'CD' + inputElement.value.trim();
+    
+    if (!code || code === 'CD') {
+        errorElement.style.display = 'none';
+        inputElement.style.borderColor = '#ddd';
+        return;
+    }
+    
+    try {
+        const allData = await callAPI('data_definition/groups');
+        const exists = allData.some(item => item.CD === code);
+        
+        if (exists) {
+            errorElement.style.display = 'block';
+            inputElement.style.borderColor = '#dc3545';
+        } else {
+            errorElement.style.display = 'none';
+            inputElement.style.borderColor = '#ddd';
+        }
+    } catch (error) {
+        console.log('중복 체크 실패:', error);
+        errorElement.style.display = 'none';
+        inputElement.style.borderColor = '#ddd';
+    }
 }
 
 // 필드 라벨을 반환하는 함수

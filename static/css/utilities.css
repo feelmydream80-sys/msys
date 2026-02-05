@@ -263,6 +263,19 @@
     pointer-events: none;
 }
 
+.inactive-row,
+.inactive-group {
+    opacity: 0.5;
+    background-color: var(--color-surface-variant);
+    color: var(--color-outline-variant);
+}
+
+.inactive-row:hover,
+.inactive-group:hover {
+    opacity: 0.6;
+    background-color: var(--color-surface-hover);
+}
+
 .loading {
     position: relative;
 }

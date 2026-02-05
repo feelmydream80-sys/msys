@@ -109,13 +109,17 @@ def create_mngr_sett():
         logging.error(f"Error creating mngr sett: {e}", exc_info=True)
         return jsonify({"message": "Error creating mngr sett."}), 500
 
-@bp.route('/update/<cd_cl>/<cd>', methods=['POST'])
+@bp.route('/detail/<cd>', methods=['PUT'])
 @login_required
 @check_password_change_required
-def update_data(cd_cl, cd):
-    """기존 데이터를 수정합니다."""
+def update_detail(cd):
+    """상세 데이터를 수정합니다."""
     try:
         data = request.json
+        cd_cl = data.get('cd_cl')
+        if not cd_cl:
+            return jsonify({"message": "cd_cl is required."}), 400
+            
         with get_db_connection() as conn:
             service = DataDefinitionService(conn)
             service.update_data(cd_cl, cd, data)
@@ -128,12 +132,17 @@ def update_data(cd_cl, cd):
         logging.error(f"Error updating data: {e}", exc_info=True)
         return jsonify({"message": "Error updating data."}), 500
 
-@bp.route('/delete/<cd_cl>/<cd>', methods=['DELETE'])
+@bp.route('/detail/<cd>', methods=['DELETE'])
 @login_required
 @check_password_change_required
-def delete_data(cd_cl, cd):
-    """데이터를 삭제합니다."""
+def delete_detail(cd):
+    """상세 데이터를 삭제합니다."""
     try:
+        data = request.json
+        cd_cl = data.get('cd_cl')
+        if not cd_cl:
+            return jsonify({"message": "cd_cl is required."}), 400
+            
         with get_db_connection() as conn:
             service = DataDefinitionService(conn)
             service.delete_data(cd_cl, cd)
@@ -142,3 +151,41 @@ def delete_data(cd_cl, cd):
     except Exception as e:
         logging.error(f"Error deleting data: {e}", exc_info=True)
         return jsonify({"message": "Error deleting data."}), 500
+
+@bp.route('/group/<cd>', methods=['PUT'])
+@login_required
+@check_password_change_required
+def update_group(cd):
+    """그룹 데이터를 수정합니다."""
+    try:
+        data = request.json
+        cd_cl = data.get('cd_cl')
+        if not cd_cl:
+            return jsonify({"message": "cd_cl is required."}), 400
+            
+        with get_db_connection() as conn:
+            service = DataDefinitionService(conn)
+            service.update_data(cd_cl, cd, data)
+            conn.commit()
+            return jsonify({"message": "Group updated successfully."}), 200
+    except ValueError as e:
+        logging.warning(f"Failed to update group: {e}")
+        return jsonify({"message": str(e)}), 400
+    except Exception as e:
+        logging.error(f"Error updating group: {e}", exc_info=True)
+        return jsonify({"message": "Error updating group."}), 500
+
+@bp.route('/group/<cd>', methods=['DELETE'])
+@login_required
+@check_password_change_required
+def delete_group(cd):
+    """그룹 데이터를 삭제합니다. (소프트 삭제)"""
+    try:
+        with get_db_connection() as conn:
+            service = DataDefinitionService(conn)
+            service.delete_data(cd, cd)  # cd_cl과 cd가 동일
+            conn.commit()
+            return jsonify({"message": "Group deleted successfully."}), 200
+    except Exception as e:
+        logging.error(f"Error deleting group: {e}", exc_info=True)
+        return jsonify({"message": "Error deleting group."}), 500

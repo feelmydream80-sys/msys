@@ -71,6 +71,13 @@ class DataDefinitionService:
             # 데이터 삽입
             self.con_mst_dao.insert_mst_data(data)
             self.logger.info(f"Data created successfully: {cd}")
+            
+            # tb_mngr_sett 테이블에 자동으로 데이터 삽입 (CD900-CD999 범위와 100의 배수는 제외)
+            cd_number = int(cd[2:]) if cd.startswith('CD') and cd[2:].isdigit() else None
+            if cd_number and not ((900 <= cd_number <= 999) or (cd_number % 100 == 0)):
+                self.create_mngr_sett(cd)
+                self.logger.info(f"Auto created mngr sett for CD: {cd}")
+            
         except Exception as e:
             self.logger.error(f"Error in create_data: {e}", exc_info=True)
             raise
@@ -112,16 +119,46 @@ class DataDefinitionService:
             raise
 
     def delete_data(self, cd_cl, cd):
-        """데이터를 삭제합니다."""
+        """데이터를 삭제합니다. (소프트 삭제)"""
         try:
             # 데이터 존재 여부 확인
             existing_data = self.con_mst_dao.get_mst_data_by_cd(cd)
             if not existing_data:
                 raise ValueError(f"Data with CD {cd} does not exist.")
             
-            # 데이터 삭제
-            self.con_mst_dao.delete_mst_data(cd_cl, cd)
-            self.logger.info(f"Data deleted successfully: {cd}")
+            # cd가 그룹 코드인지 확인 (100의 배수)
+            cd_number = int(cd[2:]) if cd.startswith('CD') and cd[2:].isdigit() else None
+            if cd_number and cd_number % 100 == 0:
+                # 그룹 삭제 - 해당 그룹의 모든 하위 데이터를 비활성화
+                group_number = cd_number
+                start_number = group_number + 1
+                end_number = group_number + 100
+                
+                # 전체 데이터를 가져와서 하위 데이터 필터링
+                all_data = self.con_mst_dao.get_all_mst_full()
+                group_details = []
+                for row in all_data:
+                    cd_value = row.get('cd', '')
+                    if cd_value.startswith('CD'):
+                        try:
+                            cd_num = int(cd_value[2:])
+                            if start_number <= cd_num < end_number:
+                                group_details.append(row)
+                        except ValueError:
+                            continue
+                
+                # 하위 데이터 비활성화
+                for detail in group_details:
+                    self.con_mst_dao.delete_mst_data(detail['cd_cl'], detail['cd'])
+                
+                # 그룹 헤더 자체도 비활성화
+                self.con_mst_dao.delete_mst_data(cd_cl, cd)
+                
+                self.logger.info(f"Group and all details deleted successfully: {cd} (Count: {len(group_details)})")
+            else:
+                # 개별 데이터 삭제
+                self.con_mst_dao.delete_mst_data(cd_cl, cd)
+                self.logger.info(f"Data deleted successfully: {cd}")
         except Exception as e:
             self.logger.error(f"Error in delete_data: {e}", exc_info=True)
             raise

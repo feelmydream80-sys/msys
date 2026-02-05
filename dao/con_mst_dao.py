@@ -115,6 +115,76 @@ class ConMstDAO:
                 result[job_id] = convert_to_legacy_columns('TB_CON_MST', row_dict)
             return result
 
+    def insert_mst_data(self, data):
+        """
+        tb_con_mst에 새로운 데이터를 삽입합니다.
+        """
+        try:
+            with self.conn.cursor() as cur:
+                query = load_sql('mst/insert_mst.sql')
+                cur.execute(query, (
+                    data.get('cd_cl'),
+                    data.get('cd'),
+                    data.get('cd_nm'),
+                    data.get('cd_desc'),
+                    data.get('item1'),
+                    data.get('item2'),
+                    data.get('item3'),
+                    data.get('item4'),
+                    data.get('item5'),
+                    data.get('item6'),
+                    data.get('item7'),
+                    data.get('item8'),
+                    data.get('item9'),
+                    data.get('item10')
+                ))
+                logging.info(f"✅ tb_con_mst 데이터 삽입 성공 (cd: {data.get('cd')})")
+        except Exception as e:
+            logging.error(f"❌ tb_con_mst 데이터 삽입 실패: {e}", exc_info=True)
+            raise
+
+    def update_mst_data(self, cd_cl, cd, data):
+        """
+        tb_con_mst의 데이터를 수정합니다.
+        """
+        try:
+            with self.conn.cursor() as cur:
+                query = load_sql('mst/update_mst.sql')
+                cur.execute(query, (
+                    data.get('cd_nm'),
+                    data.get('cd_desc'),
+                    data.get('item1'),
+                    data.get('item2'),
+                    data.get('item3'),
+                    data.get('item4'),
+                    data.get('item5'),
+                    data.get('item6'),
+                    data.get('item7'),
+                    data.get('item8'),
+                    data.get('item9'),
+                    data.get('item10'),
+                    data.get('use_yn', 'Y'),
+                    cd_cl,
+                    cd
+                ))
+                logging.info(f"✅ tb_con_mst 데이터 수정 성공 (cd: {cd})")
+        except Exception as e:
+            logging.error(f"❌ tb_con_mst 데이터 수정 실패: {e}", exc_info=True)
+            raise
+
+    def delete_mst_data(self, cd_cl, cd):
+        """
+        tb_con_mst의 데이터를 삭제합니다. (소프트 삭제)
+        """
+        try:
+            with self.conn.cursor() as cur:
+                query = load_sql('mst/delete_mst.sql')
+                cur.execute(query, (cd_cl, cd))
+                logging.info(f"✅ tb_con_mst 데이터 삭제 성공 (cd: {cd})")
+        except Exception as e:
+            logging.error(f"❌ tb_con_mst 데이터 삭제 실패: {e}", exc_info=True)
+            raise
+
     def get_paged_jobs(self, start, length, search_value, start_date=None, end_date=None, all_data=True):
         """
         Get paged, sorted and filtered jobs for DataTables, with optional date filtering.
