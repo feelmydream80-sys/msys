@@ -42,6 +42,11 @@ export function setupTabs() {
             if (targetTab) {
                 targetTab.classList.add('active');
             }
+
+            // 통계 탭이 활성화될 때 데이터 로드
+            if (tab.dataset.tab === 'statistics') {
+                // statisticsTab.activate() 호출은 mngr_sett.js에서 처리됨
+            }
         });
     });
 }

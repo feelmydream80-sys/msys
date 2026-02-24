@@ -211,14 +211,14 @@ class DataAccessTab {
         
         // PENDING 상태 사용자를 제외하고 가입일 최신순으로 정렬
         users
-            .filter(user => user.acc_sts !== 'PENDING')
-            .sort((a, b) => new Date(b.acc_cre_dt) - new Date(a.acc_cre_dt))
+            .filter(user => user.status !== 'PENDING')
+            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
             .forEach(user => {
                 const row = tableBody.insertRow();
                 const allowedJobs = user.job_ids && user.job_ids.length > 0 ? user.job_ids.join(', ') : '없음';
                 row.innerHTML = `
                     <td>${user.user_id}</td>
-                    <td>${user.acc_sts}</td>
+                    <td>${user.status}</td>
                     <td class="allowed-jobs">${allowedJobs}</td>
                     <td><button class="manage-permission-btn bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-2 rounded text-xs" data-user-id="${user.user_id}">권한 관리</button></td>
                 `;

@@ -17,6 +17,9 @@ from flask import session
 from service.dashboard_service import DashboardService
 from msys.database import get_db_connection
 from utils.datetime_utils import convert_datetime_fields_to_kst_str
+from dao.analytics_dao import AnalyticsDAO
+import psycopg2.extras
+from routes.auth_routes import login_required, check_password_change_required
 
 load_dotenv()
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
@@ -266,6 +269,308 @@ def analyze_pasted_content():
     except Exception as e:
         logging.error(f"❌ API: 콘텐츠 분석 실패: {e}", exc_info=True)
         return jsonify({'message': f'콘텐츠 분석 중 서버 오류가 발생했습니다: {e}'}), 500
+
+@api_bp.route('/api/statistics/config', methods=['GET'])
+@login_required
+@check_password_change_required
+def get_statistics_config():
+    """
+    통계 설정 데이터를 가져오는 API (메뉴 목록, 연도 목록, 아이콘 데이터)
+    """
+    try:
+        with get_db_connection() as conn:
+            analytics_dao = AnalyticsDAO(conn)
+            
+            # 메뉴 목록 가져오기 (TB_MENU 테이블)
+            query = "SELECT MENU_ID, MENU_NM FROM TB_MENU ORDER BY MENU_ID;"
+            with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+                cur.execute(query)
+                menus = [dict(row) for row in cur.fetchall()]
+            
+            # 연도 목록 가져오기 (TB_USER_ACS_LOG 테이블의 데이터가 있는 연도)
+            query = "SELECT DISTINCT EXTRACT(YEAR FROM ACS_DT)::integer as year FROM TB_USER_ACS_LOG ORDER BY year DESC;"
+            with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+                cur.execute(query)
+                years = [row['year'] for row in cur.fetchall()]
+            
+            # 아이콘 데이터 가져오기 (TB_ICON 테이블)
+            query = "SELECT ICON_ID, ICON_CD, ICON_NM, ICON_EXPL FROM TB_ICON WHERE ICON_DSP_YN = 'Y' ORDER BY ICON_ID;"
+            with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+                cur.execute(query)
+                icons = [dict(row) for row in cur.fetchall()]
+            
+            return jsonify({
+                'menus': menus,
+                'years': years,
+                'icons': icons
+            }), 200
+    except Exception as e:
+        logging.error(f"❌ API: 통계 설정 조회 실패: {e}", exc_info=True)
+        return jsonify({'message': f'통계 설정 조회 실패: {e}'}), 500
+
+@api_bp.route('/api/statistics', methods=['GET'])
+@login_required
+@check_password_change_required
+def get_statistics_data():
+    """
+    통계 데이터를 가져오는 API (일별, 주별/월별, 연도별 비교)
+    """
+    try:
+        view_type = request.args.get('view_type', 'daily')
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        year = request.args.get('year')
+        menu_nm = request.args.get('menu_nm', 'all')
+        
+        with get_db_connection() as conn:
+            analytics_dao = AnalyticsDAO(conn)
+            
+            if view_type == 'daily':
+                # 일별 통계
+                if not start_date or not end_date:
+                    start_date = end_date = datetime.now().strftime('%Y-%m-%d')
+                
+                menu_access_stats = analytics_dao.get_menu_access_stats(
+                    view_type='daily', 
+                    start_date=start_date, 
+                    end_date=end_date
+                )
+                
+                total_access_stats = analytics_dao.get_total_access_stats(
+                    view_type='daily', 
+                    start_date=start_date, 
+                    end_date=end_date
+                )
+                
+                return jsonify({
+                    'menu_access_stats': menu_access_stats,
+                    'total_access_stats': total_access_stats
+                }), 200
+                
+            elif view_type == 'weekly_monthly':
+                # 주별/월별 통계
+                if not year:
+                    year = str(datetime.now().year)
+                
+                weekly_stats = analytics_dao.get_menu_access_stats_weekly(year, menu_nm)
+                yearly_total = analytics_dao.get_yearly_total_stats(year, menu_nm)
+                
+                # 주별 통계 데이터 구조화
+                structured_weekly_stats = []
+                monthly_data = {}
+                
+                for stat in weekly_stats:
+                    month = stat['month']
+                    week = stat['week_of_month']
+                    menu = stat['menu_nm']
+                    
+                    if month not in monthly_data:
+                        monthly_data[month] = {}
+                    
+                    if week not in monthly_data[month]:
+                        monthly_data[month][week] = {
+                            'month': month,
+                            'week': week,
+                            'menus': [],
+                            'site_unique_user_count': 0
+                        }
+                    
+                    monthly_data[month][week]['menus'].append({
+                        'menu_nm': menu,
+                        'total_access_count': stat['total_access_count'],
+                        'unique_user_count': stat['unique_user_count']
+                    })
+                
+                # site_unique_user_count 추가 (주별 전체 순 방문자 수)
+                weekly_site_unique = analytics_dao.get_total_unique_users_by_week(year)
+                for month, weeks in monthly_data.items():
+                    for week, week_data in weeks.items():
+                        if (month, week) in weekly_site_unique:
+                            week_data['site_unique_user_count'] = weekly_site_unique[(month, week)]
+                
+                # 구조화된 데이터를 리스트로 변환
+                for month in sorted(monthly_data.keys()):
+                    for week in sorted(monthly_data[month].keys()):
+                        structured_weekly_stats.append(monthly_data[month][week])
+                
+                return jsonify({
+                    'weekly_stats': structured_weekly_stats,
+                    'yearly_total': yearly_total
+                }), 200
+                
+            elif view_type == 'comparison':
+                # 연도별 비교 통계
+                if not year:
+                    year = str(datetime.now().year)
+                
+                this_year = year
+                last_year = str(int(year) - 1)
+                
+                this_year_stats = analytics_dao.get_menu_access_stats_weekly(this_year, menu_nm)
+                last_year_stats = analytics_dao.get_menu_access_stats_weekly(last_year, menu_nm)
+                
+                this_year_total = analytics_dao.get_yearly_total_stats(this_year, menu_nm)
+                last_year_total = analytics_dao.get_yearly_total_stats(last_year, menu_nm)
+                
+                # 주별 통계 데이터 구조화 (이번 년도)
+                structured_this_year_stats = []
+                monthly_data = {}
+                
+                for stat in this_year_stats:
+                    month = stat['month']
+                    week = stat['week_of_month']
+                    menu = stat['menu_nm']
+                    
+                    if month not in monthly_data:
+                        monthly_data[month] = {}
+                    
+                    if week not in monthly_data[month]:
+                        monthly_data[month][week] = {
+                            'month': month,
+                            'week': week,
+                            'menus': [],
+                            'site_unique_user_count': 0
+                        }
+                    
+                    monthly_data[month][week]['menus'].append({
+                        'menu_nm': menu,
+                        'total_access_count': stat['total_access_count'],
+                        'unique_user_count': stat['unique_user_count']
+                    })
+                
+                weekly_site_unique = analytics_dao.get_total_unique_users_by_week(this_year)
+                for month, weeks in monthly_data.items():
+                    for week, week_data in weeks.items():
+                        if (month, week) in weekly_site_unique:
+                            week_data['site_unique_user_count'] = weekly_site_unique[(month, week)]
+                
+                for month in sorted(monthly_data.keys()):
+                    for week in sorted(monthly_data[month].keys()):
+                        structured_this_year_stats.append(monthly_data[month][week])
+                
+                # 주별 통계 데이터 구조화 (작년)
+                structured_last_year_stats = []
+                monthly_data = {}
+                
+                for stat in last_year_stats:
+                    month = stat['month']
+                    week = stat['week_of_month']
+                    menu = stat['menu_nm']
+                    
+                    if month not in monthly_data:
+                        monthly_data[month] = {}
+                    
+                    if week not in monthly_data[month]:
+                        monthly_data[month][week] = {
+                            'month': month,
+                            'week': week,
+                            'menus': [],
+                            'site_unique_user_count': 0
+                        }
+                    
+                    monthly_data[month][week]['menus'].append({
+                        'menu_nm': menu,
+                        'total_access_count': stat['total_access_count'],
+                        'unique_user_count': stat['unique_user_count']
+                    })
+                
+                weekly_site_unique = analytics_dao.get_total_unique_users_by_week(last_year)
+                for month, weeks in monthly_data.items():
+                    for week, week_data in weeks.items():
+                        if (month, week) in weekly_site_unique:
+                            week_data['site_unique_user_count'] = weekly_site_unique[(month, week)]
+                
+                for month in sorted(monthly_data.keys()):
+                    for week in sorted(monthly_data[month].keys()):
+                        structured_last_year_stats.append(monthly_data[month][week])
+                
+                return jsonify({
+                    'this_year_stats': structured_this_year_stats,
+                    'last_year_stats': structured_last_year_stats,
+                    'yearly_total': {
+                        'this_year': this_year_total,
+                        'last_year': last_year_total
+                    }
+                }), 200
+                
+            else:
+                return jsonify({'message': 'Invalid view type'}), 400
+                
+    except Exception as e:
+        logging.error(f"❌ API: 통계 데이터 조회 실패: {e}", exc_info=True)
+        return jsonify({'message': f'통계 데이터 조회 실패: {e}'}), 500
+
+@api_bp.route('/api/statistics/download', methods=['GET'])
+@login_required
+@check_password_change_required
+def download_statistics():
+    """
+    통계 데이터를 엑셀 파일로 다운로드하는 API
+    """
+    try:
+        view_type = request.args.get('view_type', 'daily')
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        year = request.args.get('year')
+        menu_nm = request.args.get('menu_nm', 'all')
+        
+        with get_db_connection() as conn:
+            analytics_dao = AnalyticsDAO(conn)
+            
+            if view_type == 'daily':
+                if not start_date or not end_date:
+                    start_date = end_date = datetime.now().strftime('%Y-%m-%d')
+                
+                menu_access_stats = analytics_dao.get_menu_access_stats(
+                    view_type='daily', 
+                    start_date=start_date, 
+                    end_date=end_date
+                )
+                
+                return jsonify({
+                    'menu_access_stats': menu_access_stats
+                }), 200
+                
+            elif view_type == 'weekly_monthly':
+                if not year:
+                    year = str(datetime.now().year)
+                
+                weekly_stats = analytics_dao.get_menu_access_stats_weekly(year, menu_nm)
+                yearly_total = analytics_dao.get_yearly_total_stats(year, menu_nm)
+                
+                return jsonify({
+                    'weekly_stats': weekly_stats,
+                    'yearly_total': yearly_total
+                }), 200
+                
+            elif view_type == 'comparison':
+                if not year:
+                    year = str(datetime.now().year)
+                
+                this_year = year
+                last_year = str(int(year) - 1)
+                
+                this_year_stats = analytics_dao.get_menu_access_stats_weekly(this_year, menu_nm)
+                last_year_stats = analytics_dao.get_menu_access_stats_weekly(last_year, menu_nm)
+                
+                this_year_total = analytics_dao.get_yearly_total_stats(this_year, menu_nm)
+                last_year_total = analytics_dao.get_yearly_total_stats(last_year, menu_nm)
+                
+                return jsonify({
+                    'this_year_stats': this_year_stats,
+                    'last_year_stats': last_year_stats,
+                    'yearly_total': {
+                        'this_year': this_year_total,
+                        'last_year': last_year_total
+                    }
+                }), 200
+                
+            else:
+                return jsonify({'message': 'Invalid view type'}), 400
+                
+    except Exception as e:
+        logging.error(f"❌ API: 통계 데이터 다운로드 실패: {e}", exc_info=True)
+        return jsonify({'message': f'통계 데이터 다운로드 실패: {e}'}), 500
 
 @api_bp.route('/api/save-event-log', methods=['POST'])
 def save_event_log():

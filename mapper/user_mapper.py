@@ -77,8 +77,10 @@ class UserMapper:
             
             # menu_ids 리스트에 값이 있는 경우, 새로운 권한을 추가합니다.
             if menu_ids:
+                # 중복 권한을 제거하기 위해 set으로 변환한 후 다시 리스트로 변환
+                unique_menu_ids = list(set(menu_ids))
                 # executemany를 위한 데이터 리스트 생성 (user_id, menu_id) 튜플의 리스트
-                permission_data = [(user_id, menu_id) for menu_id in menu_ids]
+                permission_data = [(user_id, menu_id) for menu_id in unique_menu_ids]
                 # executemany를 사용하여 여러 권한을 한 번에 INSERT
                 cur.executemany(UserSQL.insert_user_permission(), permission_data)
 

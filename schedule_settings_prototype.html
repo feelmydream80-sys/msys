@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>수집 스케줄 설정 - PC 최적화</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f8fafc;
+            color: #334155;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Header */
+        .header {
+            background-color: white;
+            padding: 1.5rem 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .save-btn {
+            background-color: #3b82f6;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .save-btn:hover {
+            background-color: #2563eb;
+        }
+
+        /* Settings Grid */
+        .settings-grid {
+            display: grid;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Section Styles */
+        .settings-section {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        /* 3-Column Grid for Basic Settings */
+        .basic-settings-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+
+        /* Setting Group */
+        .setting-group {
+            background-color: #f1f5f9;
+            padding: 1.25rem;
+            border-radius: 0.5rem;
+        }
+
+        .setting-group-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #475569;
+            margin-bottom: 1rem;
+        }
+
+        /* Form Elements */
+        .form-row {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #64748b;
+            margin-bottom: 0.5rem;
+        }
+
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 0.625rem 0.875rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 0.375rem;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        /* Radio Buttons */
+        .radio-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .radio-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .radio-item input[type="radio"] {
+            width: auto;
+        }
+
+        /* Checkbox */
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: auto;
+        }
+
+        /* Color Input */
+        .color-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .color-preview {
+            width: 2rem;
+            height: 2rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 0.375rem;
+            cursor: pointer;
+        }
+
+        input[type="color"] {
+            width: 3rem;
+            height: 2rem;
+            padding: 0;
+            border: 1px solid #cbd5e1;
+            border-radius: 0.375rem;
+            cursor: pointer;
+        }
+
+        /* 5-Column Grid for Status Settings */
+        .status-settings-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1.5rem;
+        }
+
+        /* Status Setting Card */
+        .status-card {
+            background-color: #f1f5f9;
+            padding: 1.25rem;
+            border-radius: 0.5rem;
+        }
+
+        .status-card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #475569;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        /* Border Style Selector */
+        .border-style-selector {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .border-style-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            padding: 0.5rem;
+            border: 2px solid transparent;
+            border-radius: 0.375rem;
+            transition: border-color 0.2s;
+        }
+
+        .border-style-option:hover {
+            border-color: #e2e8f0;
+        }
+
+        .border-style-option input[type="radio"] {
+            display: none;
+        }
+
+        .border-symbol {
+            font-size: 1.5rem;
+            color: #334155;
+            padding: 0.5rem 1rem;
+            border: 1px solid #cbd5e1;
+            background-color: white;
+            border-radius: 0.25rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .border-style-option input[type="radio"]:checked ~ .border-symbol {
+            border-color: #3b82f6;
+            color: #3b82f6;
+        }
+
+        .border-style-option span {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .basic-settings-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .status-settings-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .basic-settings-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .status-settings-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            .header {
+                padding: 1rem;
+            }
+
+            .section-title {
+                font-size: 1.125rem;
+            }
+        }
+
+        /* Helper Classes */
+        .mt-2 {
+            margin-top: 0.5rem;
+        }
+
+        .mt-4 {
+            margin-top: 1rem;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>수집 스케줄 설정</h1>
+            <button class="save-btn">스케줄 표시 설정 저장</button>
+        </div>
+
+        <!-- Basic Settings -->
+        <div class="settings-section">
+            <h2 class="section-title">기본 설정</h2>
+            <div class="basic-settings-grid">
+                <!-- Grouping Settings -->
+                <div class="setting-group">
+                    <div class="setting-group-title">그룹화 설정</div>
+                    <div class="form-row">
+                        <label for="grpMinCnt">그룹화 최소 개수</label>
+                        <input type="number" id="grpMinCnt" value="3">
+                    </div>
+                    <div class="form-row">
+                        <label>그룹 외곽선 스타일</label>
+                        <div class="border-style-selector">
+                            <label class="border-style-option">
+                                <input type="radio" name="grpBrdrStyl" value="none">
+                                <div class="border-symbol">○</div>
+                                <span>없음</span>
+                            </label>
+                            <label class="border-style-option">
+                                <input type="radio" name="grpBrdrStyl" value="solid" checked>
+                                <div class="border-symbol">─</div>
+                                <span>실선</span>
+                            </label>
+                            <label class="border-style-option">
+                                <input type="radio" name="grpBrdrStyl" value="dashed">
+                                <div class="border-symbol">╍</div>
+                                <span>대시</span>
+                            </label>
+                            <label class="border-style-option">
+                                <input type="radio" name="grpBrdrStyl" value="dotted">
+                                <div class="border-symbol">·</div>
+                                <span>점선</span>
+                            </label>
+                            <label class="border-style-option">
+                                <input type="radio" name="grpBrdrStyl" value="double">
+                                <div class="border-symbol">═</div>
+                                <span>이중선</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-row mt-4">
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="scheduleUseYn" checked>
+                            설정 사용 여부
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Threshold Settings -->
+                <div class="setting-group">
+                    <div class="setting-group-title">그룹 색상 임계값 설정</div>
+                    <div class="form-row">
+                        <label>색상 기준</label>
+                        <div class="radio-group">
+                            <label class="radio-item">
+                                <input type="radio" name="grpColrCrtr" value="prgr" checked>
+                                진행률
+                            </label>
+                            <label class="radio-item">
+                                <input type="radio" name="grpColrCrtr" value="succ">
+                                성공률
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <label for="prgsRtRedThrsval">진행률 문제점 임계값 (%)</label>
+                        <input type="number" id="prgsRtRedThrsval" value="30">
+                    </div>
+                    <div class="form-row">
+                        <label for="prgsRtOrgThrsval">진행률 경고 임계값 (%)</label>
+                        <input type="number" id="prgsRtOrgThrsval" value="60">
+                    </div>
+                    <div class="form-row">
+                        <label for="succRtRedThrsval">성공률 문제점 임계값 (%)</label>
+                        <input type="number" id="succRtRedThrsval" value="30">
+                    </div>
+                    <div class="form-row">
+                        <label for="succRtOrgThrsval">성공률 경고 임계값 (%)</label>
+                        <input type="number" id="succRtOrgThrsval" value="60">
+                    </div>
+                </div>
+
+                <!-- Group Icon Settings -->
+                <div class="setting-group">
+                    <div class="setting-group-title">그룹 아이콘 설정</div>
+                    <div class="form-row">
+                        <label for="grpPrgsIconId">그룹 진행률 아이콘</label>
+                        <select id="grpPrgsIconId">
+                            <option value="">선택 안 함</option>
+                            <option value="1">▼</option>
+                            <option value="2">▲</option>
+                            <option value="3">📊</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <label for="grpSucsIconId">그룹 성공률 아이콘</label>
+                        <select id="grpSucsIconId">
+                            <option value="">선택 안 함</option>
+                            <option value="1">✅</option>
+                            <option value="2">⭐</option>
+                            <option value="3">🏆</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Settings -->
+        <div class="settings-section">
+            <h2 class="section-title">상태별 표시 설정</h2>
+            <div class="status-settings-grid">
+                <!-- Success -->
+                <div class="status-card">
+                    <div class="status-card-title">성공</div>
+                    <div class="form-row">
+                        <label for="sucsIconId">아이콘</label>
+                        <select id="sucsIconId">
+                            <option value="">선택 안 함</option>
+                            <option value="1" selected>✅</option>
+                            <option value="2">⭐</option>
+                            <option value="3">🏆</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <label for="sucsBgColr">배경색</label>
+                        <div class="color-input-wrapper">
+                            <div class="color-preview" style="background-color: #EBF8FF"></div>
+                            <input type="color" id="sucsBgColr" value="#EBF8FF">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <label for="sucsTxtColr">텍스트색</label>
+                        <div class="color-input-wrapper">
+                            <div class="color-preview" style="background-color: #3182CE"></div>
+                            <input type="color" id="sucsTxtColr" value="#3182CE">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fail -->
+                <div class="status-card">
+                    <div class="status-card-title">실패</div>
+                    <div class="form-row">
+                        <label for="failIconId">아이콘</label>
+                        <select id="failIconId">
+                            <option value="">선택 안 함</option>
+                            <option value="1" selected>❌</option>
+                            <option value="2">⚠️</option>
+                            <option value="3">🚫</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <label for="failBgColr">배경색</label>
+                        <div class="color-input-wrapper">
+                            <div class="color-preview" style="background-color: #FFF5F5"></div>
+                            <input type="color" id="failBgColr" value="#FFF5F5">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <label for="failTxtColr">텍스트색</label>
+                        <div class="color-input-wrapper">
+                            <div class="color-preview" style="background-color: #C53030"></div>
+                            <input type="color" id="failTxtColr" value="#C53030">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- In Progress -->
+                <div class="status-card">
+                    <div class="status-card-title">수집중</div>
+                    <div class="form-row">
+                        <label for="prgsIconId">아이콘</label>
+                        <select id="prgsIconId">
+                            <option value="">선택 안 함</option>
+                            <option value="1" selected>🔄</option>
+                            <option value="2">⏳</option>
+                            <option value="3">🚀</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <label for="prgsBgColr">배경색</label>
+                        <div class="color-input-wrapper">
+                            <div class="color-preview" style="background-color: #FFFFF0"></div>
+                            <input type="color" id="prgsBgColr" value="#FFFFF0">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <label for="prgsTxtColr">텍스트색</label>
+                        <div class="color-input-wrapper">
+                            <div class="color-preview" style="background-color: #D69E2E"></div>
+                            <input type="color" id="prgsTxtColr" value="#D69E2E">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- No Data -->
+                <div class="status-card">
+                    <div class="status-card-title">미수집</div>
+                    <div class="form-row">
+                        <label for="nodtIconId">아이콘</label>
+                        <select id="nodtIconId">
+                            <option value="">선택 안 함</option>
+                            <option value="1" selected>⏰</option>
+                            <option value="2">📥</option>
+                            <option value="3">📤</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <label for="nodtBgColr">배경색</label>
+                        <div class="color-input-wrapper">
+                            <div class="color-preview" style="background-color: #F7FAFC"></div>
+                            <input type="color" id="nodtBgColr" value="#F7FAFC">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <label for="nodtTxtColr">텍스트색</label>
+                        <div class="color-input-wrapper">
+                            <div class="color-preview" style="background-color: #718096"></div>
+                            <input type="color" id="nodtTxtColr" value="#718096">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scheduled -->
+                <div class="status-card">
+                    <div class="status-card-title">예정</div>
+                    <div class="form-row">
+                        <label for="schdIconId">아이콘</label>
+                        <select id="schdIconId">
+                            <option value="">선택 안 함</option>
+                            <option value="1" selected>📅</option>
+                            <option value="2">⏱️</option>
+                            <option value="3">🔔</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <label for="schdBgColr">배경색</label>
+                        <div class="color-input-wrapper">
+                            <div class="color-preview" style="background-color: #FFFFFF"></div>
+                            <input type="color" id="schdBgColr" value="#FFFFFF">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <label for="schdTxtColr">텍스트색</label>
+                        <div class="color-input-wrapper">
+                            <div class="color-preview" style="background-color: #1A202C"></div>
+                            <input type="color" id="schdTxtColr" value="#1A202C">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Color preview update
+        document.querySelectorAll('input[type="color"]').forEach(input => {
+            input.addEventListener('input', function() {
+                const preview = this.previousElementSibling;
+                if (preview && preview.classList.contains('color-preview')) {
+                    preview.style.backgroundColor = this.value;
+                }
+            });
+        });
+
+        // Border style selector
+        document.querySelectorAll('.border-style-option').forEach(option => {
+            option.addEventListener('click', function() {
+                const radio = this.querySelector('input[type="radio"]');
+                radio.checked = true;
+            });
+        });
+    </script>
+</body>
+</html>

@@ -853,6 +853,11 @@ async function initializePage() {
     // 탭 모듈 초기화
     statisticsTab.initElements();
     statisticsTab.initEventListeners();
+    // 통계 탭 활성화 (초기 데이터 로드)
+    const statisticsTabButton = container.querySelector('button[data-tab="statistics"]');
+    if (statisticsTabButton) {
+        statisticsTabButton.addEventListener('click', () => statisticsTab.activate());
+    }
     
     userManagementTab.initElements();
     userManagementTab.initEventListeners();

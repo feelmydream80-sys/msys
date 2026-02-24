@@ -140,12 +140,16 @@ class StatisticsTab {
                 this.elements.menuSelect.add(option);
             });
 
-            // 상태 관리에 아이콘 데이터 저장
+            // 상태 관리에 메뉴 데이터 저장 (아이콘 데이터도 저장하되, 메뉴 데이터를 별도로 저장)
+            stateManager.setState('menus', config.menus || []);
             stateManager.setState('icons', config.icons || []);
 
             // 날짜 입력 필드 초기화
             this.initializeDateInputs();
 
+            // 뷰 토글 호출 (초기 스타일 설정)
+            this.toggleView();
+            // 데이터 로드
             this.loadData();
         } catch (error) {
             console.error('통계 설정 로드 실패:', error);
@@ -206,8 +210,7 @@ class StatisticsTab {
             debugLog('통계 API 데이터 수신:', data);
 
             if (viewType === 'daily') {
-                const config = stateManager.getState('icons'); // 상태에서 아이콘 데이터 조회
-                this.renderDailyStats(data, config.menus);
+                this.renderDailyStats(data);
             } else if (viewType === 'weekly_monthly') {
                 this.renderWeeklyMonthlyStats(data);
                 if (data.yearly_chart_data) {
@@ -225,16 +228,18 @@ class StatisticsTab {
     /**
      * 일별 통계 렌더링
      * @param {object} data - 통계 데이터
-     * @param {array} allMenus - 전체 메뉴 목록
      */
-    renderDailyStats(data, allMenus = []) {
+    renderDailyStats(data) {
         debugLog('일별 통계 렌더링 시작');
         debugLog('데이터:', data);
-        debugLog('메뉴 목록:', allMenus);
 
         const { menu_access_stats, total_access_stats } = data;
         debugLog('메뉴 접근 통계:', menu_access_stats);
         debugLog('전체 통계:', total_access_stats);
+
+        // 전체 메뉴 목록 가져오기 (stateManager에서)
+        const allMenus = stateManager.getState('menus') || [];
+        debugLog('전체 메뉴 목록:', allMenus);
 
         // 요약 정보 렌더링
         this.elements.summaryContainer.innerHTML = `
@@ -250,16 +255,19 @@ class StatisticsTab {
 
         // 테이블 렌더링
         this.elements.dailyTableBody.innerHTML = '';
-        const menusToRender = allMenus.length > 0 ? allMenus : [];
         
-        if (menusToRender.length > 0) {
+        if (allMenus.length > 0) {
+            // menu_access_stats가 menu_id 대신 menu_nm으로 키를 가지고 있는 경우 처리
             const statsMap = new Map();
             if (menu_access_stats) {
-                menu_access_stats.forEach(stat => statsMap.set(stat.menu_id, stat));
+                menu_access_stats.forEach(stat => {
+                    const key = stat.menu_id || stat.menu_nm; // menu_id가 없으면 menu_nm 사용
+                    statsMap.set(key, stat);
+                });
             }
 
-            menusToRender.forEach(menu => {
-                const stat = statsMap.get(menu.menu_id) || { total_access_count: 0, unique_user_count: 0 };
+            allMenus.forEach(menu => {
+                const stat = statsMap.get(menu.menu_id) || statsMap.get(menu.menu_nm) || { total_access_count: 0, unique_user_count: 0 };
                 const row = `<tr>
                     <td>${menu.menu_nm}</td>
                     <td>${stat.total_access_count}</td>
@@ -388,12 +396,18 @@ class StatisticsTab {
         }
 
         // 맵 생성하여 빠르게 조회
-        const statsMap = new Map(menuAccessStats.map(item => [item.menu_id, item]));
+        const statsMap = new Map();
+        if (menuAccessStats) {
+            menuAccessStats.forEach(item => {
+                const key = item.menu_id || item.menu_nm; // menu_id가 없으면 menu_nm 사용
+                statsMap.set(key, item);
+            });
+        }
         debugLog('통계 맵 생성 완료');
 
         // 모든 메뉴가 표시되도록 데이터 구성
         const chartData = allMenus.map(menu => {
-            const stats = statsMap.get(menu.menu_id);
+            const stats = statsMap.get(menu.menu_id) || statsMap.get(menu.menu_nm);
             return {
                 menu_nm: menu.menu_nm,
                 total_access_count: stats ? stats.total_access_count : 0,
@@ -563,9 +577,9 @@ class StatisticsTab {
             if (viewType === 'daily') {
                 fileName = `일별_접속통계_${selectedDate}.xlsx`;
                 ws_data = [['메뉴', '총 접속 횟수', '순 방문자 수']];
-                const config = stateManager.getState('icons');
+                const menus = stateManager.getState('menus');
                 const statsMap = new Map(data.menu_access_stats.map(s => [s.menu_id, s]));
-                config.forEach(menu => {
+                menus.forEach(menu => {
                     const stat = statsMap.get(menu.menu_id) || { total_access_count: 0, unique_user_count: 0 };
                     ws_data.push([menu.menu_nm, stat.total_access_count, stat.unique_user_count]);
                 });
@@ -909,6 +923,15 @@ class StatisticsTab {
         
         if (this.elements.menuSelect) this.elements.menuSelect.style.display = 'none'; // 항상 숨김
         if (this.elements.excelDownloadBtn) this.elements.excelDownloadBtn.style.display = 'inline-block'; // 항상 표시
+    }
+
+    /**
+     * 탭이 활성화될 때 호출되는 메서드
+     */
+    activate() {
+        this.initElements();
+        this.initEventListeners();
+        this.loadConfig();
     }
 }
 
