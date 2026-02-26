@@ -832,7 +832,18 @@ async function loadPageData() {
     }
 }
 
+// 전역으로 loadPageData 함수 노출
+window.loadPageData = loadPageData;
+
+let initializePageHasRun = false;
+
 async function initializePage() {
+    if (initializePageHasRun) {
+        console.log('=== INITIALIZE PAGE ALREADY RUN ===');
+        return;
+    }
+    initializePageHasRun = true;
+    
     console.log('=== INITIALIZE PAGE CALLED ==='); // 디버그 로그 추가
     const container = document.getElementById('mngr_sett_page');
     if (!container) {

@@ -295,8 +295,8 @@ export function getEditGroupModalHTML(group, groupHeader) {
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                 <div style="margin-bottom: 10px;">
                     <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #555;">그룹 코드 (cd_cl)</label>
-                    <input type="text" id="editGroupCdCl" value="${formatValue(safeGroupHeader.cd_cl || group.cd)}" 
-                           style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
+                    <input type="text" id="editGroupCdCl" value="${formatValue(safeGroupHeader.cd_cl || group.cd)}" disabled
+                           style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; background-color: #f5f5f5;">
                 </div>
                 <div style="margin-bottom: 10px;">
                     <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #555;">데이터 코드 (cd)</label>

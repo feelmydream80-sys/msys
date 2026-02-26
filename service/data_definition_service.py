@@ -72,11 +72,20 @@ class DataDefinitionService:
             self.con_mst_dao.insert_mst_data(data)
             self.logger.info(f"Data created successfully: {cd}")
             
-            # tb_mngr_sett 테이블에 자동으로 데이터 삽입 (CD900-CD999 범위와 100의 배수는 제외)
+            # tb_mngr_sett 테이블에 자동으로 데이터 삽입 (100의 배수는 제외)
             cd_number = int(cd[2:]) if cd.startswith('CD') and cd[2:].isdigit() else None
-            if cd_number and not ((900 <= cd_number <= 999) or (cd_number % 100 == 0)):
+            if cd_number and not (cd_number % 100 == 0):
                 self.create_mngr_sett(cd)
                 self.logger.info(f"Auto created mngr sett for CD: {cd}")
+            
+            # 그룹 활성화 로직 (cd_cl이 그룹 코드인 경우)
+            cd_cl_number = int(cd_cl[2:]) if cd_cl.startswith('CD') and cd_cl[2:].isdigit() else None
+            if cd_cl_number and cd_cl_number % 100 == 0:
+                # 그룹이 비활성화 상태인 경우 활성화
+                group_data = self.con_mst_dao.get_mst_data_by_cd(cd_cl)
+                if group_data and (not group_data.get('use_yn') or group_data.get('use_yn').strip() == 'N'):
+                    self.con_mst_dao.update_mst_data(cd_cl, cd_cl, {'use_yn': 'Y'})
+                    self.logger.info(f"Group activated automatically: {cd_cl}")
             
         except Exception as e:
             self.logger.error(f"Error in create_data: {e}", exc_info=True)
@@ -106,6 +115,9 @@ class DataDefinitionService:
     def update_data(self, cd_cl, cd, data):
         """기존 데이터를 수정합니다."""
         try:
+            # 로그 추가 - 수정 시작
+            self.logger.info(f"Update data started: cd_cl={cd_cl}, cd={cd}, data={data}")
+            
             # 데이터 존재 여부 확인
             existing_data = self.con_mst_dao.get_mst_data_by_cd(cd)
             if not existing_data:
@@ -117,16 +129,41 @@ class DataDefinitionService:
             else:
                 data['use_yn'] = 'Y'
             
-            # 상세 객체를 활성화(Y)할 때 그룹도 활성화(Y)로 변경
-            if data['use_yn'] == 'Y':
-                # cd_cl이 그룹 코드인지 확인 (100의 배수)
-                cd_cl_number = int(cd_cl[2:]) if cd_cl.startswith('CD') and cd_cl[2:].isdigit() else None
-                if cd_cl_number and cd_cl_number % 100 == 0:
-                    # 그룹 코드인 경우, 그룹의 use_yn도 Y로 변경
-                    group_data = self.con_mst_dao.get_mst_data_by_cd(cd_cl)
-                    if group_data and (not group_data.get('use_yn') or group_data.get('use_yn').strip() == 'N'):
-                        self.con_mst_dao.update_mst_data(cd_cl, cd_cl, {'use_yn': 'Y'})
-                        self.logger.info(f"Group activated successfully: {cd_cl}")
+            # cd가 그룹 코드인지 확인 (100의 배수)
+            cd_number = int(cd[2:]) if cd.startswith('CD') and cd[2:].isdigit() else None
+            if cd_number and cd_number % 100 == 0:
+                # 그룹 자체를 활성화(Y)할 때, 그룹의 하위 데이터도 활성화(Y)로 변경
+                if data['use_yn'] == 'Y':
+                    self.logger.info(f"Group activation started: cd={cd}, cd_number={cd_number}")
+                    group_number = cd_number
+                    start_number = group_number + 1
+                    end_number = group_number + 100
+                    
+                    all_data = self.con_mst_dao.get_all_mst_full()
+                    group_details = []
+                    for row in all_data:
+                        cd_value = row.get('cd', '')
+                        if cd_value.startswith('CD'):
+                            try:
+                                cd_num = int(cd_value[2:])
+                                if start_number <= cd_num < end_number:
+                                    group_details.append(row)
+                            except ValueError:
+                                continue
+                    
+                    self.logger.info(f"Group details to activate: {len(group_details)} items")
+                    for detail in group_details:
+                        self.con_mst_dao.update_mst_data(cd, detail['cd'], {'use_yn': 'Y'})
+                        self.logger.info(f"Detail activated successfully: {detail['cd']}")
+            else:
+                # 상세 객체를 활성화(Y)할 때 그룹도 활성화(Y)로 변경
+                if data['use_yn'] == 'Y':
+                    cd_cl_number = int(cd_cl[2:]) if cd_cl.startswith('CD') and cd_cl[2:].isdigit() else None
+                    if cd_cl_number and cd_cl_number % 100 == 0:
+                        group_data = self.con_mst_dao.get_mst_data_by_cd(cd_cl)
+                        if group_data and (not group_data.get('use_yn') or group_data.get('use_yn').strip() == 'N'):
+                            self.con_mst_dao.update_mst_data(cd_cl, cd_cl, {'use_yn': 'Y'})
+                            self.logger.info(f"Group activated successfully: {cd_cl}")
             
             # 데이터 업데이트
             self.con_mst_dao.update_mst_data(cd_cl, cd, data)

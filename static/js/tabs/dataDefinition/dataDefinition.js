@@ -531,13 +531,13 @@ function updateActionButtons() {
     console.log('addDetailBtn:', addDetailBtn);
     
     const selectedCheckboxes = document.querySelectorAll('#detailTableBody input[type="checkbox"]:checked');
-    const hasSelectedCheckboxes = selectedCheckboxes.length > 0;
+    const selectedCount = selectedCheckboxes.length;
     
-    if (hasSelectedCheckboxes) {
+    if (selectedCount > 0) {
         activateBtn.disabled = false;
         deactivateBtn.disabled = false;
         addDetailBtn.disabled = true;
-        editBtn.disabled = true;
+        editBtn.disabled = selectedCount > 1; // 2개 이상 선택시 수정 버튼 비활성화
     } else {
         activateBtn.disabled = true;
         deactivateBtn.disabled = true;
@@ -861,17 +861,27 @@ async function showEditGroupModal(group) {
                     return;
                 }
 
+                const use_yn = document.getElementById('editGroupUseYn').value.trim() === 'Y' ? 'Y' : 'N';
                 const updateData = {
                     cd_cl: cd_cl,
                     cd: group.cd,
                     cd_nm: cd_nm,
                     cd_desc: cd_desc || '',
                     ...itemValues,
-                    use_yn: document.getElementById('editGroupUseYn').value.trim() === 'Y' ? 'Y' : 'N'
+                    use_yn: use_yn
                 };
 
                 try {
                     await updateGroup(group.cd, updateData);
+                    
+                    // 그룹을 활성화(Y)할 때 하위 데이터도 활성화(Y)로 변경
+                    if (use_yn === 'Y') {
+                        const groupDetails = allData.filter(item => item.cd_cl === group.cd && item.cd !== group.cd);
+                        for (const detail of groupDetails) {
+                            await updateDetail(detail.cd, { use_yn: 'Y', cd_cl: group.cd });
+                        }
+                    }
+                    
                     alert('그룹이 수정되었습니다.');
                     allData = await getGroups(); // 전역 데이터 재로드
                     await renderGroupCards();
@@ -1124,14 +1134,40 @@ async function showAddDetailModal(group) {
             };
 
             try {
+                console.log('=== 데이터 추가 시작 ===');
+                console.log('=== newDetailData:', newDetailData);
                 await createItem(newDetailData);
                 alert('새 데이터가 추가되었습니다.');
                 document.body.removeChild(modal);
                 allData = await getGroups(); // 전역 데이터 재로드
                 await loadGroupDetails(group.cd);
                 await renderGroupCards(); // 그룹 카드 리로드
+                
+                // 관리자 설정 데이터 캐시 갱신 (CD309 추가 후 기본설정과 차트/시각화 관리에 표시되도록)
+                console.log('=== 관리자 설정 데이터 캐시 갱신 시작 ===');
+                try {
+                    // dataManager의 refreshAdminSettings 함수를 사용하여 관리자 설정 데이터의 캐시를 갱신합니다.
+                    await import('../../modules/common/dataManager.js').then(async (dataManager) => {
+                        const refreshedData = await dataManager.refreshAdminSettings();
+                        console.log('=== 관리자 설정 데이터 캐시 갱신 완료 ===');
+                        console.log('=== 관리자 설정 데이터:', refreshedData);
+                        
+                        // 관리자 설정 페이지의 테이블 갱신
+                        if (typeof window.loadPageData === 'function') {
+                            console.log('=== 관리자 설정 테이블 갱신 시작 ===');
+                            window.loadPageData();
+                            console.log('=== 관리자 설정 테이블 갱신 완료 ===');
+                        } else {
+                            console.log('=== 관리자 설정 테이블 갱신 함수가 존재하지 않습니다. ===');
+                        }
+                    });
+                } catch (error) {
+                    console.error('=== 관리자 설정 데이터 캐시 갱신 실패 ===');
+                    console.error('=== 오류:', error);
+                }
             } catch (error) {
-                console.error('데이터 추가 실패:', error);
+                console.error('=== 데이터 추가 실패 ===');
+                console.error('=== 오류:', error);
                 alert('데이터 추가에 실패했습니다.');
             }
         });
