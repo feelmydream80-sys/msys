@@ -306,6 +306,82 @@ class MngrSettService:
             self.logger.error(f"Service: Batch import failed: {e}", exc_info=True)
             raise
 
+    def sync_settings_with_mst(self) -> Dict:
+        """
+        tb_con_mst의 모든 job을 tb_mngr_sett와 동기화합니다.
+        tb_mngr_sett에 존재하지 않는 job에 대해 기본 설정을 생성합니다.
+        """
+        self.logger.info("=== Service: sync_settings_with_mst() 시작 ===")
+        try:
+            # 1. tb_con_mst에서 모든 job_id 가져오기
+            all_mst_job_ids = {job['cd'] for job in self.mst_mapper.get_all_job_ids()}
+            self.logger.info(f"Service: tb_con_mst에 있는 모든 Job ID: {all_mst_job_ids}")
+
+            # 2. tb_mngr_sett에서 기존 job_id 가져오기
+            existing_settings = self.mngr_sett_mapper.get_all_settings()
+            existing_job_ids = {setting['cd'] for setting in existing_settings}
+            self.logger.info(f"Service: tb_mngr_sett에 있는 기존 Job ID: {existing_job_ids}")
+
+            # 3. tb_mngr_sett에 없는 job_id 찾기
+            missing_job_ids = all_mst_job_ids - existing_job_ids
+            self.logger.info(f"Service: tb_mngr_sett에 없는 Job ID: {missing_job_ids}")
+
+            # 4. 제외할 job_id 필터링 (CD900~CD999, CD100, CD200 등)
+            jobs_to_create = []
+            for job_id in missing_job_ids:
+                if not self._should_exclude_job(job_id):
+                    jobs_to_create.append(job_id)
+            self.logger.info(f"Service: 생성할 Job ID: {jobs_to_create}")
+
+            # 5. 새로운 job에 기본 설정 생성
+            created_count = 0
+            existing_colors = {setting['chrt_colr'] for setting in existing_settings if setting.get('chrt_colr')}
+            
+            for job_id in jobs_to_create:
+                new_setting = {'cd': job_id, **DEFAULT_ADMIN_SETTINGS}
+                
+                # 고유한 차트 색상 할당
+                new_color = get_random_hex_color()
+                while new_color in existing_colors:
+                    new_color = get_random_hex_color()
+                
+                new_setting['chrt_colr'] = new_color
+                existing_colors.add(new_color)
+                
+                self.mngr_sett_mapper.insert_or_update_settings(new_setting)
+                created_count += 1
+                self.logger.info(f"Service: Job ID {job_id}의 설정 생성 완료")
+
+            self.logger.info(f"=== Service: sync_settings_with_mst() 완료. 생성된 설정 개수: {created_count} ===")
+            
+            return {
+                'created_count': created_count,
+                'total_mst_jobs': len(all_mst_job_ids),
+                'total_settings': len(existing_job_ids) + created_count,
+                'jobs_created': jobs_to_create
+            }
+        except Exception as e:
+            self.logger.error(f"Service: sync_settings_with_mst() 실패: {e}", exc_info=True)
+            raise
+
+    def _should_exclude_job(self, job_id):
+        """설정 생성을 제외해야 할 job_id인지 확인합니다."""
+        if not job_id or not str(job_id).strip():
+            return True
+        
+        job_id = str(job_id).upper()
+        
+        # CD900~CD999 범위 제외
+        if job_id.startswith('CD') and len(job_id) > 2:
+            try:
+                cd_number = int(job_id[2:])
+                if (cd_number >= 900 and cd_number <= 999) or (cd_number % 100 == 0):
+                    return True
+            except ValueError:
+                pass
+        
+        return False
+
     def export_settings(self) -> List[Dict]:
         try:
             mapper = self.mngr_sett_mapper

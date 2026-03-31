@@ -147,6 +147,31 @@ def export_mngr_sett():
         logging.error(f"❌ API: 관리자 설정 내보내기 실패: {e}", exc_info=True)
         return jsonify({"message": f"설정 내보내기 실패: {e}"}), 500
 
+@api_mngr_sett_bp.route('/settings/sync', methods=['POST'])
+@login_required
+@check_password_change_required
+@mngr_sett_required
+def sync_mngr_sett_with_mst():
+    """
+    tb_con_mst와 tb_mngr_sett를 동기화합니다.
+    tb_mngr_sett에 존재하지 않는 job에 대해 기본 설정을 생성합니다.
+    """
+    logging.info("=== API: sync_mngr_sett_with_mst() 시작 ===")
+    try:
+        conn = get_db_connection()
+        mngr_sett_service = MngrSettService(conn)
+        result = mngr_sett_service.sync_settings_with_mst()
+        conn.commit()
+        
+        logging.info(f"=== API: sync_mngr_sett_with_mst() 완료. 생성된 설정 개수: {result['created_count']} ===")
+        return jsonify({
+            "message": f"설정 동기화 완료. {result['created_count']}개의 새로운 설정이 생성되었습니다.",
+            "result": result
+        }), 200
+    except Exception as e:
+        logging.error(f"❌ API: 설정 동기화 실패: {e}", exc_info=True)
+        return jsonify({"message": f"설정 동기화 실패: {e}"}), 500
+
 @api_mngr_sett_bp.route('/settings/import', methods=['POST'])
 @login_required
 @check_password_change_required

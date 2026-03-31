@@ -314,3 +314,35 @@ export async function importIconsApi(file) {
         throw error;
     }
 }
+
+/**
+ * @AI_NOTE: tb_con_mst와 tb_mngr_sett를 동기화합니다.
+ * tb_mngr_sett에 존재하지 않는 job에 대해 기본 설정을 생성합니다.
+ * @returns {Promise<Object>} API 응답 데이터
+ */
+export async function syncSettingsApi() {
+    const apiName = "settingsSync";
+    updateApiStatus(apiName, "apiCallInitiated", true);
+    updateApiStatus(apiName, "apiCallSuccess", false);
+    updateApiStatus(apiName, "error", null);
+    try {
+        const response = await fetch(`${BASE_URL}/api/mngr_sett/settings/sync`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({}),
+        });
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+        }
+        const result = await response.json();
+        showMessage(result.message, 'success');
+        updateApiStatus(apiName, "apiCallSuccess", true);
+        return result;
+    } catch (error) {
+        console.error("API: syncSettingsApi 실패:", error);
+        showMessage(`설정 동기화 실패: ${error.message}`, 'error');
+        updateApiStatus(apiName, "error", error.message);
+        throw error;
+    }
+}

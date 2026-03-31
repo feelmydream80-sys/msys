@@ -30,9 +30,13 @@ import {
     exportSettings,
     importSettings,
     exportIcons,
-    importIcons
+    importIcons,
+    syncSettings
 } from '../modules/mngr_sett/events.js';
 import { downloadExcelTemplate } from '../utils/excelDownload.js';
+
+// 설정 동기화 함수를 전역으로 노출
+window.syncSettings = syncSettings;
 
 // --- START: Schedule Settings Tab Logic ---
 

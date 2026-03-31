@@ -1,9 +1,39 @@
 // import { showMessage, showConfirm } from '../common/utils.js'; // toast.js를 직접 사용
 import { showToast } from '../../utils/toast.js';
 import { showConfirm } from '../common/utils.js';
-import { saveAllSettingsApi, saveIconApi, deleteIconApi, toggleIconDisplayApi, exportSettingsApi, importSettingsApi, exportIconsApi, importIconsApi } from '../common/api/mngr_sett.js';
-import { getAdminSettings, getIcons, refreshIconsData } from './data.js';
+import { saveAllSettingsApi, saveIconApi, deleteIconApi, toggleIconDisplayApi, exportSettingsApi, importSettingsApi, exportIconsApi, importIconsApi, syncSettingsApi } from '../common/api/mngr_sett.js';
+import { getAdminSettings, getIcons, refreshIconsData, refreshAdminSettingsData } from './data.js';
 import { renderSettingsTable, renderIconTable, populateIconSelects, hideIconForm, displayIconForm } from './ui.js';
+
+/**
+ * @DOC: '설정 동기화' 버튼 클릭 시 호출됩니다.
+ * tb_con_mst와 tb_mngr_sett를 동기화하여, tb_mngr_sett에 존재하지 않는 job에 대해 기본 설정을 생성합니다.
+ * @example
+ * // <button onclick="window.syncSettings()">설정 동기화</button>
+ */
+export async function syncSettings() {
+    const container = document.getElementById('mngr_sett_page');
+    if (!container) return;
+    const adminLoadingOverlay = container.querySelector('#adminLoadingOverlay');
+
+    if (adminLoadingOverlay) adminLoadingOverlay.classList.remove('hidden');
+
+    try {
+        const result = await syncSettingsApi();
+        console.log('=== syncSettings() result:', result);
+        showToast(result.message, 'success');
+        
+        // 동기화 후 설정 테이블 재렌더링 (캐시 무효화로 최신 데이터 가져오기)
+        const [allMngrSett, allIcons] = await Promise.all([refreshAdminSettingsData(), refreshIconsData()]);
+        renderSettingsTable(allMngrSett, allIcons);
+        populateIconSelects(allIcons);
+    } catch (error) {
+        console.error('Error syncing settings:', error);
+        showToast('설정 동기화 실패: ' + error.message, 'error');
+    } finally {
+        if (adminLoadingOverlay) adminLoadingOverlay.classList.add('hidden');
+    }
+}
 
 // @DOC: 이 파일은 관리자 설정 페이지의 모든 사용자 이벤트 처리와 관련된 함수들을 포함합니다.
 // '저장', '삭제', '가져오기', '내보내기' 등과 같은 버튼 클릭 이벤트를 처리하고,
