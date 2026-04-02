@@ -102,5 +102,28 @@ const ApiKeyMngrData = {
             console.error('API 키 관리 데이터 업데이트 오류:', error);
             return false;
         }
+    },
+
+    /**
+     * 알림 메일 전송 (선택된 CD 목록에 대해)
+     * Following the same pattern as Airflow's ServiceMonitor.send_emails()
+     */
+    sendEmail: async function(cds) {
+        try {
+            const response = await axios.post('/api/api_key_mngr/send_email', {
+                cds: cds
+            });
+            
+            if (response.status === 200 && response.data.success) {
+                console.log('메일 발송 성공:', response.data.results);
+                return response.data;
+            } else {
+                console.error('메일 발송 실패:', response.data.message);
+                return { success: false, message: response.data.message };
+            }
+        } catch (error) {
+            console.error('메일 발송 오류:', error);
+            return { success: false, message: error.message };
+        }
     }
 };

@@ -5,6 +5,7 @@ from dao.con_mst_dao import ConMstDAO
 from datetime import datetime
 from msys.database import get_db_connection
 import logging
+from mail_send import send_email, create_api_key_expiry_email, validate_email_address
 
 class ApiKeyMngrService:
     """TB_API_KEY_MNGR 서비스 클래스"""
@@ -116,4 +117,144 @@ class ApiKeyMngrService:
             if 'conn' in locals():
                 conn.rollback()
             self.logger.error(f"Error updating API key manager with API key: {e}")
+            raise
+
+    def get_mail_settings(self):
+        """Get all mail settings"""
+        try:
+            return self.dao.select_mail_settings()
+        except Exception as e:
+            self.logger.error(f"Error getting mail settings: {e}")
+            raise
+
+    def save_mail_settings(self, settings):
+        """Save mail settings"""
+        try:
+            for mail_tp in ['mail30', 'mail7', 'mail0']:
+                if mail_tp in settings:
+                    s = settings[mail_tp]
+                    self.dao.upsert_mail_settings(
+                        mail_tp=mail_tp,
+                        subject=s.get('subject', ''),
+                        from_email=s.get('from', ''),
+                        body=s.get('body', '')
+                    )
+            return True
+        except Exception as e:
+            self.logger.error(f"Error saving mail settings: {e}")
+            raise
+
+    def get_event_logs(self, limit=100):
+        """Get event logs"""
+        try:
+            return self.dao.select_event_logs(limit)
+        except Exception as e:
+            self.logger.error(f"Error getting event logs: {e}")
+            raise
+
+    def send_expiry_notification(self, cds):
+        """
+        Send API key expiry notification emails for selected CDs
+        Following the same pattern as Airflow's ServiceMonitor.write_email() and send_emails()
+        
+        :param cds: List of CD strings to send notifications for
+        :return: dict with success/failure results
+        """
+        results = {
+            'success': [],
+            'failed': [],
+            'skipped': []
+        }
+        
+        try:
+            # Get all API key data
+            all_data = self.get_all_api_key_mngr()
+            
+            # Filter data for requested CDs
+            target_data = [item for item in all_data if item['cd'] in cds]
+            
+            for api_key_data in target_data:
+                # Validate email address
+                email_addr = api_key_data.get('api_ownr_email_addr', '')
+                if not validate_email_address(email_addr):
+                    self.logger.warning(f"Invalid email address for CD {api_key_data['cd']}: {email_addr}")
+                    results['skipped'].append({
+                        'cd': api_key_data['cd'],
+                        'reason': f'Invalid email: {email_addr}'
+                    })
+                    # Log the skipped event
+                    try:
+                        self.dao.insert_event_log(
+                            cd=api_key_data['cd'],
+                            to_email=email_addr,
+                            success=False,
+                            error_msg=f'Invalid email: {email_addr}'
+                        )
+                    except:
+                        pass
+                    continue
+                
+                # Create email content (following mail_s.txt structure)
+                subject, body = create_api_key_expiry_email(api_key_data)
+                
+                # Send email (following mail_s.txt EmailOperator pattern)
+                try:
+                    success = send_email(
+                        to=email_addr,
+                        subject=subject,
+                        html_content=body
+                    )
+                    
+                    if success:
+                        self.logger.info(f"Email sent successfully for CD: {api_key_data['cd']} to {email_addr}")
+                        results['success'].append({
+                            'cd': api_key_data['cd'],
+                            'email': email_addr
+                        })
+                        # Log the success event
+                        try:
+                            self.dao.insert_event_log(
+                                cd=api_key_data['cd'],
+                                to_email=email_addr,
+                                success=True
+                            )
+                        except:
+                            pass
+                    else:
+                        results['failed'].append({
+                            'cd': api_key_data['cd'],
+                            'reason': 'send_email returned False'
+                        })
+                        # Log the failed event
+                        try:
+                            self.dao.insert_event_log(
+                                cd=api_key_data['cd'],
+                                to_email=email_addr,
+                                success=False,
+                                error_msg='send_email returned False'
+                            )
+                        except:
+                            pass
+                        
+                except Exception as e:
+                    self.logger.error(f"Failed to send email for CD {api_key_data['cd']}: {str(e)}")
+                    results['failed'].append({
+                        'cd': api_key_data['cd'],
+                        'reason': str(e)
+                    })
+                    # Log the failed event
+                    try:
+                        self.dao.insert_event_log(
+                            cd=api_key_data['cd'],
+                            to_email=email_addr,
+                            success=False,
+                            error_msg=str(e)
+                        )
+                    except:
+                        pass
+            
+            return results
+            
+        except Exception as e:
+            self.logger.error(f"Error in send_expiry_notification: {str(e)}")
             raise

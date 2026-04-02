@@ -165,3 +165,109 @@ def update_cd_from_mngr_sett():
             'message': str(e)
         }), 500
 
+@api_key_mngr_api.route('/api_key_mngr/send_email', methods=['POST'])
+@login_required
+@check_password_change_required
+@api_key_mngr_required
+def send_api_key_expiry_email():
+    """선택된 API 키에 대해 만료 알림 메일 발송"""
+    try:
+        data = request.json
+        cds = data.get('cds', [])
+        
+        if not cds:
+            return jsonify({
+                'success': False,
+                'message': 'CD 목록이 필요합니다.'
+            }), 400
+        
+        service = ApiKeyMngrService()
+        results = service.send_expiry_notification(cds)
+        
+        # 결과 요약
+        success_count = len(results['success'])
+        failed_count = len(results['failed'])
+        skipped_count = len(results['skipped'])
+        
+        message = f'메일 발송 완료: 성공 {success_count}건'
+        if failed_count > 0:
+            message += f', 실패 {failed_count}건'
+        if skipped_count > 0:
+            message += f', 건너뜀 {skipped_count}건'
+        
+        return jsonify({
+            'success': True,
+            'message': message,
+            'results': results
+        }), 200
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+@api_key_mngr_api.route('/api_key_mngr/mail_settings', methods=['GET'])
+@login_required
+@check_password_change_required
+@api_key_mngr_required
+def get_mail_settings():
+    """메일 설정 조회"""
+    try:
+        service = ApiKeyMngrService()
+        settings = service.get_mail_settings()
+        return jsonify({
+            'success': True,
+            'settings': settings
+        }), 200
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+@api_key_mngr_api.route('/api_key_mngr/mail_settings', methods=['POST'])
+@login_required
+@check_password_change_required
+@api_key_mngr_required
+def save_mail_settings():
+    """메일 설정 저장"""
+    try:
+        data = request.json
+        service = ApiKeyMngrService()
+        result = service.save_mail_settings(data)
+        
+        if result:
+            return jsonify({
+                'success': True,
+                'message': '메일 설정이 저장되었습니다.'
+            }), 200
+        else:
+            return jsonify({
+                'success': False,
+                'message': '메일 설정 저장에 실패했습니다.'
+            }), 500
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+@api_key_mngr_api.route('/api_key_mngr/event_log', methods=['GET'])
+@login_required
+@check_password_change_required
+@api_key_mngr_required
+def get_event_log():
+    """이벤트 이력 조회"""
+    try:
+        service = ApiKeyMngrService()
+        logs = service.get_event_logs()
+        return jsonify({
+            'success': True,
+            'logs': logs
+        }), 200
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+

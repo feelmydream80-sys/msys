@@ -2,7 +2,8 @@
  * API 키 관리 페이지의 UI 모듈
  */
 
-const ApiKeyMngrUI = {
+// 전역 스코프에 노출 (라우터에서 접근 가능하도록)
+window.ApiKeyMngrUI = {
     /**
      * 페이지당 수량 가져오기
      */
@@ -458,7 +459,7 @@ const ApiKeyMngrUI = {
         const today = new Date();
         const todayP = this.calculatePct(today);
 
-        const rows = paginatedItems.map(k => {
+        const rows = paginatedItems.map((k, idx) => {
             const left = this.calculatePct(k.start);
             const right = this.calculatePct(k.end);
             const w = Math.max(right - left, 0.3);
@@ -474,7 +475,7 @@ const ApiKeyMngrUI = {
                     'data-id="' + k.id + '" data-start="' + k.start + '" data-end="' + k.end + '" ' +
                     'data-status="' + k.status + '" data-reason="' + (k.reason||'') + '" data-days="' + k.daysLeft + '" ' +
                     'onmouseenter="showTip(event,this)" onmouseleave="hideTip()">' +
-                    '<div class="today-line" style="left:' + todayP + '%"></div>' +
+                    '<div class="today-line" style="left:' + todayP + '%">' + (idx === 0 ? '<span class="today-text">today</span>' : '') + '</div>' +
                     '<div class="bar-track ' + barCls + '" style="left:' + left + '%;width:' + w + '%"></div>' +
                 '</div>' +
             '</div>';
@@ -747,10 +748,85 @@ const ApiKeyMngrUI = {
     },
 
     /**
-     * 알림 메일 전송
+     * 알림 메일 전송 (단일 CD)
+     * Following the same pattern as Airflow's ServiceMonitor.send_emails()
      */
-    sendNotification: function(cd) {
-        alert(`알림 메일이 전송되었습니다. (CD: ${cd})`);
+    sendNotification: async function(cd) {
+        if (!confirm(`선택한 API 키(CD: ${cd})의 소유자에게 만료 알림 메일을 전송하시겠습니까?`)) {
+            return;
+        }
+        
+        try {
+            const result = await ApiKeyMngrData.sendEmail([cd]);
+            
+            if (result.success) {
+                const successCount = result.results.success.length;
+                const failedCount = result.results.failed.length;
+                const skippedCount = result.results.skipped.length;
+                
+                let message = `메일 발송 완료: 성공 ${successCount}건`;
+                if (failedCount > 0) message += `, 실패 ${failedCount}건`;
+                if (skippedCount > 0) message += `, 건너뜀 ${skippedCount}건`;
+                
+                alert(message);
+                
+                // 실패/건너뜀 상세 정보 출력
+                if (failedCount > 0) {
+                    console.error('실패 항목:', result.results.failed);
+                }
+                if (skippedCount > 0) {
+                    console.warn('건너뜀 항목:', result.results.skipped);
+                }
+            } else {
+                alert(`메일 발송 실패: ${result.message}`);
+            }
+        } catch (error) {
+            console.error('메일 전송 오류:', error);
+            alert('메일 전송 중 오류가 발생했습니다.');
+        }
+    },
+
+    /**
+     * 알림 메일 전송 (선택된 여러 CD)
+     */
+    sendNotificationBulk: async function(cds) {
+        if (!cds || cds.length === 0) {
+            alert('메일을 보낼 항목을 선택해주세요.');
+            return;
+        }
+        
+        if (!confirm(`선택한 ${cds.length}개의 API 키 소유자에게 만료 알림 메일을 전송하시겠습니까?`)) {
+            return;
+        }
+        
+        try {
+            const result = await ApiKeyMngrData.sendEmail(cds);
+            
+            if (result.success) {
+                const successCount = result.results.success.length;
+                const failedCount = result.results.failed.length;
+                const skippedCount = result.results.skipped.length;
+                
+                let message = `메일 발송 완료: 성공 ${successCount}건`;
+                if (failedCount > 0) message += `, 실패 ${failedCount}건`;
+                if (skippedCount > 0) message += `, 건너뜀 ${skippedCount}건`;
+                
+                alert(message);
+                
+                // 실패/건너뜀 상세 정보 출력
+                if (failedCount > 0) {
+                    console.error('실패 항목:', result.results.failed);
+                }
+                if (skippedCount > 0) {
+                    console.warn('건너뜀 항목:', result.results.skipped);
+                }
+            } else {
+                alert(`메일 발송 실패: ${result.message}`);
+            }
+        } catch (error) {
+            console.error('메일 전송 오류:', error);
+            alert('메일 전송 중 오류가 발생했습니다.');
+        }
     },
 
     /**
@@ -979,11 +1055,11 @@ const ApiKeyMngrUI = {
     },
 
     /**
-     * 탭 전환 이벤트
+     * 탭 전환 이벤트 (mngr_sett와 동일한 구조)
      */
     setupTabNavigation: function() {
-        const tabs = document.querySelectorAll('.tab-btn');
-        const tabContents = document.querySelectorAll('.tab-content');
+        const tabs = document.querySelectorAll('#api_key_mngr_page .tab-button');
+        const tabContents = document.querySelectorAll('#api_key_mngr_page .tab-content');
 
         tabs.forEach(tab => {
             tab.addEventListener('click', (e) => {
@@ -991,15 +1067,15 @@ const ApiKeyMngrUI = {
                 const tabId = tab.dataset.tab;
 
                 // 모든 탭과 내용 숨기기
-                tabs.forEach(t => t.classList.remove('active', 'bg-indigo-50', 'text-indigo-700'));
-                tabContents.forEach(c => c.classList.add('hidden'));
+                tabs.forEach(t => t.classList.remove('active'));
+                tabContents.forEach(c => c.classList.remove('active'));
 
                 // 선택된 탭 활성화
-                tab.classList.add('active', 'bg-indigo-50', 'text-indigo-700');
+                tab.classList.add('active');
                 const contentId = `content${tabId}`;
                 const content = document.getElementById(contentId);
                 if (content) {
-                    content.classList.remove('hidden');
+                    content.classList.add('active');
                 }
 
                 // 탭에 따라 데이터 로드
@@ -1009,6 +1085,10 @@ const ApiKeyMngrUI = {
                 } else if (tabId === '2') {
                     console.log('위험군 탭 선택');
                     this.renderRiskApiKeyMngrTable();
+                } else if (tabId === '3') {
+                    console.log('설정 탭 선택');
+                    this.loadMailSettings();
+                    this.loadEventLog();
                 }
             });
         });
@@ -1029,13 +1109,11 @@ const ApiKeyMngrUI = {
 
                 // 모든 API 탭 버튼 상태 초기화
                 apiTabs.forEach(t => {
-                    t.classList.remove('active', 'bg-indigo-50', 'text-indigo-700');
-                    t.classList.add('text-gray-500', 'hover:text-gray-700');
+                    t.classList.remove('active');
                 });
 
                 // 선택된 API 탭 활성화
-                tab.classList.add('active', 'bg-indigo-50', 'text-indigo-700');
-                tab.classList.remove('text-gray-500', 'hover:text-gray-700');
+                tab.classList.add('active');
 
                 // 테이블 컨테이너 표시/숨기기
                 if (apiTab === 'normal') {
@@ -1111,6 +1189,116 @@ const ApiKeyMngrUI = {
             this.showErrorMessage('API 키 유통기한 정보를 불러오는 데 실패했습니다.');
         } finally {
             this.hideLoading();
+        }
+    },
+
+    /**
+     * 메일 설정 저장
+     */
+    saveMailSettings: async function() {
+        const settings = {
+            mail30: {
+                subject: document.getElementById('mail30_subject')?.value || '',
+                from: document.getElementById('mail30_from')?.value || '',
+                body: document.getElementById('mail30_body')?.value || ''
+            },
+            mail7: {
+                subject: document.getElementById('mail7_subject')?.value || '',
+                from: document.getElementById('mail7_from')?.value || '',
+                body: document.getElementById('mail7_body')?.value || ''
+            },
+            mail0: {
+                subject: document.getElementById('mail0_subject')?.value || '',
+                from: document.getElementById('mail0_from')?.value || '',
+                body: document.getElementById('mail0_body')?.value || ''
+            }
+        };
+
+        try {
+            const response = await axios.post('/api/api_key_mngr/mail_settings', settings);
+            if (response.data.success) {
+                alert('메일 설정이 저장되었습니다.');
+            } else {
+                alert('메일 설정 저장 실패: ' + (response.data.message || '알 수 없는 오류'));
+            }
+        } catch (error) {
+            console.error('메일 설정 저장 오류:', error);
+            alert('메일 설정 저장 중 오류가 발생했습니다.');
+        }
+    },
+
+    /**
+     * 메일 설정 로드
+     */
+    loadMailSettings: async function() {
+        try {
+            const response = await axios.get('/api/api_key_mngr/mail_settings');
+            if (response.data.success) {
+                const settings = response.data.settings;
+                if (settings.mail30) {
+                    document.getElementById('mail30_subject').value = settings.mail30.subject || '';
+                    document.getElementById('mail30_from').value = settings.mail30.from || '';
+                    document.getElementById('mail30_body').value = settings.mail30.body || '';
+                }
+                if (settings.mail7) {
+                    document.getElementById('mail7_subject').value = settings.mail7.subject || '';
+                    document.getElementById('mail7_from').value = settings.mail7.from || '';
+                    document.getElementById('mail7_body').value = settings.mail7.body || '';
+                }
+                if (settings.mail0) {
+                    document.getElementById('mail0_subject').value = settings.mail0.subject || '';
+                    document.getElementById('mail0_from').value = settings.mail0.from || '';
+                    document.getElementById('mail0_body').value = settings.mail0.body || '';
+                }
+            }
+        } catch (error) {
+            console.error('메일 설정 로드 오류:', error);
+        }
+    },
+
+    /**
+     * 이벤트 이력 로드
+     */
+    loadEventLog: async function() {
+        const tableBody = document.getElementById('event-log-table-body');
+        if (!tableBody) return;
+
+        try {
+            const response = await axios.get('/api/api_key_mngr/event_log');
+            if (response.data.success) {
+                const logs = response.data.logs || [];
+                tableBody.innerHTML = '';
+                
+                if (logs.length === 0) {
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="py-8 px-6 text-center text-gray-500">
+                                전송 이력이 없습니다.
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                logs.forEach(log => {
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-gray-50 transition';
+                    
+                    const resultClass = log.success ? 'text-green-600 font-medium' : 'text-red-600 font-medium';
+                    const resultText = log.success ? '성공' : '실패';
+                    
+                    row.innerHTML = `
+                        <td class="py-4 px-6 text-gray-700">${log.sent_at || '-'}</td>
+                        <td class="py-4 px-6 font-medium text-gray-800">${log.cd || '-'}</td>
+                        <td class="py-4 px-6 text-gray-700">${log.to_email || '-'}</td>
+                        <td class="py-4 px-6 ${resultClass}">${resultText}</td>
+                        <td class="py-4 px-6 text-gray-500">${log.error_msg || '-'}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            }
+        } catch (error) {
+            console.error('이벤트 이력 로드 오류:', error);
         }
     }
 };
