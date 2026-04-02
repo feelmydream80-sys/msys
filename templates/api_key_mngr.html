@@ -1,97 +1,366 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>API 키 관리</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <style>
-        body { font-family: 'Pretendard', system-ui, sans-serif; }
-        .timeline-header { background: linear-gradient(to right, #f3f4f6, #e5e7eb); }
-        .today-line { position: absolute; top: 0; bottom: 0; width: 2px; background: #ef4444; z-index: 10; box-shadow: 0 0 6px rgba(239, 68, 68, 0.6); }
-        .gantt-bar { transition: all 0.4s ease; }
-    </style>
-</head>
-<body class="bg-gray-50">
-    <div class="flex h-screen">
-        <!-- 사이드바 -->
-        <div class="w-64 bg-white border-r shadow-sm">
-            <div class="p-6 border-b">
-                <h1 class="text-2xl font-bold text-indigo-700">API 키 관리</h1>
+{% extends "base.html" %}
+
+{% block title %}API 키 관리{% endblock %}
+
+{% block head %}
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500&display=swap" rel="stylesheet">
+<style id="page-specific-style">
+    .timeline-header { background: linear-gradient(to right, #f3f4f6, #e5e7eb); }
+    .today-line { position: absolute; top: 0; bottom: 0; width: 2px; background: #ef4444; z-index: 10; box-shadow: 0 0 6px rgba(239, 68, 68, 0.6); }
+    .gantt-bar { transition: all 0.4s ease; }
+
+    /* Gantt Chart Styles */
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-bottom: 1.75rem;
+    }
+    .metric-card {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 1rem 1.25rem;
+    }
+    .metric-label {
+        font-size: 11px;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 8px;
+    }
+    .metric-value {
+        font-size: 28px;
+        font-weight: 500;
+        font-family: 'IBM Plex Mono', monospace;
+    }
+    .metric-value.ok  { color: #22c984; }
+    .metric-value.warn { color: #f5a623; }
+    .metric-value.err { color: #f04f54; }
+    .metric-value.total { color: #1e293b; }
+
+    .controls {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+    }
+    .controls input,
+    .controls select {
+        font-family: 'IBM Plex Sans KR', sans-serif;
+        font-size: 13px;
+        padding: 7px 12px;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        color: #1e293b;
+        outline: none;
+        transition: border-color 0.15s;
+    }
+    .controls input { flex: 1; min-width: 200px; }
+    .controls input:focus,
+    .controls select:focus { border-color: #22c984; }
+    .controls select option { background: #ffffff; }
+
+    .section-label {
+        font-size: 11px;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin: 1.5rem 0 0.6rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .section-label span {
+        font-family: 'IBM Plex Mono', monospace;
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        border-radius: 4px;
+        padding: 1px 7px;
+        font-size: 11px;
+        color: #64748b;
+        text-transform: none;
+        letter-spacing: 0;
+    }
+
+    .gantt-wrapper {
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        overflow: hidden;
+        background: #ffffff;
+    }
+
+    .gantt-header {
+        display: flex;
+        border-bottom: 1px solid #e2e8f0;
+        background: #f8fafc;
+    }
+    .col-key {
+        width: 210px;
+        min-width: 210px;
+        padding: 8px 14px;
+        border-right: 1px solid #e2e8f0;
+        font-size: 10px;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+    .col-timeline {
+        flex: 1;
+        display: flex;
+    }
+    .tick-label {
+        flex: 1;
+        font-size: 10px;
+        font-family: 'IBM Plex Mono', monospace;
+        color: #64748b;
+        padding: 8px 0;
+        text-align: center;
+        border-right: 1px solid #e2e8f0;
+    }
+    .tick-label:last-child { border-right: none; }
+
+    .gantt-row {
+        display: flex;
+        border-bottom: 1px solid #e2e8f0;
+        align-items: center;
+        transition: background 0.1s;
+    }
+    .gantt-row:last-child { border-bottom: none; }
+    .gantt-row:hover { background: #f8fafc; }
+
+    .key-info {
+        width: 210px;
+        min-width: 210px;
+        padding: 8px 14px;
+        border-right: 1px solid #e2e8f0;
+    }
+    .key-name {
+        font-size: 12px;
+        font-family: 'IBM Plex Mono', monospace;
+        color: #1e293b;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .key-badge {
+        display: inline-block;
+        font-size: 10px;
+        font-family: 'IBM Plex Mono', monospace;
+        padding: 1px 6px;
+        border-radius: 3px;
+        margin-top: 3px;
+        border: 1px solid transparent;
+    }
+    .badge-ok   { background: rgba(34,201,132,0.1); color: #22c984; border-color: rgba(34,201,132,0.25); }
+    .badge-warn { background: rgba(245,166,35,0.1); color: #f5a623; border-color: rgba(245,166,35,0.25); }
+    .badge-expiring-7 { background: rgba(255,165,0,0.1); color: #ff6b35; border-color: rgba(255,165,0,0.25); }
+    .badge-err  { background: rgba(240,79,84,0.1); color: #f04f54; border-color: rgba(240,79,84,0.25); }
+
+    .bar-area {
+        flex: 1;
+        position: relative;
+        height: 44px;
+        cursor: default;
+    }
+    .grid-line {
+        position: absolute;
+        top: 0; bottom: 0;
+        width: 0.5px;
+        background: #e2e8f0;
+        pointer-events: none;
+    }
+    .bar-track {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        height: 10px;
+        border-radius: 5px;
+        min-width: 3px;
+        transition: opacity 0.15s, filter 0.15s;
+    }
+    .bar-area:hover .bar-track { filter: brightness(1.2); }
+    .bar-ok   { background: linear-gradient(90deg, #22c984, #1aaa6e); }
+    .bar-warn { background: linear-gradient(90deg, #f5a623, #d48b1a); }
+    .bar-err  { background: linear-gradient(90deg, #f04f54, #c83a3e); opacity: 0.65; }
+
+    .today-line {
+        position: absolute;
+        top: 0; bottom: 0;
+        width: 1.5px;
+        background: #f04f54;
+        opacity: 0.7;
+        z-index: 2;
+        pointer-events: none;
+    }
+    .today-line::after {
+        content: 'today';
+        position: absolute;
+        top: 4px;
+        left: 4px;
+        font-size: 9px;
+        font-family: 'IBM Plex Mono', monospace;
+        color: #f04f54;
+        white-space: nowrap;
+        opacity: 0.8;
+    }
+
+    .tooltip {
+        position: fixed;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 10px 14px;
+        font-size: 12px;
+        pointer-events: none;
+        z-index: 1000;
+        display: none;
+        min-width: 200px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    }
+    .t-key {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 11px;
+        color: #64748b;
+        margin-bottom: 6px;
+        padding-bottom: 6px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    .t-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        margin-top: 4px;
+        font-size: 12px;
+    }
+    .t-row span:first-child { color: #64748b; }
+    .t-row span:last-child  { font-family: 'IBM Plex Mono', monospace; color: #1e293b; }
+
+    .no-result {
+        text-align: center;
+        padding: 2.5rem;
+        color: #64748b;
+        font-size: 13px;
+    }
+
+    @media (max-width: 640px) {
+        .summary-grid { grid-template-columns: repeat(2, 1fr); }
+        body { padding: 1rem; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <div id="api_key_mngr_page" class="container mx-auto p-4">
+
+        <!-- 탭 네비게이션 -->
+        <div class="mb-6">
+            <div class="border-b border-gray-200">
+                <nav class="flex space-x-8">
+                    <a href="#" class="tab-btn active bg-indigo-50 text-indigo-700 px-3 py-2 rounded-t-lg font-medium text-sm" data-tab="0">API 키 관리</a>
+                    <a href="#" class="tab-btn text-gray-500 hover:text-gray-700 px-3 py-2 rounded-t-lg font-medium text-sm" data-tab="1">기간 차트</a>
+                    <a href="#" class="tab-btn text-gray-500 hover:text-gray-700 px-3 py-2 rounded-t-lg font-medium text-sm" data-tab="2">위험군</a>
+                </nav>
             </div>
-            <nav class="p-4">
-                <a href="#" class="tab-btn flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-indigo-50 active" id="tab0" data-tab="0">
-                    <i class="fas fa-cog"></i>
-                    <span class="font-medium">데이터 설정</span>
-                </a>
-                <a href="#" class="tab-btn flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-indigo-50" id="tab1" data-tab="1">
-                    <i class="fas fa-chart-bar"></i>
-                    <span class="font-medium">기간 차트</span>
-                </a>
-            </nav>
         </div>
 
         <!-- 메인 콘텐츠 -->
         <div class="flex-1 overflow-auto">
-            <!-- 데이터 설정 화면 -->
+            <!-- API 키 관리 탭 -->
             <div id="content0" class="tab-content p-8">
-                <div class="max-w-6xl mx-auto">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-3xl font-bold text-gray-800">API 키 관리</h2>
-                        <button id="update-cd-button" 
-                                class="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-2xl font-medium shadow-md transition">
-                            <i class="fas fa-sync"></i>
-                            <span>CD 업데이트</span>
-                        </button>
+                <div class="max-w-7xl mx-auto">
+                    <!-- API 키 관리 탭 네비게이션 -->
+                    <div class="mb-6">
+                        <div class="border-b border-gray-200">
+                            <nav class="flex space-x-8">
+                                <a href="#" class="api-tab-btn active bg-indigo-50 text-indigo-700 px-3 py-2 rounded-t-lg font-medium text-sm" data-api-tab="normal">정상 API 키 관리 테이블</a>
+                                <a href="#" class="api-tab-btn text-gray-500 hover:text-gray-700 px-3 py-2 rounded-t-lg font-medium text-sm" data-api-tab="abnormal">비정상 API 키 관리 테이블</a>
+                            </nav>
+                        </div>
                     </div>
 
                     <!-- 정상 데이터 테이블 -->
-                    <div class="bg-white rounded-3xl shadow overflow-hidden mb-8" id="api-key-mngr-table-container">
-                        <div class="p-4 border-b">
-                            <h3 class="text-lg font-semibold">정상 API 키 관리 테이블</h3>
+                    <div id="normal-api-table-container">
+                        <div class="flex justify-between items-center mb-6">
+                            <div class="flex items-center gap-4">
+                                <div class="flex items-center gap-2">
+                                    <label class="text-sm text-gray-600">페이지당 수량:</label>
+                                    <select id="page-size-select" class="border border-gray-300 rounded-lg px-3 py-1 text-sm">
+                                        <option value="10">10개</option>
+                                        <option value="20">20개</option>
+                                        <option value="50">50개</option>
+                                        <option value="100">100개</option>
+                                    </select>
+                                </div>
+                                <button class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition" onclick="ApiKeyMngrUI.filterByStatus('all')">전체키 (<span id="allCount">0</span>)</button>
+                                <button class="px-4 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg text-sm font-medium transition" onclick="ApiKeyMngrUI.filterByStatus('ok')">정상 (<span id="okCount">0</span>)</button>
+                                <button class="px-4 py-2 bg-yellow-100 hover:bg-yellow-200 text-yellow-700 rounded-lg text-sm font-medium transition" onclick="ApiKeyMngrUI.filterByStatus('expiring-30')">만료 임박(30일) (<span id="expiring30Count">0</span>)</button>
+                                <button class="px-4 py-2 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-lg text-sm font-medium transition" onclick="ApiKeyMngrUI.filterByStatus('expiring-7')">만료 임박(7일) (<span id="expiring7Count">0</span>)</button>
+                                <button class="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm font-medium transition" onclick="ApiKeyMngrUI.filterByStatus('err')">오버 (<span id="errCount">0</span>)</button>
+                            </div>
+                            <input type="text" id="searchInput" placeholder="키 이름 또는 CD 검색..." oninput="ApiKeyMngrUI.handleSearch()" class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" style="width: 30%;">
                         </div>
-                        <table class="w-full">
-                            <thead class="bg-gray-100">
-                                <tr>
-                                    <th class="py-4 px-6 text-left font-medium text-gray-600">코드명</th>
-                                    <th class="py-4 px-6 text-left font-medium text-gray-600">API값</th>
-                                    <th class="py-4 px-6 text-left font-medium text-gray-600">API책임자이메일</th>
-                                    <th class="py-4 px-6 text-left font-medium text-gray-600">기간</th>
-                                    <th class="py-4 px-6 text-left font-medium text-gray-600">등록일</th>
-                                    <th class="py-4 px-6 text-left font-medium text-gray-600">남은 기간</th>
-                                    <th class="py-4 px-6 text-left font-medium text-gray-600">알림 메일 전송</th>
-                                </tr>
-                            </thead>
-                        <tbody id="api-key-mngr-table-body" class="divide-y">
-                                <!-- 데이터 로딩 중 -->
-                            </tbody>
-                        </table>
-                        <!-- 페이지네이션 영역 -->
-                        <div id="api-key-mngr-pagination" class="flex justify-center items-center gap-2 mt-4 p-4"></div>
+                        
+                        <div class="bg-white rounded-3xl shadow overflow-hidden mb-8">
+                            <table class="w-full">
+                                <thead class="bg-gray-100">
+                                    <tr>
+                                        <th class="py-4 px-6 text-left font-medium text-gray-600">코드명</th>
+                                        <th class="py-4 px-6 text-left font-medium text-gray-600">API값</th>
+                                        <th class="py-4 px-6 text-left font-medium text-gray-600">API책임자이메일</th>
+                                        <th class="py-4 px-6 text-left font-medium text-gray-600">기간</th>
+                                        <th class="py-4 px-6 text-left font-medium text-gray-600">등록일</th>
+                                        <th class="py-4 px-6 text-left font-medium text-gray-600">남은 기간</th>
+                                        <th class="py-4 px-6 text-left font-medium text-gray-600">알림 메일 전송</th>
+                                        <th class="py-4 px-6 text-left font-medium text-gray-600">수정</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="api-key-mngr-table-body" class="divide-y">
+                                    <!-- 데이터 로딩 중 -->
+                                </tbody>
+                            </table>
+                            <!-- 페이지네이션 영역 -->
+                            <div id="api-key-mngr-pagination" class="flex justify-center items-center gap-2 mt-4 p-4"></div>
+                        </div>
                     </div>
 
                     <!-- 비정상 데이터 테이블 -->
-                    <div class="bg-white rounded-3xl shadow overflow-hidden" id="abnormal-api-key-mngr-table-container">
-                        <div class="p-4 border-b">
-                            <h3 class="text-lg font-semibold">비정상 API 키 관리 테이블</h3>
+                    <div id="abnormal-api-table-container" class="hidden">
+                        <div class="flex justify-between items-center mb-6">
+                            <div class="flex items-center gap-2">
+                                <label class="text-sm text-gray-600">페이지당 수량:</label>
+                                <select id="page-size-select" class="border border-gray-300 rounded-lg px-3 py-1 text-sm">
+                                    <option value="10">10개</option>
+                                    <option value="20">20개</option>
+                                    <option value="50">50개</option>
+                                    <option value="100">100개</option>
+                                </select>
+                            </div>
+                            <input type="text" id="searchInput" placeholder="키 이름 또는 CD 검색..." oninput="ApiKeyMngrUI.handleSearch()" class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" style="width: 30%;">
                         </div>
-                        <table class="w-full">
-                            <thead class="bg-gray-100">
-                                <tr>
-                                    <th class="py-4 px-6 text-left font-medium text-gray-600">코드명</th>
-                                    <th class="py-4 px-6 text-left font-medium text-gray-600">API값</th>
-                                    <th class="py-4 px-6 text-left font-medium text-gray-600">API책임자이메일</th>
-                                    <th class="py-4 px-6 text-left font-medium text-gray-600">기간</th>
-                                    <th class="py-4 px-6 text-left font-medium text-gray-600">등록일</th>
-                                    <th class="py-4 px-6 text-left font-medium text-gray-600">남은 기간</th>
-                                    <th class="py-4 px-6 text-left font-medium text-gray-600">알림 메일 전송</th>
-                                </tr>
-                            </thead>
-                        <tbody id="abnormal-api-key-mngr-table-body" class="divide-y">
-                                <!-- 데이터 로딩 중 -->
-                            </tbody>
-                        </table>
+                        
+                        <div class="bg-white rounded-3xl shadow overflow-hidden mb-8">
+                            <table class="w-full">
+                                <thead class="bg-gray-100">
+                                    <tr>
+                                        <th class="py-4 px-6 text-left font-medium text-gray-600">코드명</th>
+                                        <th class="py-4 px-6 text-left font-medium text-gray-600">API값</th>
+                                        <th class="py-4 px-6 text-left font-medium text-gray-600">API책임자이메일</th>
+                                        <th class="py-4 px-6 text-left font-medium text-gray-600">기간</th>
+                                        <th class="py-4 px-6 text-left font-medium text-gray-600">등록일</th>
+                                        <th class="py-4 px-6 text-left font-medium text-gray-600">남은 기간</th>
+                                        <th class="py-4 px-6 text-left font-medium text-gray-600">알림 메일 전송</th>
+                                        <th class="py-4 px-6 text-left font-medium text-gray-600">수정</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="abnormal-api-key-mngr-table-body" class="divide-y">
+                                    <!-- 데이터 로딩 중 -->
+                                </tbody>
+                            </table>
+                            <!-- 페이지네이션 영역 -->
+                            <div id="abnormal-api-key-mngr-pagination" class="flex justify-center items-center gap-2 mt-4 p-4"></div>
+                        </div>
                     </div>
 
                     <div class="mt-8 bg-amber-50 border border-amber-200 rounded-2xl p-6 text-sm text-amber-800">
@@ -105,49 +374,126 @@
                 </div>
             </div>
 
-            <!-- 기간 차트 화면 -->
+            <!-- 기간 차트 탭 -->
             <div id="content1" class="tab-content hidden p-8">
-                <div class="max-w-6xl mx-auto">
-                    <h2 class="text-3xl font-bold text-gray-800 mb-6">기간 차트 (유효기간 관리)</h2>
+                <div class="max-w-7xl mx-auto">
                     <div class="bg-white rounded-3xl shadow p-8">
+                        <!-- 한 줄로 배치된 섹션 라벨, 페이징 수량, 버튼, 검색 -->
                         <div class="flex justify-between items-center mb-6">
-                            <div>
-                <h3 class="font-semibold text-xl">API 키 유통기한 Gantt 차트</h3>
-                                <p class="text-gray-500 text-sm">기준일: {{ current_date }}</p>
-                            </div>
-                            <div class="flex items-center gap-6 text-sm">
+                            <div class="flex items-center gap-4">
                                 <div class="flex items-center gap-2">
-                                    <div class="w-4 h-4 bg-green-500 rounded"></div>
-                                    <span>여유 (1개월 초과)</span>
+                                    <span class="text-sm font-medium text-gray-700">API 키 유효기간</span>
+                                    <span id="totalCount" class="text-sm font-medium text-gray-700">0개</span>
+                                    <select id="gantt-page-size-select" class="border border-gray-300 rounded-lg px-3 py-1 text-sm" onchange="ApiKeyMngrUI.handlePageSizeChange()">
+                                        <option value="10">10개</option>
+                                        <option value="20">20개</option>
+                                        <option value="50">50개</option>
+                                        <option value="100">100개</option>
+                                    </select>
                                 </div>
-                                <div class="flex items-center gap-2">
-                                    <div class="w-4 h-4 bg-red-500 rounded"></div>
-                                    <span>긴급 (1개월 이내)</span>
-                                </div>
+                                <button class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition" onclick="ApiKeyMngrUI.filterByStatus('all')">전체키 (<span id="allCount">0</span>)</button>
+                                <button class="px-4 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg text-sm font-medium transition" onclick="ApiKeyMngrUI.filterByStatus('ok')">정상 (<span id="okCount">0</span>)</button>
+                                <button class="px-4 py-2 bg-yellow-100 hover:bg-yellow-200 text-yellow-700 rounded-lg text-sm font-medium transition" onclick="ApiKeyMngrUI.filterByStatus('expiring-30')">만료 임박(30일) (<span id="expiring30Count">0</span>)</button>
+                                <button class="px-4 py-2 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-lg text-sm font-medium transition" onclick="ApiKeyMngrUI.filterByStatus('expiring-7')">만료 임박(7일) (<span id="expiring7Count">0</span>)</button>
+                                <button class="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm font-medium transition" onclick="ApiKeyMngrUI.filterByStatus('err')">오버 (<span id="errCount">0</span>)</button>
                             </div>
+                            <input type="text" id="searchInput" placeholder="키 이름 또는 CD 검색..." oninput="renderGanttChart()" class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" style="width: 30%;">
                         </div>
+                        
+                        <!-- Gantt 차트 -->
+                        <div id="ganttChart"></div>
+                        <div class="tooltip" id="tooltip"></div>
+                    </div>
+                </div>
+            </div>
 
-                        <!-- 차트 -->
-                        <div id="api-key-expiry-chart" class="space-y-8 mt-8">
-                            <!-- 차트 데이터 로딩 중 -->
+            <!-- 위험군 탭 -->
+            <div id="content2" class="tab-content hidden p-8">
+                <div class="max-w-6xl mx-auto">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-6">위험군 API 키 (1개월 이내 만료)</h2>
+                    
+                    <!-- 페이징 수량 선택 -->
+                    <div class="flex justify-between items-center mb-4">
+                        <div class="flex items-center gap-2">
+                            <label class="text-sm text-gray-600">페이지당 수량:</label>
+                            <select id="risk-page-size-select" class="border border-gray-300 rounded-lg px-3 py-1 text-sm">
+                                <option value="10">10개</option>
+                                <option value="20">20개</option>
+                                <option value="50">50개</option>
+                                <option value="100">100개</option>
+                            </select>
                         </div>
+                    </div>
+
+                    <div class="bg-white rounded-3xl shadow overflow-hidden mb-8">
+                        <div class="p-4 border-b">
+                            <h3 class="text-lg font-semibold">위험군 API 키 관리 테이블</h3>
+                        </div>
+                        <table class="w-full">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="py-4 px-6 text-left font-medium text-gray-600">코드명</th>
+                                    <th class="py-4 px-6 text-left font-medium text-gray-600">API값</th>
+                                    <th class="py-4 px-6 text-left font-medium text-gray-600">API책임자이메일</th>
+                                    <th class="py-4 px-6 text-left font-medium text-gray-600">기간</th>
+                                    <th class="py-4 px-6 text-left font-medium text-gray-600">등록일</th>
+                                    <th class="py-4 px-6 text-left font-medium text-gray-600">남은 기간</th>
+                                    <th class="py-4 px-6 text-left font-medium text-gray-600">알림 메일 전송</th>
+                                    <th class="py-4 px-6 text-left font-medium text-gray-600">수정</th>
+                                </tr>
+                            </thead>
+                            <tbody id="risk-api-key-mngr-table-body" class="divide-y">
+                                <!-- 데이터 로딩 중 -->
+                            </tbody>
+                        </table>
+                        <!-- 페이지네이션 영역 -->
+                        <div id="risk-api-key-mngr-pagination" class="flex justify-center items-center gap-2 mt-4 p-4"></div>
+                    </div>
+
+                    <div class="bg-red-50 border border-red-200 rounded-2xl p-6 text-sm text-red-800">
+                        <strong>위험군 API 키 안내</strong><br>
+                        • 이 테이블에는 수명이 <strong>1개월 이내</strong>로 남은 API 키가 표시됩니다.<br>
+                        • 빠른 조치가 필요합니다. 만료 전에 API 키를 갱신해 주세요.<br>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- 로딩 표시 -->
-    <div id="loading" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white p-6 rounded-lg shadow-xl">
-            <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500 mx-auto"></div>
-            <p class="mt-4 text-center text-gray-700">데이터 로딩 중...</p>
+        <!-- 로딩 표시 -->
+        <div id="loading" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+            <div class="bg-white p-6 rounded-lg shadow-xl">
+                <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500 mx-auto"></div>
+                <p class="mt-4 text-center text-gray-700">데이터 로딩 중...</p>
+            </div>
         </div>
     </div>
+{% endblock %}
 
-    <script src="{{ url_for('static', filename='js/modules/common/api/api_key_mngr.js') }}"></script>
+{% block scripts %}
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="{{ url_for('static', filename='js/modules/api_key_mngr/data.js') }}"></script>
     <script src="{{ url_for('static', filename='js/modules/api_key_mngr/ui.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/pages/api_key_mngr.js') }}"></script>
-</body>
-</html>
+    <script>
+        // Gantt 차트 관련 전역 함수
+        function renderGanttChart() {
+            ApiKeyMngrUI.renderGanttChart();
+        }
+
+        function showTip(e, el) {
+            ApiKeyMngrUI.showTip(e, el);
+        }
+
+        function hideTip() {
+            ApiKeyMngrUI.hideTip();
+        }
+
+        // 페이지 로드 시 Gantt 이벤트 리스너 설정
+        document.addEventListener('DOMContentLoaded', function() {
+            ApiKeyMngrUI.setupGanttEventListeners();
+        });
+    </script>
+    <script type="module">
+        import { init } from '/static/js/pages/api_key_mngr.js';
+        init();
+    </script>
+{% endblock %}
