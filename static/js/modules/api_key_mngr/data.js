@@ -58,13 +58,15 @@ const ApiKeyMngrData = {
 
     /**
      * 정상 상태의 API 키 관리 데이터 반환
+     * - api_key 값이 있으면 만료일 관계없이 정상으로 분류
      */
     getNormalApiKeyMngrData: function() {
-        return this.apiKeyMngrData.filter(item => item.api_key && item.days_remaining > 0);
+        return this.apiKeyMngrData.filter(item => item.api_key);
     },
 
     /**
      * 비정상 상태의 API 키 관리 데이터 반환
+     * - api_key 값이 없거나 만료된 데이터
      */
     getAbnormalApiKeyMngrData: function() {
         return this.apiKeyMngrData.filter(item => !item.api_key || item.days_remaining <= 0);

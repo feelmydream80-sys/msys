@@ -13,7 +13,7 @@ class ApiKeyMngrDao:
         self.logger = logging.getLogger(__name__)
 
     def select_all(self) -> List[Dict[str, Any]]:
-        """Select all records from TB_API_KEY_MNGR with joined TB_CON_MST data"""
+        """Select all active records from TB_API_KEY_MNGR with joined TB_CON_MST data (USE_YN='Y' only)"""
         try:
             conn = get_db_connection()
             cursor = conn.cursor()
@@ -25,9 +25,11 @@ class ApiKeyMngrDao:
                     b.cd_nm,
                     a.api_ownr_email_addr,
                     a.due,
-                    a.start_dt
+                    a.start_dt,
+                    b.USE_YN as use_yn
                 FROM TB_API_KEY_MNGR a
                 LEFT JOIN TB_CON_MST b ON a.cd = b.CD
+                WHERE b.USE_YN = 'Y'
             """
             
             cursor.execute(query)
@@ -42,7 +44,8 @@ class ApiKeyMngrDao:
                     'cd_nm': row[2],
                     'api_ownr_email_addr': row[3],
                     'due': row[4],
-                    'start_dt': row[5]
+                    'start_dt': row[5],
+                    'use_yn': row[6]
                 })
             
             self.logger.debug(f"Fetched {len(data)} records from TB_API_KEY_MNGR with joined TB_CON_MST data")

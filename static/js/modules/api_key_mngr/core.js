@@ -128,11 +128,14 @@ window.ApiKeyMngrUI.setupTabNavigation = function() {
             }
 
             // 탭에 따라 데이터 로드
-            if (tabId === '1') {
-                console.log('기간 차트 탭 선택');
+            if (tabId === '0') {
+                console.log('API 키 관리 탭 선택 - 데이터 새로고침');
+                window.ApiKeyMngrUI.handlePageLoad();
+            } else if (tabId === '1') {
+                console.log('기간 차트 탭 선택 - 데이터 새로고침');
                 window.ApiKeyMngrUI.loadApiKeyExpiryInfo();
             } else if (tabId === '2') {
-                console.log('위험군 탭 선택');
+                console.log('위험군 탭 선택 - 데이터 새로고침');
                 // 필터 버튼 초기 상태 설정
                 window.ApiKeyMngrUI.riskMailFilter = 'all';
                 document.querySelectorAll('.risk-mail-filter-btn').forEach(btn => {
@@ -141,7 +144,8 @@ window.ApiKeyMngrUI.setupTabNavigation = function() {
                         btn.classList.add('active');
                     }
                 });
-                window.ApiKeyMngrUI.renderRiskApiKeyMngrTable();
+                // 데이터 새로 로드 후 위험군 테이블 렌더링
+                window.ApiKeyMngrUI.loadRiskGroupData();
             } else if (tabId === '3') {
                 console.log('설정 탭 선택');
                 window.ApiKeyMngrUI.loadMailSettings();
@@ -349,16 +353,44 @@ window.ApiKeyMngrUI.handlePageLoad = async function() {
 };
 
 /**
- * API 키 유통기한 정보 로드
+ * API 키 유통기한 정보 로드 (데이터 새로고침 포함)
  */
-window.ApiKeyMngrUI.loadApiKeyExpiryInfo = function() {
+window.ApiKeyMngrUI.loadApiKeyExpiryInfo = async function() {
     window.ApiKeyMngrUI.showLoading(true);
     try {
-        // 기존 데이터를 사용하여 Gantt 차트 렌더링
-        window.ApiKeyMngrUI.renderGanttChart();
+        // 데이터 새로 로드
+        const success = await ApiKeyMngrData.loadApiKeyMngrData();
+        if (success) {
+            // Gantt 차트 렌더링
+            window.ApiKeyMngrUI.renderGanttChart();
+        } else {
+            window.ApiKeyMngrUI.showErrorMessage('API 키 유통기한 정보를 불러오는 데 실패했습니다.');
+        }
     } catch (error) {
         console.error('API 키 유통기한 정보 조회 실패:', error);
         window.ApiKeyMngrUI.showErrorMessage('API 키 유통기한 정보를 불러오는 데 실패했습니다.');
+    } finally {
+        window.ApiKeyMngrUI.hideLoading();
+    }
+};
+
+/**
+ * 위험군 데이터 로드 (데이터 새로고침 포함)
+ */
+window.ApiKeyMngrUI.loadRiskGroupData = async function() {
+    window.ApiKeyMngrUI.showLoading(true);
+    try {
+        // 데이터 새로 로드
+        const success = await ApiKeyMngrData.loadApiKeyMngrData();
+        if (success) {
+            // 위험군 테이블 렌더링
+            window.ApiKeyMngrUI.renderRiskApiKeyMngrTable();
+        } else {
+            window.ApiKeyMngrUI.showErrorMessage('위험군 정보를 불러오는 데 실패했습니다.');
+        }
+    } catch (error) {
+        console.error('위험군 정보 조회 실패:', error);
+        window.ApiKeyMngrUI.showErrorMessage('위험군 정보를 불러오는 데 실패했습니다.');
     } finally {
         window.ApiKeyMngrUI.hideLoading();
     }

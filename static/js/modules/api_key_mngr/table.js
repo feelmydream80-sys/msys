@@ -1,9 +1,108 @@
 /**
  * API 키 관리 페이지의 Table 모듈
- * - 테이블 렌더링, 페이지네이션, 필터링
+ * - 테이블 렌더링, 페이지네이션, 필터링, 정렬
  */
 
 window.ApiKeyMngrUI = window.ApiKeyMngrUI || {};
+
+// ==========================================
+// 정렬 상태 관리
+// ==========================================
+window.ApiKeyMngrUI.sortState = {
+    normal: { column: 'days_remaining', direction: 'asc' },
+    abnormal: { column: 'days_remaining', direction: 'asc' }
+};
+
+/**
+ * 데이터 정렬 함수
+ */
+window.ApiKeyMngrUI.sortData = function(data, column, direction, tableType) {
+    if (!column) return data;
+    
+    return [...data].sort((a, b) => {
+        let valA = a[column];
+        let valB = b[column];
+        
+        // null/undefined 처리
+        if (valA === null || valA === undefined) valA = '';
+        if (valB === null || valB === undefined) valB = '';
+        
+        // 숫자 비교 (days_remaining, due 등)
+        if (column === 'days_remaining' || column === 'due') {
+            valA = Number(valA) || 0;
+            valB = Number(valB) || 0;
+            return direction === 'asc' ? valA - valB : valB - valA;
+        }
+        
+        // 날짜 비교 (start_dt)
+        if (column === 'start_dt') {
+            const dateA = new Date(valA);
+            const dateB = new Date(valB);
+            return direction === 'asc' ? dateA - dateB : dateB - dateA;
+        }
+        
+        // 문자열 비교 (cd, cd_nm, api_key, api_ownr_email_addr)
+        const strA = String(valA).toLowerCase();
+        const strB = String(valB).toLowerCase();
+        if (strA < strB) return direction === 'asc' ? -1 : 1;
+        if (strA > strB) return direction === 'asc' ? 1 : -1;
+        return 0;
+    });
+};
+
+/**
+ * 정렬 상태 업데이트 및 테이블 다시 렌더링
+ */
+window.ApiKeyMngrUI.handleSort = function(column, tableType) {
+    const state = window.ApiKeyMngrUI.sortState[tableType];
+    if (!state) return;
+    
+    // 같은 열 클릭 시 방향 토글, 다른 열 클릭 시 오름차순으로 초기화
+    if (state.column === column) {
+        state.direction = state.direction === 'asc' ? 'desc' : 'asc';
+    } else {
+        state.column = column;
+        state.direction = 'asc';
+    }
+    
+    // 테이블 다시 렌더링
+    if (tableType === 'normal') {
+        window.ApiKeyMngrUI.renderApiKeyMngrTable();
+    } else if (tableType === 'abnormal') {
+        window.ApiKeyMngrUI.renderAbnormalApiKeyMngrTable();
+    }
+};
+
+/**
+ * 정렬 아이콘 HTML 생성
+ */
+window.ApiKeyMngrUI.getSortIcon = function(column, tableType) {
+    const state = window.ApiKeyMngrUI.sortState[tableType];
+    if (!state || state.column !== column) {
+        return '<span class="ml-1 text-gray-400 text-xs">↕</span>';
+    }
+    return state.direction === 'asc' 
+        ? '<span class="ml-1 text-blue-600 text-xs">↑</span>' 
+        : '<span class="ml-1 text-blue-600 text-xs">↓</span>';
+};
+
+/**
+ * 정렬 가능한 헤더 HTML 생성
+ */
+window.ApiKeyMngrUI.createSortableHeader = function(column, label, tableType) {
+    const widths = {
+        'cd': '10%', 'cd_nm': '12%', 'api_key': '18%',
+        'api_ownr_email_addr': '18%', 'due': '7%',
+        'start_dt': '10%', 'days_remaining': '8%'
+    };
+    const width = widths[column] || 'auto';
+    const icon = window.ApiKeyMngrUI.getSortIcon(column, tableType);
+    return `<th class="py-4 px-6 text-left font-medium text-gray-600 whitespace-nowrap cursor-pointer hover:bg-gray-200 select-none transition" 
+                style="width: ${width};"
+                onclick="ApiKeyMngrUI.handleSort('${column}', '${tableType}')">
+                ${label}${icon}
+            </th>`;
+};
 
 // ==========================================
 // 필터링 함수
@@ -53,12 +152,32 @@ window.ApiKeyMngrUI.getFilteredApiKeyMngrData = function(data) {
 window.ApiKeyMngrUI.renderApiKeyMngrTable = function(data) {
     const tableBody = document.getElementById('api-key-mngr-table-body');
     const paginationDiv = document.getElementById('api-key-mngr-pagination');
+    const tableHead = document.querySelector('#normal-api-table-container thead tr');
     
     // 정상 상태의 API 키 관리 데이터 가져오기
     let normalData = ApiKeyMngrData.getNormalApiKeyMngrData();
     
     // 필터 및 검색 적용
     normalData = window.ApiKeyMngrUI.getFilteredApiKeyMngrData(normalData);
+    
+    // 정렬 적용
+    const sortState = window.ApiKeyMngrUI.sortState.normal;
+    normalData = window.ApiKeyMngrUI.sortData(normalData, sortState.column, sortState.direction, 'normal');
+    
+    // 헤더 업데이트 (정렬 아이콘 포함)
+    if (tableHead) {
+        tableHead.innerHTML = `
+            ${window.ApiKeyMngrUI.createSortableHeader('cd', '코드명', 'normal')}
+            ${window.ApiKeyMngrUI.createSortableHeader('cd_nm', '명칭', 'normal')}
+            ${window.ApiKeyMngrUI.createSortableHeader('api_key', 'API값', 'normal')}
+            ${window.ApiKeyMngrUI.createSortableHeader('api_ownr_email_addr', 'API책임자이메일', 'normal')}
+            ${window.ApiKeyMngrUI.createSortableHeader('due', '기간', 'normal')}
+            ${window.ApiKeyMngrUI.createSortableHeader('start_dt', '등록일', 'normal')}
+            ${window.ApiKeyMngrUI.createSortableHeader('days_remaining', '남은 기간', 'normal')}
+            <th class="py-4 px-6 text-left font-medium text-gray-600 whitespace-nowrap" style="width: 10%;">알림 메일 전송</th>
+            <th class="py-4 px-6 text-left font-medium text-gray-600 whitespace-nowrap" style="width: 7%;">수정</th>
+        `;
+    }
     
     // 페이지네이션 설정
     const itemsPerPage = window.ApiKeyMngrUI.getPageSize();
@@ -84,7 +203,17 @@ window.ApiKeyMngrUI.renderApiKeyMngrTable = function(data) {
             row.className = 'hover:bg-gray-50 transition';
             
             const remainingDays = item.days_remaining;
-            const remainingDaysClass = remainingDays <= 30 ? 'text-red-600 font-medium' : 'text-gray-700';
+            // 기간 차트 필터 버튼과 동일한 조건부 색상 적용
+            let remainingDaysClass = 'text-gray-700';
+            if (remainingDays <= 0) {
+                remainingDaysClass = 'text-red-600 font-medium'; // err (오버)
+            } else if (remainingDays <= 7) {
+                remainingDaysClass = 'text-orange-500 font-medium'; // expiring-7 (만료 임박 7일)
+            } else if (remainingDays <= 30) {
+                remainingDaysClass = 'text-yellow-600 font-medium'; // expiring-30 (만료 임박 30일)
+            } else {
+                remainingDaysClass = 'text-green-600 font-medium'; // ok (정상)
+            }
             
             row.innerHTML = `
                 <td class="py-4 px-6 font-medium text-gray-800">${item.cd}</td>
@@ -126,6 +255,7 @@ window.ApiKeyMngrUI.renderApiKeyMngrTable = function(data) {
 window.ApiKeyMngrUI.renderAbnormalApiKeyMngrTable = function() {
     const tableBody = document.getElementById('abnormal-api-key-mngr-table-body');
     const paginationDiv = document.getElementById('abnormal-api-key-mngr-pagination');
+    const tableHead = document.querySelector('#abnormal-api-table-container thead tr');
     
     // 비정상 상태의 API 키 관리 데이터 가져오기
     let abnormalData = ApiKeyMngrData.getAbnormalApiKeyMngrData();
@@ -135,6 +265,25 @@ window.ApiKeyMngrUI.renderAbnormalApiKeyMngrTable = function() {
     abnormalData = abnormalData.filter(item => {
         return !q || item.cd.toLowerCase().includes(q) || (item.api_key && item.api_key.toLowerCase().includes(q));
     });
+    
+    // 정렬 적용
+    const sortState = window.ApiKeyMngrUI.sortState.abnormal;
+    abnormalData = window.ApiKeyMngrUI.sortData(abnormalData, sortState.column, sortState.direction, 'abnormal');
+    
+    // 헤더 업데이트 (정렬 아이콘 포함)
+    if (tableHead) {
+        tableHead.innerHTML = `
+            ${window.ApiKeyMngrUI.createSortableHeader('cd', '코드명', 'abnormal')}
+            ${window.ApiKeyMngrUI.createSortableHeader('cd_nm', '명칭', 'abnormal')}
+            ${window.ApiKeyMngrUI.createSortableHeader('api_key', 'API값', 'abnormal')}
+            ${window.ApiKeyMngrUI.createSortableHeader('api_ownr_email_addr', 'API책임자이메일', 'abnormal')}
+            ${window.ApiKeyMngrUI.createSortableHeader('due', '기간', 'abnormal')}
+            ${window.ApiKeyMngrUI.createSortableHeader('start_dt', '등록일', 'abnormal')}
+            ${window.ApiKeyMngrUI.createSortableHeader('days_remaining', '남은 기간', 'abnormal')}
+            <th class="py-4 px-6 text-left font-medium text-gray-600 whitespace-nowrap" style="width: 10%;">알림 메일 전송</th>
+            <th class="py-4 px-6 text-left font-medium text-gray-600 whitespace-nowrap" style="width: 7%;">수정</th>
+        `;
+    }
     
     // 페이지네이션 설정
     const itemsPerPage = window.ApiKeyMngrUI.getPageSize();
@@ -159,6 +308,19 @@ window.ApiKeyMngrUI.renderAbnormalApiKeyMngrTable = function() {
             const row = document.createElement('tr');
             row.className = 'hover:bg-gray-50 transition';
             
+            const remainingDays = item.days_remaining;
+            // 기간 차트 필터 버튼과 동일한 조건부 색상 적용
+            let remainingDaysClass = 'text-gray-700';
+            if (remainingDays <= 0) {
+                remainingDaysClass = 'text-red-600 font-medium'; // err (오버)
+            } else if (remainingDays <= 7) {
+                remainingDaysClass = 'text-orange-500 font-medium'; // expiring-7 (만료 임박 7일)
+            } else if (remainingDays <= 30) {
+                remainingDaysClass = 'text-yellow-600 font-medium'; // expiring-30 (만료 임박 30일)
+            } else {
+                remainingDaysClass = 'text-green-600 font-medium'; // ok (정상)
+            }
+            
             row.innerHTML = `
                 <td class="py-4 px-6 font-medium text-gray-800">${item.cd}</td>
                 <td class="py-4 px-6 text-gray-700">${item.cd_nm || '-'}</td>
@@ -166,7 +328,7 @@ window.ApiKeyMngrUI.renderAbnormalApiKeyMngrTable = function() {
                 <td class="py-4 px-6 text-gray-700">${item.api_ownr_email_addr || '-'}</td>
                 <td class="py-4 px-6 text-gray-700">${item.due}년</td>
                 <td class="py-4 px-6 text-gray-700">${window.ApiKeyMngrUI.formatDate(item.start_dt)}</td>
-                <td class="py-4 px-6 text-red-600 font-medium">${item.days_remaining}일</td>
+                <td class="py-4 px-6 ${remainingDaysClass}">${remainingDays}일</td>
                 <td class="py-4 px-6">
                     <button class="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm" onclick="ApiKeyMngrUI.sendNotification('${item.cd}')">
                         보내기
@@ -612,15 +774,13 @@ window.ApiKeyMngrUI.handleUpdateApiKeyMngr = async function(cd) {
         const success = await ApiKeyMngrData.updateApiKeyMngr(cd, due, startDt, apiOwnrEmail, apiKey);
         if (success) {
             window.ApiKeyMngrUI.hideEditModal();
-            window.ApiKeyMngrUI.showSuccessMessage('API 키 관리 데이터가 성공적으로 업데이트되었습니다.');
             window.ApiKeyMngrUI.renderApiKeyMngrTable();
             window.ApiKeyMngrUI.renderAbnormalApiKeyMngrTable();
             window.ApiKeyMngrUI.renderGanttChart();
         } else {
-            window.ApiKeyMngrUI.showErrorMessage('API 키 관리 데이터 업데이트에 실패했습니다.');
+            console.error('API 키 관리 데이터 업데이트에 실패했습니다.');
         }
     } catch (error) {
         console.error('API 키 관리 데이터 업데이트 오류:', error);
-        window.ApiKeyMngrUI.showErrorMessage('API 키 관리 데이터 업데이트 중 오류가 발생했습니다.');
     }
 };

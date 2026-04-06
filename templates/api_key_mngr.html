@@ -488,7 +488,7 @@
 
             <!-- API 키 관리 탭 -->
             <div id="content0" class="tab-content active">
-                <div class="max-w-7xl mx-auto">
+                <div class="w-full mx-auto px-4">
                     <!-- API 키 관리 탭 네비게이션 -->
                     <div class="mb-6">
                         <div class="border-b border-gray-200">
@@ -521,19 +521,30 @@
                             <input type="text" id="searchInput" placeholder="키 이름 또는 CD 검색..." oninput="ApiKeyMngrUI.handleSearch()" class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" style="width: 30%;">
                         </div>
                         
-                        <div class="bg-white rounded-3xl shadow overflow-hidden mb-8">
-                            <table class="w-full">
+                        <div class="bg-white rounded-3xl shadow overflow-x-auto mb-8">
+                            <table class="w-full min-w-[1200px]" style="table-layout: fixed;">
+                                <colgroup>
+                                    <col style="width: 10%;">
+                                    <col style="width: 12%;">
+                                    <col style="width: 18%;">
+                                    <col style="width: 18%;">
+                                    <col style="width: 7%;">
+                                    <col style="width: 10%;">
+                                    <col style="width: 8%;">
+                                    <col style="width: 10%;">
+                                    <col style="width: 7%;">
+                                </colgroup>
                                 <thead class="bg-gray-100">
                                     <tr>
-                                        <th class="py-4 px-6 text-left font-medium text-gray-600">코드명</th>
-                                        <th class="py-4 px-6 text-left font-medium text-gray-600">명칭</th>
-                                        <th class="py-4 px-6 text-left font-medium text-gray-600">API값</th>
-                                        <th class="py-4 px-6 text-left font-medium text-gray-600">API책임자이메일</th>
-                                        <th class="py-4 px-6 text-left font-medium text-gray-600">기간</th>
-                                        <th class="py-4 px-6 text-left font-medium text-gray-600">등록일</th>
-                                        <th class="py-4 px-6 text-left font-medium text-gray-600">남은 기간</th>
-                                        <th class="py-4 px-6 text-left font-medium text-gray-600">알림 메일 전송</th>
-                                        <th class="py-4 px-6 text-left font-medium text-gray-600">수정</th>
+                                        <th class="py-4 px-6 text-left font-medium text-gray-600 whitespace-nowrap">코드명</th>
+                                        <th class="py-4 px-6 text-left font-medium text-gray-600 whitespace-nowrap">명칭</th>
+                                        <th class="py-4 px-6 text-left font-medium text-gray-600 whitespace-nowrap">API값</th>
+                                        <th class="py-4 px-6 text-left font-medium text-gray-600 whitespace-nowrap">API책임자이메일</th>
+                                        <th class="py-4 px-6 text-left font-medium text-gray-600 whitespace-nowrap">기간</th>
+                                        <th class="py-4 px-6 text-left font-medium text-gray-600 whitespace-nowrap">등록일</th>
+                                        <th class="py-4 px-6 text-left font-medium text-gray-600 whitespace-nowrap">남은 기간</th>
+                                        <th class="py-4 px-6 text-left font-medium text-gray-600 whitespace-nowrap">알림 메일 전송</th>
+                                        <th class="py-4 px-6 text-left font-medium text-gray-600 whitespace-nowrap">수정</th>
                                     </tr>
                                 </thead>
                                 <tbody id="api-key-mngr-table-body" class="divide-y">
@@ -560,19 +571,30 @@
                             <input type="text" id="searchInput" placeholder="키 이름 또는 CD 검색..." oninput="ApiKeyMngrUI.handleSearch()" class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" style="width: 30%;">
                         </div>
                         
-                        <div class="bg-white rounded-3xl shadow overflow-hidden mb-8">
-                            <table class="w-full">
+                        <div class="bg-white rounded-3xl shadow overflow-x-auto mb-8">
+                            <table class="w-full min-w-[1200px]" style="table-layout: fixed;">
+                                <colgroup>
+                                    <col style="width: 10%;">
+                                    <col style="width: 12%;">
+                                    <col style="width: 18%;">
+                                    <col style="width: 18%;">
+                                    <col style="width: 7%;">
+                                    <col style="width: 10%;">
+                                    <col style="width: 8%;">
+                                    <col style="width: 10%;">
+                                    <col style="width: 7%;">
+                                </colgroup>
                                 <thead class="bg-gray-100">
                                     <tr>
-                                        <th class="py-4 px-6 text-left font-medium text-gray-600">코드명</th>
-                                        <th class="py-4 px-6 text-left font-medium text-gray-600">명칭</th>
-                                        <th class="py-4 px-6 text-left font-medium text-gray-600">API값</th>
-                                        <th class="py-4 px-6 text-left font-medium text-gray-600">API책임자이메일</th>
-                                        <th class="py-4 px-6 text-left font-medium text-gray-600">기간</th>
-                                        <th class="py-4 px-6 text-left font-medium text-gray-600">등록일</th>
-                                        <th class="py-4 px-6 text-left font-medium text-gray-600">남은 기간</th>
-                                        <th class="py-4 px-6 text-left font-medium text-gray-600">알림 메일 전송</th>
-                                        <th class="py-4 px-6 text-left font-medium text-gray-600">수정</th>
+                                        <th class="py-4 px-6 text-left font-medium text-gray-600 whitespace-nowrap">코드명</th>
+                                        <th class="py-4 px-6 text-left font-medium text-gray-600 whitespace-nowrap">명칭</th>
+                                        <th class="py-4 px-6 text-left font-medium text-gray-600 whitespace-nowrap">API값</th>
+                                        <th class="py-4 px-6 text-left font-medium text-gray-600 whitespace-nowrap">API책임자이메일</th>
+                                        <th class="py-4 px-6 text-left font-medium text-gray-600 whitespace-nowrap">기간</th>
+                                        <th class="py-4 px-6 text-left font-medium text-gray-600 whitespace-nowrap">등록일</th>
+                                        <th class="py-4 px-6 text-left font-medium text-gray-600 whitespace-nowrap">남은 기간</th>
+                                        <th class="py-4 px-6 text-left font-medium text-gray-600 whitespace-nowrap">알림 메일 전송</th>
+                                        <th class="py-4 px-6 text-left font-medium text-gray-600 whitespace-nowrap">수정</th>
                                     </tr>
                                 </thead>
                                 <tbody id="abnormal-api-key-mngr-table-body" class="divide-y">

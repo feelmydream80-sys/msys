@@ -29,6 +29,12 @@ window.ApiKeyMngrUI.sendNotification = async function(cd) {
             if (failedCount > 0) message += `, 실패 ${failedCount}건`;
             if (skippedCount > 0) message += `, 건너뜀 ${skippedCount}건`;
             
+            // 건너뜀 사유를 메시지에 포함
+            if (skippedCount > 0) {
+                const skippedReasons = result.results.skipped.map(s => `CD: ${s.cd} - ${s.reason}`).join('\n');
+                message += `\n\n[건너뜀 사유]\n${skippedReasons}`;
+            }
+            
             alert(message);
             
             // 실패/건너뜀 상세 정보 출력
@@ -71,6 +77,12 @@ window.ApiKeyMngrUI.sendNotificationBulk = async function(cds) {
             let message = `메일 발송 완료: 성공 ${successCount}건`;
             if (failedCount > 0) message += `, 실패 ${failedCount}건`;
             if (skippedCount > 0) message += `, 건너뜀 ${skippedCount}건`;
+            
+            // 건너뜀 사유를 메시지에 포함
+            if (skippedCount > 0) {
+                const skippedReasons = result.results.skipped.map(s => `CD: ${s.cd} - ${s.reason}`).join('\n');
+                message += `\n\n[건너뜀 사유]\n${skippedReasons}`;
+            }
             
             alert(message);
             
@@ -603,6 +615,12 @@ window.ApiKeyMngrUI.sendScheduledMails = async function() {
             message += `✅ 성공: ${successCount}건\n`;
             if (failedCount > 0) message += `❌ 실패: ${failedCount}건\n`;
             message += `⏭️ 건너뜀: ${skippedCount}건`;
+            
+            // 건너뜀 사유를 메시지에 포함
+            if (skippedCount > 0) {
+                const skippedReasons = result.results.skipped.map(s => `CD: ${s.cd} - ${s.reason}`).join('\n');
+                message += `\n\n[건너뜀 사유]\n${skippedReasons}`;
+            }
             
             alert(message);
             

@@ -2,18 +2,22 @@
 export async function init() {
     console.log('API 키 관리 페이지 초기화');
     
-    // ui.js와 data.js가 로드될 때까지 대기
-    let retries = 0;
-    const maxRetries = 50; // 최대 5초 대기
-    
-    while (typeof window.ApiKeyMngrUI === 'undefined' && retries < maxRetries) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-        retries++;
-    }
-    
-    if (typeof window.ApiKeyMngrUI !== 'undefined') {
-        window.ApiKeyMngrUI.init();
-    } else {
-        console.error('ApiKeyMngrUI is not defined after waiting');
+    try {
+        // 모듈 동적 import (순서대로 로드)
+        await import('../modules/api_key_mngr/data.js');
+        await import('../modules/api_key_mngr/core.js');
+        await import('../modules/api_key_mngr/table.js');
+        await import('../modules/api_key_mngr/chart.js');
+        await import('../modules/api_key_mngr/settings.js');
+        await import('../modules/api_key_mngr/ui.js');
+        
+        // 모든 모듈이 로드된 후 초기화
+        if (typeof window.ApiKeyMngrUI !== 'undefined' && typeof window.ApiKeyMngrUI.init === 'function') {
+            window.ApiKeyMngrUI.init();
+        } else {
+            console.error('ApiKeyMngrUI가 정의되지 않았거나 init 함수가 없습니다.');
+        }
+    } catch (error) {
+        console.error('API 키 관리 모듈 로드 실패:', error);
     }
 }
