@@ -48,19 +48,40 @@ def mngr_sett_required(f):
 def get_all_mngr_sett():
     """
     모든 관리자 설정 데이터를 제공하는 API.
+    페이징 및 검색 파라미터를 지원합니다.
+    
+    Query Parameters:
+        page (int): 페이지 번호 (기본값: 1)
+        per_page (int): 페이지당 항목 수 (기본값: 10)
+        search_term (str): 검색어 (Job ID 또는 Job 이름)
     """
     logging.info("=== API: get_all_mngr_sett() 시작 ===")
     current_user = session.get('user', {})
     logging.info(f"Current user: {current_user.get('user_id', 'None')}")
     logging.info(f"User permissions: {current_user.get('permissions', [])}")
 
+    # 페이징 및 검색 파라미터 추출
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+    search_term = request.args.get('search_term', None)
+    
+    logging.info(f"API: page={page}, per_page={per_page}, search_term={search_term}")
+
     try:
         conn = get_db_connection()
         mngr_sett_service = MngrSettService(conn)
-        settings = mngr_sett_service.get_all_settings()
-        conn.commit()
-        logging.info(f"=== API: get_all_mngr_sett() 완료. 반환 설정 개수: {len(settings)} ===")
-        return jsonify(settings), 200
+        
+        # 페이징/검색 파라미터가 있으면 페이징 조회, 없으면 기존 전체 조회 (하위 호환성)
+        if page or per_page != 10 or search_term:
+            result = mngr_sett_service.get_all_settings_paged(page, per_page, search_term)
+            conn.commit()
+            logging.info(f"=== API: get_all_mngr_sett() 페이징 조회 완료. total: {result['total']}, page: {result['page']} ===")
+            return jsonify(result), 200
+        else:
+            settings = mngr_sett_service.get_all_settings()
+            conn.commit()
+            logging.info(f"=== API: get_all_mngr_sett() 전체 조회 완료. 반환 설정 개수: {len(settings)} ===")
+            return jsonify(settings), 200
     except Exception as e:
         logging.error(f"❌ API: 모든 관리자 설정 조회 실패: {e}", exc_info=True)
         return jsonify({"message": "관리자 설정 조회 중 오류가 발생했습니다."}), 500

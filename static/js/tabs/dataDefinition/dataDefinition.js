@@ -1246,15 +1246,73 @@ async function showAddDetailModal(group) {
                 }
             });
         }
+
+        // 현재 그룹의 사용 중인 CD 목록 분석
+        const groupDetails = allData.filter(item => item.cd_cl === group.cd && item.cd !== group.cd);
+        const groupNum = parseInt(group.cd.replace('CD', ''));
         
-        const { modal, modalContent, saveBtn } = createModal(getDetailModalHTML(`${group.cd} - ${group.cd_nm} 추가`, null, groupItemFields), {
+        // 사용 중인 CD 숫자 목록 추출 (CD 접두사 제거)
+        const usedCodes = new Set();
+        groupDetails.forEach(item => {
+            const codeNum = parseInt(item.cd.replace('CD', ''));
+            if (!isNaN(codeNum)) {
+                usedCodes.add(codeNum);
+            }
+        });
+
+        // 첫 번째 빈 값 찾기 (groupNum+1 ~ groupNum+99)
+        let nextAvailableCode = null;
+        let firstEmptyCode = null;
+        let maxUsedCode = groupNum;
+        
+        for (let i = groupNum + 1; i <= groupNum + 99; i++) {
+            if (!usedCodes.has(i)) {
+                if (firstEmptyCode === null) {
+                    firstEmptyCode = i;
+                }
+            } else {
+                maxUsedCode = Math.max(maxUsedCode, i);
+            }
+        }
+
+        // 빈 값이 있으면 첫 번째 빈 값, 없으면 최대값+1
+        if (firstEmptyCode !== null) {
+            nextAvailableCode = firstEmptyCode;
+        } else if (maxUsedCode < groupNum + 99) {
+            nextAvailableCode = maxUsedCode + 1;
+        }
+
+        // 모든 코드가 사용 중인지 확인 (nextAvailableCode가 null이면 모두 사용 중)
+        const isAllCodesUsed = nextAvailableCode === null;
+
+        // 모달 생성 옵션
+        const modalOptions = {
             title: `${group.cd} - ${group.cd_nm} 추가`,
             width: '1800px',
             saveText: '추가',
-            saveDisabled: true
-        });
+            saveDisabled: isAllCodesUsed // 모두 사용 중이면 저장 버튼 비활성화
+        };
+
+        const { modal, modalContent, saveBtn } = createModal(
+            getDetailModalHTML(`${group.cd} - ${group.cd_nm} 추가`, null, groupItemFields, isAllCodesUsed, groupNum, nextAvailableCode), 
+            modalOptions
+        );
+
+        // 모든 코드가 사용 중이 아닌 경우에만 CD 입력 필드에 자동 값 설정
+        if (!isAllCodesUsed && nextAvailableCode !== null) {
+            const cdInput = document.getElementById('newDetailCd');
+            if (cdInput) {
+                cdInput.value = nextAvailableCode;
+                // input 이벤트 트리거하여 검증 함수 실행
+                cdInput.dispatchEvent(new Event('input'));
+            }
+        }
 
         const cdInput = document.getElementById('newDetailCd');
+        // cdInput이 null일 수 있음 (모든 코드 사용 중일 때 disabled)
+        if (!cdInput) {
+            return;
+        }
         // 데이터 코드 검증 처리
         cdInput.addEventListener('input', debounce(() => {
             const cdValue = cdInput.value.trim();

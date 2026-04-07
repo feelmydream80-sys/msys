@@ -164,3 +164,32 @@ class MngrSettDAO:
         except psycopg2.Error as e:
             self.logger.error(f"DAO: Error fetching menu for URL {url}: {e}", exc_info=True)
             raise
+
+    def get_all_settings_paged(self, page: int = 1, per_page: int = 10, search_term: str = None) -> List[Dict]:
+        """
+        Retrieves settings with pagination and optional search.
+        """
+        query = load_sql('mngr_sett/get_all_mngr_sett_paged.sql')
+        offset = (page - 1) * per_page
+        try:
+            with self.conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute(query, (search_term, search_term, search_term, per_page, offset))
+                results = cur.fetchall()
+                return [dict(row) for row in results]
+        except psycopg2.Error as e:
+            self.logger.error(f"DAO: Error fetching paged settings: {e}", exc_info=True)
+            raise
+
+    def get_all_settings_count(self, search_term: str = None) -> int:
+        """
+        Retrieves total count of settings with optional search filter.
+        """
+        query = load_sql('mngr_sett/get_all_mngr_sett_count.sql')
+        try:
+            with self.conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute(query, (search_term, search_term, search_term))
+                result = cur.fetchone()
+                return int(result['total']) if result else 0
+        except psycopg2.Error as e:
+            self.logger.error(f"DAO: Error fetching settings count: {e}", exc_info=True)
+            raise

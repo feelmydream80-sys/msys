@@ -214,9 +214,9 @@ export function getAddGroupModalHTML() {
                     <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #555;">그룹 코드 (cd_cl)</label>
                     <div style="position: relative; height: 40px;">
                         <span style="position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: #666; font-weight: 600;">CD</span>
-                        <input type="text" id="newGroupCdCl" placeholder="숫자만 입력하세요" 
-                               style="width: 100%; padding: 8px 8px 8px 35px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;"
-                               oninput="this.value = this.value.replace(/[^0-9]/g, ''); validateAddGroupModal();">
+                         <input type="text" id="newGroupCdCl" placeholder="숫자만 입력하세요" 
+                                style="width: 100%; padding: 8px 8px 8px 35px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;"
+                                oninput="this.value = this.value.replace(/[^0-9]/g, '');">
                     </div>
                     <div id="newGroupCdClError" style="color: #dc3545; font-size: 0.85rem; margin-top: 3px; display: none;">
                         기존에 존재하는 그룹 코드입니다.
@@ -229,9 +229,9 @@ export function getAddGroupModalHTML() {
                     <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #555;">데이터 코드 (cd)</label>
                     <div style="position: relative; height: 40px;">
                         <span style="position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: #666; font-weight: 600;">CD</span>
-                        <input type="text" id="newGroupCd" placeholder="숫자만 입력하세요" 
-                               style="width: 100%; padding: 8px 8px 8px 35px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;"
-                               oninput="this.value = this.value.replace(/[^0-9]/g, ''); validateAddGroupModal();">
+                         <input type="text" id="newGroupCd" placeholder="숫자만 입력하세요" 
+                                style="width: 100%; padding: 8px 8px 8px 35px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;"
+                                oninput="this.value = this.value.replace(/[^0-9]/g, '');">
                     </div>
                     <div id="newGroupCdError" style="color: #dc3545; font-size: 0.85rem; margin-top: 3px; display: none;">
                         기존에 존재하는 데이터 코드입니다.
@@ -243,8 +243,7 @@ export function getAddGroupModalHTML() {
                 <div style="margin-bottom: 10px;">
                     <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #555;">데이터 명칭 (cd_nm)</label>
                     <input type="text" id="newGroupNm" placeholder="" 
-                           style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;"
-                           oninput="validateAddGroupModal();">
+                           style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
                 </div>
                 <div style="margin-bottom: 10px;">
                     <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #555;">활용목적 (cd_desc)</label>
@@ -405,9 +404,28 @@ export function getEditGroupModalHTML(group, groupHeader) {
 }
 
 // 상세 항목 추가/수정 모달 HTML
-export function getDetailModalHTML(title, item = null, groupItemFields = []) {
+export function getDetailModalHTML(title, item = null, groupItemFields = [], isAllCodesUsed = false, groupNum = null, nextAvailableCode = null) {
     let html = `
         <div style="max-height: 600px; overflow-y: auto;">
+    `;
+
+    // 모든 코드가 사용 중일 때 안내 메시지
+    if (isAllCodesUsed && !item) {
+        html += `
+            <div style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 20px; margin-bottom: 20px; text-align: center;">
+                <div style="font-size: 24px; margin-bottom: 10px;">⚠️</div>
+                <div style="font-weight: 600; color: #856404; font-size: 16px;">이 그룹에 더 이상 추가할 수 없습니다.</div>
+                <div style="color: #856404; margin-top: 8px; font-size: 14px;">
+                    CD${groupNum + 1} ~ CD${groupNum + 99} 모두 사용 중입니다.
+                </div>
+                <div style="color: #856404; margin-top: 4px; font-size: 13px;">
+                    기존 데이터를 삭제하거나 비활성화 후 다시 시도해주세요.
+                </div>
+            </div>
+        `;
+    }
+
+    html += `
             <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">
                 <div style="margin-bottom: 10px;">
                     <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #555;">데이터 코드</label>
@@ -417,9 +435,15 @@ export function getDetailModalHTML(title, item = null, groupItemFields = []) {
                             <input type="text" id="newDetailCd" 
                                    value="" 
                                    placeholder="숫자만 입력하세요"
-                                   style="width: 100%; padding: 8px 8px 8px 35px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;"
-                                   oninput="this.value = this.value.replace(/[^0-9]/g, ''); validateAddModal();">
+                                   style="width: 100%; padding: 8px 8px 8px 35px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; ${isAllCodesUsed ? 'background-color: #f5f5f5;' : ''}"
+                                   ${isAllCodesUsed ? 'disabled' : ''}
+                                   oninput="this.value = this.value.replace(/[^0-9]/g, '');">
                         </div>
+                        ${nextAvailableCode !== null && !isAllCodesUsed ? `
+                            <div style="color: #28a745; font-size: 0.8rem; margin-top: 3px;">
+                                💡 추천 코드: ${nextAvailableCode} (자동 입력됨)
+                            </div>
+                        ` : ''}
                     ` : `
                         <input type="text" id="editDetailCd" 
                                value="${item?.cd || ''}" disabled

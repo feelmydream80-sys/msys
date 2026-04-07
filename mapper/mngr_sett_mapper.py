@@ -86,3 +86,19 @@ class MngrSettMapper:
         """
         menu_settings = self.dao.get_all_menu_settings()
         return menu_settings
+
+    def get_all_settings_paged(self, page: int = 1, per_page: int = 10, search_term: str = None) -> dict:
+        """
+        페이징 및 검색이 적용된 설정 데이터를 조회합니다.
+        """
+        settings = self.dao.get_all_settings_paged(page, per_page, search_term)
+        total = self.dao.get_all_settings_count(search_term)
+        total_pages = (total + per_page - 1) // per_page if per_page > 0 else 0
+        
+        return {
+            'data': settings,
+            'total': total,
+            'page': page,
+            'per_page': per_page,
+            'total_pages': total_pages
+        }

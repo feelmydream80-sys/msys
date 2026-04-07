@@ -60,14 +60,191 @@ export function setupTabs() {
  * // adminSettings와 icons 데이터를 사용하여 설정 테이블을 렌더링합니다.
  * // renderSettingsTable(adminSettings, icons);
  */
-// 페이징 상태 관리
-let settingsCurrentPage = 1;
-let chartSettingsCurrentPage = 1;
-let iconsCurrentPage = 1;
-let settingsItemsPerPage = 10; // 페이지당 표시 수량 (기본값)
-let chartSettingsItemsPerPage = 10;
-let iconsItemsPerPage = 10;
+// 페이징 상태 관리 (window 객체를 통해 전역으로 노출)
+window._mngrSettState = {
+    settingsCurrentPage: 1,
+    chartSettingsCurrentPage: 1,
+    iconsCurrentPage: 1,
+    settingsItemsPerPage: 10,
+    chartSettingsItemsPerPage: 10,
+    iconsItemsPerPage: 10,
+    settingsSearchTerm: null,
+    settingsTotalCount: 0,
+    settingsTotalPages: 0
+};
+
 const itemsPerPageOptions = [5, 10, 20, 50, 100]; // 표시 수량 옵션
+
+// 편의를 위한 로컬 참조
+let settingsCurrentPage = window._mngrSettState.settingsCurrentPage;
+let chartSettingsCurrentPage = window._mngrSettState.chartSettingsCurrentPage;
+let iconsCurrentPage = window._mngrSettState.iconsCurrentPage;
+let settingsItemsPerPage = window._mngrSettState.settingsItemsPerPage;
+let chartSettingsItemsPerPage = window._mngrSettState.chartSettingsItemsPerPage;
+let iconsItemsPerPage = window._mngrSettState.iconsItemsPerPage;
+let settingsSearchTerm = window._mngrSettState.settingsSearchTerm;
+let settingsTotalCount = window._mngrSettState.settingsTotalCount;
+let settingsTotalPages = window._mngrSettState.settingsTotalPages;
+
+/**
+ * 검색 결과 정보를 업데이트하는 함수
+ */
+function updateSearchResultInfo() {
+    const container = document.getElementById('mngr_sett_page');
+    if (!container) return;
+    
+    // 제목 옆 전체 건수 업데이트
+    const settingsTotalCountSpan = container.querySelector('#settingsTotalCount');
+    if (settingsTotalCountSpan) {
+        settingsTotalCountSpan.textContent = `(전체 ${settingsTotalCount}건)`;
+    }
+    
+    const searchResultInfo = container.querySelector('#searchResultInfo');
+    const searchResultText = container.querySelector('#searchResultText');
+    if (!searchResultInfo || !searchResultText) return;
+    
+    if (settingsSearchTerm) {
+        searchResultText.textContent = `'${settingsSearchTerm}' 검색 결과: ${settingsTotalCount}건`;
+        searchResultInfo.style.display = 'block';
+    } else {
+        searchResultInfo.style.display = 'none';
+    }
+}
+
+/**
+ * 서버 사이드 페이징 버튼을 렌더링하는 함수
+ */
+function renderServerSidePagination() {
+    const container = document.getElementById('mngr_sett_page');
+    if (!container) return;
+    
+    const settingsTable = container.querySelector('#settingsTable');
+    if (!settingsTable) return;
+    
+    // 기존 페이징 컨테이너 제거
+    const existingPagination = document.getElementById('settingsPagination');
+    if (existingPagination) {
+        existingPagination.remove();
+    }
+    
+    // 페이징이 필요 없으면 종료
+    if (settingsTotalPages <= 1) return;
+    
+    const paginationContainer = document.createElement('div');
+    paginationContainer.id = 'settingsPagination';
+    paginationContainer.style.cssText = 'margin-top: 15px; display: flex; gap: 5px; justify-content: center; align-items: center;';
+    
+    // 이전 페이지 버튼
+    const prevBtn = document.createElement('button');
+    prevBtn.textContent = '이전';
+    prevBtn.className = 'btn';
+    prevBtn.style.cssText = 'padding: 5px 10px; border: 1px solid #ddd; border-radius: 4px; background: white; cursor: pointer;';
+    prevBtn.disabled = settingsCurrentPage === 1;
+    prevBtn.addEventListener('click', () => {
+        if (settingsCurrentPage > 1) {
+            settingsCurrentPage--;
+            window._mngrSettState.settingsCurrentPage = settingsCurrentPage;
+            loadPageDataWithPagination();
+        }
+    });
+    
+    // 페이지 번호 버튼
+    const pageNumbersContainer = document.createElement('div');
+    pageNumbersContainer.style.cssText = 'display: flex; gap: 5px;';
+    
+    // 페이지 번호 계산 (현재 페이지 중심으로 최대 5개 표시)
+    let startPage = Math.max(1, settingsCurrentPage - 2);
+    let endPage = Math.min(settingsTotalPages, startPage + 4);
+    if (endPage - startPage < 4) {
+        startPage = Math.max(1, endPage - 4);
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+        const pageBtn = document.createElement('button');
+        pageBtn.textContent = i;
+        pageBtn.className = `btn ${i === settingsCurrentPage ? 'btn-primary' : ''}`;
+        pageBtn.style.cssText = 'padding: 5px 10px; border: 1px solid #ddd; border-radius: 4px; background: white; cursor: pointer;';
+        if (i === settingsCurrentPage) {
+            pageBtn.style.backgroundColor = '#007bff';
+            pageBtn.style.color = 'white';
+            pageBtn.style.borderColor = '#007bff';
+        }
+        pageBtn.addEventListener('click', () => {
+            settingsCurrentPage = i;
+            window._mngrSettState.settingsCurrentPage = settingsCurrentPage;
+            loadPageDataWithPagination();
+        });
+        pageNumbersContainer.appendChild(pageBtn);
+    }
+    
+    // 다음 페이지 버튼
+    const nextBtn = document.createElement('button');
+    nextBtn.textContent = '다음';
+    nextBtn.className = 'btn';
+    nextBtn.style.cssText = 'padding: 5px 10px; border: 1px solid #ddd; border-radius: 4px; background: white; cursor: pointer;';
+    nextBtn.disabled = settingsCurrentPage === settingsTotalPages;
+    nextBtn.addEventListener('click', () => {
+        if (settingsCurrentPage < settingsTotalPages) {
+            settingsCurrentPage++;
+            window._mngrSettState.settingsCurrentPage = settingsCurrentPage;
+            loadPageDataWithPagination();
+        }
+    });
+    
+    // 표시 수량 콤보박스
+    const itemsPerPageSelect = document.createElement('select');
+    itemsPerPageSelect.style.cssText = 'padding: 5px 10px; border: 1px solid #ddd; border-radius: 4px; margin-right: 15px;';
+    itemsPerPageOptions.forEach(option => {
+        const optionElement = document.createElement('option');
+        optionElement.value = option;
+        optionElement.textContent = `${option} 건`;
+        if (option === settingsItemsPerPage) {
+            optionElement.selected = true;
+        }
+        itemsPerPageSelect.appendChild(optionElement);
+    });
+    itemsPerPageSelect.addEventListener('change', (e) => {
+        settingsItemsPerPage = parseInt(e.target.value);
+        settingsCurrentPage = 1;
+        window._mngrSettState.settingsItemsPerPage = settingsItemsPerPage;
+        window._mngrSettState.settingsCurrentPage = settingsCurrentPage;
+        loadPageDataWithPagination();
+    });
+    
+    paginationContainer.appendChild(itemsPerPageSelect);
+    paginationContainer.appendChild(prevBtn);
+    paginationContainer.appendChild(pageNumbersContainer);
+    paginationContainer.appendChild(nextBtn);
+    settingsTable.parentNode.appendChild(paginationContainer);
+}
+
+/**
+ * 페이징 정보를 사용하여 데이터를 다시 로드하는 함수
+ * 스크롤 위치를 유지합니다.
+ */
+function loadPageDataWithPagination() {
+    // 현재 스크롤 위치 저장
+    const scrollPosition = window.scrollY || document.documentElement.scrollTop || 0;
+    
+    if (typeof window.loadPageData === 'function') {
+        window.loadPageData({
+            page: settingsCurrentPage,
+            perPage: settingsItemsPerPage,
+            searchTerm: settingsSearchTerm
+        }).then(() => {
+            // DOM 업데이트가 완료된 후 스크롤 위치 복원
+            // requestAnimationFrame을 두 번 사용하여 렌더링 사이클 완료 후 실행
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    window.scrollTo(0, scrollPosition);
+                });
+            });
+        }).catch(() => {
+            // 에러 발생 시에도 스크롤 복원
+            window.scrollTo(0, scrollPosition);
+        });
+    }
+}
 
 // 아이콘 관리 데이터 수량 콤보박스 이벤트 리스너
 function setupIconsItemsPerPageListener() {
@@ -122,10 +299,17 @@ export function initSettingsPagination() {
     setupIconsItemsPerPageListener();
 }
 
-export function renderSettingsTable(allMngrSett, allIcons) {
+/**
+ * 서버 사이드 페이징을 지원하는 설정 테이블 렌더링 함수
+ * @param {Array} allMngrSett - 설정 데이터 배열 (서버에서 페이징된 데이터)
+ * @param {Array} allIcons - 아이콘 데이터 배열
+ * @param {Object} paginationInfo - 페이징 정보 { total, page, per_page, total_pages }
+ */
+export function renderSettingsTable(allMngrSett, allIcons, paginationInfo = null) {
     console.log('=== renderSettingsTable() called ===');
     console.log('=== allMngrSett:', allMngrSett);
     console.log('=== allIcons:', allIcons);
+    console.log('=== paginationInfo:', paginationInfo);
     
     const container = document.getElementById('mngr_sett_page');
     if (!container) return;
@@ -134,27 +318,54 @@ export function renderSettingsTable(allMngrSett, allIcons) {
 
     settingsTableBody.innerHTML = '';
 
+    // paginationInfo가 있으면 서버 사이드 페이징 모드
+    const isServerPaging = paginationInfo !== null;
+    
+    // 서버 사이드 페이징인 경우 total 정보를 저장
+    if (isServerPaging) {
+        settingsTotalCount = paginationInfo.total || 0;
+        settingsTotalPages = paginationInfo.total_pages || 0;
+    }
+
     if (!allMngrSett || allMngrSett.length === 0) {
-        settingsTableBody.innerHTML = '<tr><td colspan="20" class="text-center py-4">표시할 Job ID가 없습니다. (tb_con_hist에 이력이 있는 Job ID만 표시됩니다.)</td></tr>';
+        const emptyMessage = isServerPaging && settingsSearchTerm 
+            ? `'${settingsSearchTerm}'에 대한 검색 결과가 없습니다.`
+            : '표시할 Job ID가 없습니다. (tb_con_hist에 이력이 있는 Job ID만 표시됩니다.)';
+        settingsTableBody.innerHTML = `<tr><td colspan="20" class="text-center py-4">${emptyMessage}</td></tr>`;
         renderChartSettingsTable([]); // 차트 설정 테이블도 함께 렌더링
+        updateSearchResultInfo();
         return;
     }
 
-    // Job ID를 숫자 값 기준으로 정렬 (CD100, CD300, CD1000 순서)
-    const sortedMngrSett = allMngrSett.slice().sort((a, b) => {
-        const aNum = parseInt(a.cd.replace('CD', ''));
-        const bNum = parseInt(b.cd.replace('CD', ''));
-        return aNum - bNum;
-    });
+    // 서버 사이드 페이징이 아닌 경우에만 클라이언트 사이드 정렬/페이징
+    let displayData = allMngrSett;
+    let sortedMngrSett = allMngrSett;
+    if (!isServerPaging) {
+        // Job ID를 숫자 값 기준으로 정렬 (CD100, CD300, CD1000 순서)
+        sortedMngrSett = allMngrSett.slice().sort((a, b) => {
+            const aNum = parseInt(a.cd.replace('CD', ''));
+            const bNum = parseInt(b.cd.replace('CD', ''));
+            return aNum - bNum;
+        });
+        renderChartSettingsTable(sortedMngrSett); // 차트 설정 테이블도 함께 렌더링
 
-    renderChartSettingsTable(sortedMngrSett); // 차트 설정 테이블도 함께 렌더링
+        // 페이징된 데이터 렌더링
+        const startIndex = (settingsCurrentPage - 1) * settingsItemsPerPage;
+        const endIndex = startIndex + settingsItemsPerPage;
+        displayData = sortedMngrSett.slice(startIndex, endIndex);
+    } else {
+        // 서버 사이드 페이징인 경우 차트 테이블도 함께 렌더링
+        renderChartSettingsTable(allMngrSett);
+    }
 
-    // 페이징된 데이터 렌더링
-    const startIndex = (settingsCurrentPage - 1) * settingsItemsPerPage;
-    const endIndex = startIndex + settingsItemsPerPage;
-    const pagedData = sortedMngrSett.slice(startIndex, endIndex);
+    // 서버 사이드 페이징인 경우 서버 사이드 페이징 버튼 렌더링
+    if (isServerPaging) {
+        updateSearchResultInfo();
+        renderServerSidePagination();
+    }
 
-    pagedData.forEach(setting => {
+    // displayData를 사용하여 행 렌더링
+    displayData.forEach(setting => {
         const row = settingsTableBody.insertRow();
         row.dataset.cd = String(setting.cd);
 

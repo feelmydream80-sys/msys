@@ -575,3 +575,33 @@ class MngrSettService:
         except Exception as e:
             self.logger.error(f"Service: Failed to save schedule settings: {e}", exc_info=True)
             raise
+
+    def get_all_settings_paged(self, page: int = 1, per_page: int = 10, search_term: str = None) -> dict:
+        """
+        페이징 및 검색이 적용된 관리자 설정 데이터를 조회합니다.
+        """
+        self.logger.info(f"Service: get_all_settings_paged() 호출 - page: {page}, per_page: {per_page}, search_term: {search_term}")
+        try:
+            mapper = self.mngr_sett_mapper
+            result = mapper.get_all_settings_paged(page, per_page, search_term)
+            
+            # 아이콘 데이터 추가 (기존 _combine_settings_details 로직 활용)
+            all_icons = self.icon_service.get_all_icons_data()
+            icon_code_map = {icon['icon_id']: icon['icon_cd'] for icon in all_icons}
+            
+            # 데이터에 아이콘 코드 추가
+            for setting in result['data']:
+                icon_fields = [
+                    'CNN_FAILR_ICON_ID', 'CNN_WARN_ICON_ID', 'CNN_SUCS_ICON_ID',
+                    'SUCS_RT_SUCS_ICON_ID', 'SUCS_RT_WARN_ICON_ID'
+                ]
+                for field in icon_fields:
+                    icon_id = setting.get(field)
+                    if icon_id:
+                        setting[f'{field}_code'] = icon_code_map.get(icon_id)
+            
+            self.logger.info(f"Service: get_all_settings_paged() 완료 - total: {result['total']}, page: {result['page']}")
+            return result
+        except Exception as e:
+            self.logger.error(f"Service: Failed to get paged settings: {e}", exc_info=True)
+            return {'data': [], 'total': 0, 'page': page, 'per_page': per_page, 'total_pages': 0}

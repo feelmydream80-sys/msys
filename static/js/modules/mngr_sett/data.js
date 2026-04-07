@@ -7,11 +7,16 @@ import { getAdminSettings as fetchAdminSettings, getIcons as fetchIcons, refresh
 /**
  * @DOC: 서버에서 모든 관리자 설정 데이터를 비동기적으로 가져옵니다.
  * 공통 데이터 관리 모듈을 통해 캐시된 데이터를 반환합니다.
- * @returns {Promise<Array<Object>>} 성공 시 관리자 설정 데이터 배열을, 실패 시 에러를 반환합니다.
+ * @param {Object} options - 페이징 및 검색 옵션
+ * @param {number} options.page - 페이지 번호 (기본값: 1)
+ * @param {number} options.perPage - 페이지당 항목 수 (기본값: 10)
+ * @param {string} options.searchTerm - 검색어
+ * @param {boolean} options.bypassCache - 캐시 우회 여부 (기본값: false)
+ * @returns {Promise<Object>} 성공 시 { data, total, page, per_page, total_pages }를, 실패 시 에러를 반환합니다.
  */
-export function getAdminSettings() {
-    console.log('=== mngr_sett.data.getAdminSettings() called ===');
-    return fetchAdminSettings();
+export function getAdminSettings(options = {}) {
+    console.log('=== mngr_sett.data.getAdminSettings() called ===', options);
+    return fetchAdminSettings(options);
 }
 
 /**

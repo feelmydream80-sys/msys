@@ -34,18 +34,28 @@ let loadingPromises = {
 
 /**
  * @description 관리자 설정 데이터를 가져옵니다 (캐시된 데이터 반환)
- * @returns {Promise<Array>} 관리자 설정 데이터 배열
+ * @param {Object} options - 페이징 및 검색 옵션
+ * @param {number} options.page - 페이지 번호 (기본값: 1)
+ * @param {number} options.perPage - 페이지당 항목 수 (기본값: 10)
+ * @param {string} options.searchTerm - 검색어
+ * @param {boolean} options.bypassCache - 캐시 우회 여부 (기본값: false)
+ * @returns {Promise<Object>} 관리자 설정 데이터 { data, total, page, per_page, total_pages }
  */
-export async function getAdminSettings() {
-    console.log('=== dataManager.getAdminSettings() called ===');
-    // 이미 로딩 중인 경우 기존 프로미스 반환
-    if (loadingPromises.adminSettings) {
+export async function getAdminSettings(options = {}) {
+    const { page = 1, perPage = 10, searchTerm = null, bypassCache = false } = options;
+    console.log('=== dataManager.getAdminSettings() called ===', options);
+    
+    // 검색어가 있거나 페이징 옵션이 기본값과 다르면 캐시를 우회
+    const shouldBypassCache = bypassCache || searchTerm !== null || page !== 1 || perPage !== 10;
+    
+    // 이미 로딩 중인 경우 기존 프로미스 반환 (캐시 우회가 아닌 경우에만)
+    if (!shouldBypassCache && loadingPromises.adminSettings) {
         console.log('=== dataManager.getAdminSettings() - already loading ===');
         return loadingPromises.adminSettings;
     }
     
-    // 캐시된 데이터가 있는 경우 반환
-    if (dataCache.adminSettings) {
+    // 캐시된 데이터가 있는 경우 반환 (캐시 우회가 아닌 경우에만)
+    if (!shouldBypassCache && dataCache.adminSettings) {
         console.log('=== dataManager.getAdminSettings() - returning cached data ===');
         console.log('=== Cached data:', dataCache.adminSettings);
         return JSON.parse(JSON.stringify(dataCache.adminSettings));
@@ -56,12 +66,15 @@ export async function getAdminSettings() {
     
     // API 호출
     console.log('=== dataManager.getAdminSettings() - fetching from API ===');
-    loadingPromises.adminSettings = fetchAllMngrSett()
+    loadingPromises.adminSettings = fetchAllMngrSett({ page, perPage, searchTerm })
         .then(data => {
             console.log('=== dataManager.getAdminSettings() - API response received ===');
             console.log('=== API data:', data);
-            dataCache.adminSettings = JSON.parse(JSON.stringify(data));
-            return JSON.parse(JSON.stringify(dataCache.adminSettings));
+            // 검색어가 없으면 캐시에 저장
+            if (!searchTerm) {
+                dataCache.adminSettings = JSON.parse(JSON.stringify(data));
+            }
+            return JSON.parse(JSON.stringify(data));
         })
         .catch(error => {
             console.error("Failed to load admin settings:", error);

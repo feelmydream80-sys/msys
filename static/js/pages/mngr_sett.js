@@ -767,8 +767,19 @@ async function refreshUserManagementTable() {
     userManagementTab.renderTable(users, menus);
 }
 
-async function loadPageData() {
-    console.log('=== loadPageData() called ===');
+/**
+ * 서버 사이드 페이징과 검색을 지원하는 데이터 로드 함수
+ * @param {Object} options - 페이징 및 검색 옵션
+ * @param {number} options.page - 페이지 번호
+ * @param {number} options.perPage - 페이지당 항목 수
+ * @param {string} options.searchTerm - 검색어
+ */
+async function loadPageData(options = {}) {
+    // window._mngrSettState에서 값 가져오기
+    const state = window._mngrSettState || {};
+    const { page = 1, perPage = state.settingsItemsPerPage || 10, searchTerm = null } = options;
+    
+    console.log('=== loadPageData() called ===', options);
     const container = document.getElementById('mngr_sett_page');
     if (!container) {
         console.error('Container not found: mngr_sett_page');
@@ -779,15 +790,16 @@ async function loadPageData() {
 
     try {
         // 개별적으로 API 호출하여 하나의 실패가 전체를 망가뜨리지 않도록 함
-        let adminSettings = [];
+        let adminSettingsResult = { data: [], total: 0, page: 1, per_page: 10, total_pages: 0 };
         let icons = [];
         let userData = { users: [], menus: [] };
 
         try {
             console.log('=== loadPageData() - getting admin settings ===');
-            adminSettings = await getAdminSettings();
+            // 서버 사이드 페이징 옵션 전달
+            adminSettingsResult = await getAdminSettings({ page, perPage, searchTerm, bypassCache: true });
             console.log('=== loadPageData() - admin settings received ===');
-            console.log('=== Admin settings:', adminSettings);
+            console.log('=== Admin settings:', adminSettingsResult);
         } catch (error) {
             console.error('관리자 설정 로드 실패:', error);
             showToast('관리자 설정 로드 실패: ' + error.message, 'warning');
@@ -813,7 +825,15 @@ async function loadPageData() {
         // 각 데이터 렌더링 (실패하더라도 다른 데이터는 렌더링)
         try {
             console.log('=== loadPageData() - rendering settings table ===');
-            renderSettingsTable(adminSettings, icons);
+            // 서버에서 받은 페이징된 데이터와 paginationInfo 전달
+            const adminSettingsData = adminSettingsResult.data || adminSettingsResult;
+            const paginationInfo = {
+                total: adminSettingsResult.total || 0,
+                page: adminSettingsResult.page || 1,
+                per_page: adminSettingsResult.per_page || 10,
+                total_pages: adminSettingsResult.total_pages || 0
+            };
+            renderSettingsTable(adminSettingsData, icons, paginationInfo);
         } catch (error) {
             console.error('설정 테이블 렌더링 실패:', error);
         }
@@ -962,6 +982,30 @@ async function initializePage() {
     const excelTemplateTab = container.querySelector('button[data-tab="excelTemplateManagement"]');
     if (excelTemplateTab) {
         excelTemplateTab.addEventListener('click', loadExcelTemplateInfo);
+    }
+
+    // 검색 기능 이벤트 리스너 추가 (자동 검색 - debounce 적용)
+    const searchInput = container.querySelector('#settingsSearchInput');
+    let searchDebounceTimer = null;
+    
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.trim();
+            
+            // 이전 타이머 취소
+            if (searchDebounceTimer) {
+                clearTimeout(searchDebounceTimer);
+            }
+            
+            // 300ms 후 검색 실행
+            searchDebounceTimer = setTimeout(() => {
+                // window._mngrSettState를 통해 상태 업데이트
+                if (!window._mngrSettState) window._mngrSettState = {};
+                window._mngrSettState.settingsSearchTerm = searchTerm || null;
+                window._mngrSettState.settingsCurrentPage = 1;
+                loadPageData({ page: 1, searchTerm: searchTerm || null });
+            }, 300);
+        });
     }
 
     const uploadExcelTemplateBtn = container.querySelector('#uploadExcelTemplateBtn');

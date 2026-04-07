@@ -6,10 +6,15 @@ const BASE_URL = '';
 
 /**
  * @AI_NOTE: 모든 관리자 설정 데이터를 가져옵니다.
- * @returns {Promise<Array<Object>>} 관리자 설정 데이터 배열
+ * @param {Object} options - 페이징 및 검색 옵션
+ * @param {number} options.page - 페이지 번호 (기본값: 1)
+ * @param {number} options.perPage - 페이지당 항목 수 (기본값: 10)
+ * @param {string} options.searchTerm - 검색어 (Job ID 또는 Job 이름)
+ * @returns {Promise<Object>} 페이징된 관리자 설정 데이터 { data, total, page, per_page, total_pages }
  */
-export async function fetchAllMngrSett() {
-    console.log('=== fetchAllMngrSett() called ===');
+export async function fetchAllMngrSett(options = {}) {
+    const { page = 1, perPage = 10, searchTerm = null } = options;
+    console.log('=== fetchAllMngrSett() called ===', options);
     const apiName = "mngrSettFetch";
     updateApiStatus(apiName, "apiCallAttempted", true);
     updateApiStatus(apiName, "apiCallSuccess", false);
@@ -17,7 +22,15 @@ export async function fetchAllMngrSett() {
     updateApiStatus(apiName, "error", null);
 
     try {
-        const url = `${BASE_URL}/api/mngr_sett/settings/all`;
+        // 쿼리 파라미터 구성
+        const params = new URLSearchParams();
+        params.append('page', page);
+        params.append('per_page', perPage);
+        if (searchTerm) {
+            params.append('search_term', searchTerm);
+        }
+        
+        const url = `${BASE_URL}/api/mngr_sett/settings/all?${params.toString()}`;
         console.log('=== fetchAllMngrSett() - fetching from:', url);
         const response = await fetch(url);
         console.log('=== fetchAllMngrSett() - response status:', response.status);
@@ -30,8 +43,16 @@ export async function fetchAllMngrSett() {
         console.log('=== fetchAllMngrSett() - data received:', data);
         showMessage('관리자 설정 데이터 로드 성공.', 'success');
         updateApiStatus(apiName, "apiCallSuccess", true);
-        updateApiStatus(apiName, "apiResponseCount", data.length);
-        return data;
+        
+        // 페이징 응답인지 배열 응답인지 확인 (하위 호환성)
+        if (data.data && Array.isArray(data.data)) {
+            updateApiStatus(apiName, "apiResponseCount", data.data.length);
+            return data; // { data, total, page, per_page, total_pages }
+        } else {
+            // 기존 배열 응답 (하위 호환성)
+            updateApiStatus(apiName, "apiResponseCount", data.length);
+            return { data, total: data.length, page: 1, per_page: data.length, total_pages: 1 };
+        }
     } catch (error) {
         console.error("관리자 설정 데이터 로드 실패:", error);
         showMessage('관리자 설정 데이터 로드 실패: ' + error.message, 'error');
