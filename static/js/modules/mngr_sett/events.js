@@ -24,7 +24,9 @@ export async function syncSettings() {
         showToast(result.message, 'success');
         
         // 동기화 후 설정 테이블 재렌더링 (캐시 무효화로 최신 데이터 가져오기)
-        const [allMngrSett, allIcons] = await Promise.all([refreshAdminSettingsData(), refreshIconsData()]);
+        const [allMngrSettResult, allIcons] = await Promise.all([refreshAdminSettingsData(), refreshIconsData()]);
+        // API 응답이 환경에 따라 배열 또는 객체 { data: [...] }로 반환될 수 있으므로 정규화
+        const allMngrSett = Array.isArray(allMngrSettResult) ? allMngrSettResult : (allMngrSettResult.data || []);
         renderSettingsTable(allMngrSett, allIcons);
         populateIconSelects(allIcons);
     } catch (error) {
@@ -185,7 +187,9 @@ export async function importSettings() {
     try {
         await importSettingsApi(file);
         showToast('설정이 성공적으로 가져오기되었습니다.', 'success');
-        const [allMngrSett, allIcons] = await Promise.all([getAdminSettings(), getIcons()]);
+        const [allMngrSettResult, allIcons] = await Promise.all([getAdminSettings(), getIcons()]);
+        // API 응답이 환경에 따라 배열 또는 객체 { data: [...] }로 반환될 수 있으므로 정규화
+        const allMngrSett = Array.isArray(allMngrSettResult) ? allMngrSettResult : (allMngrSettResult.data || []);
         renderSettingsTable(allMngrSett, allIcons);
         populateIconSelects(allIcons);
         if (typeof window.renderJobCheckboxes === 'function') {
