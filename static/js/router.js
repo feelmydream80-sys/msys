@@ -102,7 +102,14 @@ async function navigate(url) {
     }
 }
 
+// 중복 초기화 방지 플래그
+let isInitialPageLoaded = false;
+
 document.addEventListener('DOMContentLoaded', () => {
+    // 이미 초기화되었으면 스킵
+    if (isInitialPageLoaded) return;
+    isInitialPageLoaded = true;
+
     // Initial page load handler
     const currentPath = window.location.pathname;
     const menuItem = window.MENU_DATA.find(item => item.menu_url === currentPath);

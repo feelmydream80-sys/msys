@@ -1,7 +1,17 @@
 import { showToast } from '../utils/toast.js';
 import { downloadExcelTemplate } from '../utils/excelDownload.js';
 import { filterActiveMstData } from '../modules/common/utils.js';
+// 중복 초기화 방지 플래그
+let hasInitialized = false;
+
 export function init() {
+    // 이미 초기화되었으면 스킵 (페이지 이동 시에는 router.js가 새 DOM을 로드하므로 플래그가 리셋됨)
+    if (hasInitialized) {
+        console.log('[collection_schedule] Already initialized, skipping.');
+        return;
+    }
+    hasInitialized = true;
+
     // DOM Elements
     const weeklyBtn = document.getElementById('weekly-btn');
     const monthlyBtn = document.getElementById('monthly-btn');

@@ -1005,9 +1005,8 @@ export async function init() {
         return;
     }
 
-    // F5 새로고침 시 init() 함수가 호출되지 않는 근본 원인 해결
-    // router.js의 DOMContentLoaded 이벤트 타이밍 문제 해결
-    initializePageHasRun = false; // 강제로 초기화 상태를 리셋
+    // 페이지 이동 시마다 초기화 플래그 리셋 (F5는 router.js의 isInitialPageLoaded가 처리)
+    initializePageHasRun = false;
     await initializePage();
 }
 
