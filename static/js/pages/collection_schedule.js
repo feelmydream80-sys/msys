@@ -399,6 +399,13 @@ export function init() {
                 return numA - numB;
             }).forEach(parentGroupName => {
                 const subGroups = jobsByParentGroup[parentGroupName];
+                
+                // 스케줄 데이터 기반 하위 그룹 저장 (스케줄에 있는 그룹만)
+                subGroupsByParent[parentGroupName] = Object.keys(subGroups).map(subId => ({
+                    cd: subId,
+                    cd_nm: mstData[subId]?.cd_nm || subId
+                }));
+                
                 const groupingThreshold = settingsManager.get('grpMinCnt');
                 
                 // 전체 job 수 계산
@@ -1215,10 +1222,14 @@ export function init() {
             // 관리자이고 상위 그룹(depth=1)일 때 하위 그룹 정보 자동 입력
             if (isAdmin && depth === 1) {
                 const subGroups = getSubGroupsByParent(grpId);
-                const subGroupList = subGroups.length > 0 ? subGroups.map(sg => `${sg.id} - ${sg.name}`).join('\n') + '\n\n' : '';
+                const subGroupList = subGroups.length > 0 ? subGroups.map(sg => {
+                    const now = new Date(Date.now() + (9 * 60 * 60 * 1000)); // KST
+                    const dateStr = `${String(now.getFullYear()).slice(2)}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+                    return `${sg.cd}-${sg.cd_nm}\n- '${dateStr}' : 특이사항 없음`;
+                }).join('\n') + '\n\n' : '';
                 
                 if (loadedMemo) {
-                    memoContent.value = subGroupList + loadedMemo.content;
+                    memoContent.value = loadedMemo.content;
                 } else {
                     memoContent.value = subGroupList;
                 }
@@ -1228,6 +1239,32 @@ export function init() {
                     memoContent.value = loadedMemo.content;
                 } else {
                     memoContent.value = '';
+                }
+            }
+
+            // 관리자가 아니면 읽기 전용
+            if (memoContent) {
+                memoContent.readOnly = !isAdmin;
+            }
+
+            // 작성자/일시 정보 표시
+            const memoInfo = document.getElementById('memo-info');
+            const memoWriter = document.getElementById('memo-writer');
+            const memoDateInfo = document.getElementById('memo-date-info');
+            if (memoInfo && memoWriter && memoDateInfo) {
+                if (loadedMemo && loadedMemo.writer_id) {
+                    memoWriter.textContent = loadedMemo.writer_id;
+                    const createdAt = loadedMemo.created_at || loadedMemo.createdAt;
+                    if (createdAt) {
+                        const d = new Date(createdAt);
+                        const dateStr = `${String(d.getFullYear()).slice(2)}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+                        memoDateInfo.textContent = dateStr;
+                    } else {
+                        memoDateInfo.textContent = '';
+                    }
+                } else {
+                    memoWriter.textContent = '';
+                    memoDateInfo.textContent = '';
                 }
             }
 
@@ -1298,32 +1335,7 @@ async function updateMemoButtons() {
     }
 }
 
-// 상위 그룹의 하위 그룹 목록 조회
+// 상위 그룹의 하위 그룹 목록 조회 (스케줄 데이터 기반)
 function getSubGroupsByParent(parentGrpId) {
-    const subGroups = [];
-    const parentIdNum = parseInt(parentGrpId.replace('CD', ''), 10);
-    
-    if (isNaN(parentIdNum)) return subGroups;
-    
-    Object.keys(mstData).forEach(jobId => {
-        const jobIdNum = parseInt(jobId.replace('CD', ''), 10);
-        if (!isNaN(jobIdNum) && Math.floor(jobIdNum / 100) * 100 === parentIdNum) {
-            // 하위 그룹 (예: CD100의 하위: CD101~CD199)
-            const subGroupPrefix = parentIdNum * 100;
-            const subGroupSuffix = jobIdNum % 100;
-            if (subGroupSuffix > 0 && subGroupSuffix < 100) {
-                const mstInfo = mstData[jobId];
-                subGroups.push({
-                    id: jobId,
-                    name: mstInfo ? mstInfo.cd_nm : jobId
-                });
-            }
-        }
-    });
-    
-    return subGroups.sort((a, b) => {
-        const numA = parseInt(a.id.replace('CD', ''), 10);
-        const numB = parseInt(b.id.replace('CD', ''), 10);
-        return numA - numB;
-    });
+    return subGroupsByParent[parentGrpId] || [];
 }

@@ -331,7 +331,7 @@
 
     <!-- Memo Popup -->
     <div id="memo-popup" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-        <div class="bg-white rounded-lg shadow-xl p-6 w-96 max-w-[90vw]">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-[90vw] max-w-[800px] max-h-[90vh] overflow-auto">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-bold text-gray-800">그룹 메모</h3>
                 <button id="memo-close-btn" class="text-gray-500 hover:text-gray-700 text-xl">&times;</button>
@@ -340,7 +340,10 @@
                 <input type="hidden" id="memo-grp-id">
                 <input type="hidden" id="memo-date">
                 <input type="hidden" id="memo-depth">
-                <textarea id="memo-content" class="w-full h-32 p-3 border border-gray-300 rounded-lg resize-none text-sm" placeholder="메모를 입력하세요..."></textarea>
+                <textarea id="memo-content" class="w-full h-[60vh] max-h-[600px] p-3 border border-gray-300 rounded-lg resize-none text-sm" placeholder="메모를 입력하세요..."></textarea>
+                <div id="memo-info" class="text-xs text-gray-500 mt-2 mb-3">
+                    <span id="memo-writer"></span> | <span id="memo-date-info"></span>
+                </div>
                 <div class="flex justify-end gap-2 mt-4">
                     <button type="button" id="memo-delete-btn" class="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg text-sm">삭제</button>
                     <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">저장</button>

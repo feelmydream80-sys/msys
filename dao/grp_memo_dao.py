@@ -22,7 +22,7 @@ class GrpMemoDao:
         Retrieves a single memo by group ID, depth, and date.
         """
         query = """
-            SELECT grp_id, memo_date, depth, content
+            SELECT grp_id, memo_date, depth, content, writer_id, created_at
             FROM TB_GRP_MEMO
             WHERE grp_id = %s AND depth = %s AND memo_date = %s
         """
