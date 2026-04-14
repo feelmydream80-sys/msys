@@ -476,7 +476,9 @@ export function init() {
                             <span style="font-size: 0.75rem; white-space: nowrap;">${completed}/${total}</span>
                         </div>
                         <div class="text-center" style="font-size: 0.75rem;">
-                            성공: ${success} / 실패: ${fail} (${successRate}%)
+                            <span style="color: ${settingsManager.getStatusInfoByCd('CD901')?.txt_colr || '#166534'}">성공: ${success}</span> / 
+                            <span style="color: ${settingsManager.getStatusInfoByCd('CD902')?.txt_colr || '#991b1b'}">실패: ${fail}</span> 
+                            (${successRate}%)
                         </div>
                     `;
                     groupPill.title = parentDisplayName;
@@ -555,7 +557,9 @@ export function init() {
                                 <span style="font-size: 0.7rem; white-space: nowrap;">${subCompleted}/${subTotal}</span>
                             </div>
                             <div class="text-center" style="font-size: 0.7rem;">
-                                성공: ${subSuccess} / 실패: ${subFail} (${subSuccessRate}%)
+                                <span style="color: ${settingsManager.getStatusInfoByCd('CD901')?.txt_colr || '#166534'}">성공: ${subSuccess}</span> / 
+                                <span style="color: ${settingsManager.getStatusInfoByCd('CD902')?.txt_colr || '#991b1b'}">실패: ${subFail}</span> 
+                                (${subSuccessRate}%)
                             </div>
                         `;
                         subGroupPill.title = subDisplayName;
@@ -972,16 +976,17 @@ export function init() {
             // Load memo colors from schedule settings
             try {
                 const schedRes = await scheduleSettingsApi.getSettings();
-                if (schedRes && schedRes[0]) {
-                    const s = schedRes[0];
+                
+                if (schedRes && typeof schedRes === 'object' && Object.keys(schedRes).length > 0) {
+                    const s = schedRes;
                     memoColors = {
-                        iconId: s.memo_icon_id || null,
-                        bgColr: s.memo_bg_colr || '#fef08b',
-                        txtColr: s.memo_txt_colr || '#a16207'
+                        iconId: s.memoIconId || null,
+                        bgColr: s.memoBgColr || '#708090',
+                        txtColr: s.memoTxtColr || '#ffffff'
                     };
                 }
             } catch (e) {
-                console.warn('[memo colors] 로드 실패, 기본값 사용:', e);
+                console.warn('[memo colors] 로드 실패:', e);
             }
 
             if (data.status_codes) {
@@ -1365,10 +1370,26 @@ async function updateMemoButtons() {
                 btn.textContent = '✓';
                 btn.style.color = memoColors.txtColr;
                 btn.style.backgroundColor = memoColors.bgColr;
+                
+                // 그룹 전체에 메모 색상 적용 (최우선 순위)
+                const groupContainer = btn.closest('.group-container');
+                const groupPill = groupContainer?.querySelector('.group-pill-summary');
+                if (groupPill) {
+                    groupPill.style.setProperty('background-color', memoColors.bgColr, 'important');
+                    groupPill.style.setProperty('color', memoColors.txtColr, 'important');
+                }
             } else {
                 btn.textContent = '+';
                 btn.style.color = '';
                 btn.style.backgroundColor = '';
+                
+                // 그룹 색상 초기화 (기존 색상 클래스로 복구)
+                const groupContainer = btn.closest('.group-container');
+                const groupPill = groupContainer?.querySelector('.group-pill-summary');
+                if (groupPill) {
+                    groupPill.style.setProperty('background-color', '', '');
+                    groupPill.style.setProperty('color', '', '');
+                }
             }
         });
     } catch (err) {

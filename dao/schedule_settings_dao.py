@@ -120,8 +120,9 @@ class ScheduleSettingsDAO:
                 'use_yn': settings_data.get('use_yn'),
                 'grp_brdr_styl': settings_data.get('grp_brdr_styl'),
                 'grp_colr_crtr': settings_data.get('grp_colr_crtr'),
-                'grp_prgs_icon_id': settings_data.get('grp_prgs_icon_id'),
-                'grp_sucs_icon_id': settings_data.get('grp_sucs_icon_id'),
+                'memo_icon_id': settings_data.get('memo_icon_id'),
+                'memo_bg_colr': settings_data.get('memo_bg_colr'),
+                'memo_txt_colr': settings_data.get('memo_txt_colr'),
                 'updr_id': settings_data.get('updr_id'),
                 'sett_id': settings_data.get('sett_id')
             }
@@ -155,8 +156,9 @@ class ScheduleSettingsDAO:
                 'use_yn': settings_data.get('use_yn'),
                 'grp_brdr_styl': settings_data.get('grp_brdr_styl'),
                 'grp_colr_crtr': settings_data.get('grp_colr_crtr'),
-                'grp_prgs_icon_id': settings_data.get('grp_prgs_icon_id'),
-                'grp_sucs_icon_id': settings_data.get('grp_sucs_icon_id'),
+                'memo_icon_id': settings_data.get('memo_icon_id'),
+                'memo_bg_colr': settings_data.get('memo_bg_colr'),
+                'memo_txt_colr': settings_data.get('memo_txt_colr'),
                 'regr_id': settings_data.get('regr_id'),
                 'updr_id': settings_data.get('updr_id')
             }

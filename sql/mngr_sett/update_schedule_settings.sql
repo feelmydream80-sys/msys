@@ -10,8 +10,9 @@ SET
     grp_colr_crtr = %(grp_colr_crtr)s,
     succ_rt_red_thrsval = %(succ_rt_red_thrsval)s,
     succ_rt_org_thrsval = %(succ_rt_org_thrsval)s,
-    grp_prgs_icon_id = %(grp_prgs_icon_id)s,
-    grp_sucs_icon_id = %(grp_sucs_icon_id)s,
+    memo_icon_id = %(memo_icon_id)s,
+    memo_bg_colr = %(memo_bg_colr)s,
+    memo_txt_colr = %(memo_txt_colr)s,
     updr_id = %(updr_id)s,
     upd_dt = CURRENT_TIMESTAMP
 WHERE

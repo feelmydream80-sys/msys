@@ -62,11 +62,7 @@ function renderScheduleSettingsForm(settings) {
         useYn: 'Y',
         grpBrdrStyl: 'solid',
         grpColrCrtr: 'prgr',
-        sucsIconId: null, sucsBgColr: '#EBF8FF', sucsTxtColr: '#3182CE',
-        failIconId: null, failBgColr: '#FFF5F5', failTxtColr: '#C53030',
-        prgsIconId: null, prgsBgColr: '#FFFFF0', prgsTxtColr: '#D69E2E',
-        nodtIconId: null, nodtBgColr: '#F7FAFC', nodtTxtColr: '#718096',
-        schdIconId: null, schdBgColr: '#FFFFFF', schdTxtColr: '#1A202C'
+        memoIconId: null, memoBgColr: '#fef08b', memoTxtColr: '#a16207'
     };
 
     let receivedSettings = {};
@@ -197,6 +193,29 @@ function renderScheduleSettingsForm(settings) {
                             <label for="prgsRtOrgThrsval">진행률 정상 임계값 (%)</label>
                             <input type="number" id="prgsRtOrgThrsval" value="${setting.prgsRtOrgThrsval ?? ''}" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                             <small class="threshold-desc">임계값 이상 → CD901 배경색</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Memo Color Settings -->
+                <div class="setting-group" style="margin-top: 1.5rem;">
+                    <div class="setting-group-title">메모 존재시 그룹 색상</div>
+                    <div class="form-row">
+                        <label for="memoIconId">아이콘</label>
+                        <select id="memoIconId">${createIconOptions(setting.memoIconId)}</select>
+                    </div>
+                    <div class="form-row">
+                        <label for="memoBgColr">배경색</label>
+                        <div class="color-input-wrapper">
+                            <div class="color-preview" style="background-color: ${setting.memoBgColr || '#fef08b'}"></div>
+                            <input type="color" id="memoBgColr" value="${setting.memoBgColr || '#fef08b'}">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <label for="memoTxtColr">텍스트색</label>
+                        <div class="color-input-wrapper">
+                            <div class="color-preview" style="background-color: ${setting.memoTxtColr || '#a16207'}"></div>
+                            <input type="color" id="memoTxtColr" value="${setting.memoTxtColr || '#a16207'}">
                         </div>
                     </div>
                 </div>
@@ -850,8 +869,9 @@ async function saveScheduleSettings() {
         use_yn: useYn,
         grp_brdr_styl: document.querySelector('input[name="grpBrdrStyl"]:checked') ? document.querySelector('input[name="grpBrdrStyl"]:checked').value : 'solid',
         grp_colr_crtr: document.querySelector('input[name="grpColrCrtr"]:checked') ? document.querySelector('input[name="grpColrCrtr"]:checked').value : 'prgr',
-        grp_prgs_icon_id: getIconId('grpPrgsIconId'),
-        grp_sucs_icon_id: getIconId('grpSucsIconId')
+        memo_icon_id: getIconId('memoIconId'),
+        memo_bg_colr: getColorValue('memoBgColr', '#fef08b'),
+        memo_txt_colr: getColorValue('memoTxtColr', '#a16207')
     };
 
     try {
