@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}?v={{ now.timestamp() }}">
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/common.css') }}?v={{ now.timestamp() }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components/popup.css') }}?v={{ now.timestamp() }}">
     
     {% block head %}{% endblock %}
 </head>
@@ -128,6 +129,20 @@
     <script type="module" src="{{ url_for('static', filename='js/router.js') }}?v={{ now.timestamp() }}"></script>
     <script type="module" src="{{ url_for('static', filename='js/utils/toast.js') }}?v={{ now.timestamp() }}"></script>
     <script type="module" src="{{ url_for('static', filename='js/components/card.js') }}?v={{ now.timestamp() }}"></script>
+    
+    <!-- Popup Module -->
+    <script type="module">
+        import { PopupManager } from '{{ url_for("static", filename="js/modules/popup/popupManager.js") }}?v={{ now.timestamp() }}';
+        
+        // Initialize popup manager when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof window.popupManager === 'undefined') {
+                window.popupManager = new PopupManager();
+                window.popupManager.init();
+            }
+        });
+    </script>
+    
     {% block scripts %}{% endblock %}
 </body>
 </html>

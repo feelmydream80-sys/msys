@@ -15,6 +15,7 @@ import { stateManager } from '../services/stateManager.js';
 import { statisticsTab } from '../tabs/statistics.js';
 import { userManagementTab } from '../tabs/userManagement.js';
 import { dataAccessTab } from '../tabs/dataAccess.js';
+import { popupManagementTab } from '../tabs/popupManagement.js';
 import { init as initDataDefinition } from '../tabs/dataDefinition/dataDefinition.js';
 
 // 외부 모듈들 가져오기
@@ -1089,6 +1090,9 @@ async function initializePage() {
     
     dataAccessTab.initElements();
     dataAccessTab.initEventListeners();
+
+    popupManagementTab.initElements();
+    popupManagementTab.initEventListeners();
 
     // 데이터정의 탭 초기화 (조건부)
     const dataDefinitionContainer = document.getElementById('dataDefinition');

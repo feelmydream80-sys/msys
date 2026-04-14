@@ -319,3 +319,79 @@ export const excelTemplateApi = {
         return await ApiService.delete('excel_template/delete');
     }
 };
+
+// 팝업 관리 탭에서 사용할 전용 API 함수들
+export const popupManagementApi = {
+    /**
+     * 팝업 목록 가져오기
+     * @param {string} searchTerm - 검색어
+     * @param {number} page - 페이지 번호
+     * @param {number} perPage - 페이지당 항목 수
+     * @returns {Promise<any>} - 팝업 목록 데이터
+     */
+    async getPopups(searchTerm = '', page = 1, perPage = 10) {
+        const queryString = new URLSearchParams({ 
+            search_term: searchTerm,
+            page: page.toString(),
+            per_page: perPage.toString()
+        }).toString();
+        return await ApiService.get(`popups?${queryString}`);
+    },
+
+    /**
+     * 단일 팝업 가져오기
+     * @param {number|string} popupId - 팝업 ID
+     * @returns {Promise<any>} - 팝업 데이터
+     */
+    async getPopup(popupId) {
+        return await ApiService.get(`popups/${popupId}`);
+    },
+
+    /**
+     * 팝업 생성
+     * @param {FormData} formData - 팝업 데이터
+     * @returns {Promise<any>} - 응답 데이터
+     */
+    async createPopup(formData) {
+        try {
+            const response = await fetch('/api/popups', {
+                method: 'POST',
+                body: formData
+            });
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            return await response.json();
+        } catch (error) {
+            console.error('팝업 생성 실패:', error);
+            throw error;
+        }
+    },
+
+    /**
+     * 팝업 수정
+     * @param {number|string} popupId - 팝업 ID
+     * @param {FormData} formData - 팝업 데이터
+     * @returns {Promise<any>} - 응답 데이터
+     */
+    async updatePopup(popupId, formData) {
+        try {
+            const response = await fetch(`/api/popups/${popupId}`, {
+                method: 'PUT',
+                body: formData
+            });
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            return await response.json();
+        } catch (error) {
+            console.error('팝업 수정 실패:', error);
+            throw error;
+        }
+    },
+
+    /**
+     * 팝업 삭제
+     * @param {number|string} popupId - 팝업 ID
+     * @returns {Promise<any>} - 응답 데이터
+     */
+    async deletePopup(popupId) {
+        return await ApiService.delete(`popups/${popupId}`);
+    }
+};
