@@ -17,21 +17,6 @@ const DEFAULT_CHART_COLORS = [
     'rgb(0, 123, 255)'
 ];
 
-// @DOC: 장애 코드별로 고정된 색상을 매핑하여 차트의 일관성을 유지합니다.
-const errorCodeColorMap = {
-    'CD901': '#22c55e', // 정상(성공)
-    'CD902': '#ef4444', // 실패
-    'CD903': '#f59e42', // 미수집
-    'CD904': '#22c55e', // 계측중
-};
-
-// @DOC: 장애 코드별로 고정된 이름을 매핑하여 차트 라벨에 사용합니다.
-const errorCodeNameMap = {
-    'CD901': '정상(성공)',
-    'CD902': '실패',
-    'CD903': '미수집',
-    'CD904': '계측중',
-};
 
 /**
  * @DOC: Job ID 목록을 받아 동적으로 체크박스를 생성하고 컨테이너에 추가합니다.
@@ -338,28 +323,28 @@ export function renderTroublePieChart(troubleCodeData, chartType, startDate, end
     const noDataMsg = document.getElementById('troublePieNoDataMsg');
     if (noDataMsg) noDataMsg.remove();
 
-    const labels = troubleCodeData.map(item => {
-        const errorCode = item.error_code || '알 수 없음';
-        const errorName = item.error_name || errorCodeNameMap[errorCode] || errorCode;
-        return labelDisplayType === 'code' ? errorCode : errorName;
+    // @DOC: 레이블 생성 - API에서 제공하는 TB_STS_CD_MST 기준 정보 사용
+    const labels = troubleCodeData.map((item) => {
+        const errorCode = item.error_code || '';
+        const errorName = item.error_name || '';
+        
+        if (labelDisplayType === 'code') {
+            return errorCode;
+        } else {
+            // 명칭 표시: 코드와 명칭이 다른 경우 "코드 (명칭)" 형식
+            if (errorCode && errorName && errorName !== errorCode) {
+                return `${errorCode} (${errorName})`;
+            }
+            return errorName || errorCode;
+        }
     });
     const dataValues = troubleCodeData.map(item => item.count || 0);
     
-    const getColorForErrorCode = (errorCode) => {
-        if (!mngrSettings || mngrSettings.length === 0) {
-            return errorCodeColorMap[errorCode] || '#a3a3a3';
-        }
-        const setting = mngrSettings[0]; // Assuming global color settings from the first entry
-        switch (errorCode) {
-            case 'CD901': return setting.cnn_sucs_wrd_colr;
-            case 'CD902': return setting.cnn_failr_wrd_colr;
-            case 'CD903': return setting.cnn_warn_wrd_colr;
-            case 'CD904': return '#84cc16'; // @FIX: CD904(계측중)를 연두색으로 변경
-            default: return '#a3a3a3';
-        }
-    };
-
-    const backgroundColors = troubleCodeData.map(item => getColorForErrorCode(item.error_code));
+    // @DOC: 색상 생성 - API에서 제공하는 TB_STS_CD_MST 기준 색상 사용
+    const backgroundColors = troubleCodeData.map(item => {
+        // API에서 제공하는 색상 사용 (TB_STS_CD_MST 기준)
+        return item.bg_color || '#a3a3a3';
+    });
 
     if (troublePieChart) {
         troublePieChart.destroy();
@@ -378,11 +363,32 @@ export function renderTroublePieChart(troubleCodeData, chartType, startDate, end
                 tooltip: {
                     callbacks: {
                         label: context => {
-                            return `${context.label}: ${context.raw}건`;
+                            // 바 차트와 도넛 차트 모두 지원하도록 안전하게 label 가져오기
+                            const label = context.label || context.chart.data.labels[context.dataIndex] || '알 수 없음';
+                            return `${label}: ${context.raw}건`;
                         }
                     }
                 },
-                legend: { position: 'top' },
+                legend: {
+                    position: 'top',
+                    labels: {
+                        generateLabels: function(chart) {
+                            const data = chart.data;
+                            if (data.labels.length && data.datasets.length) {
+                                return data.labels.map((label, i) => {
+                                    const ds = data.datasets[0];
+                                    return {
+                                        text: label || '알 수 없음',
+                                        fillStyle: typeof ds.backgroundColor[i] !== 'undefined' ? ds.backgroundColor[i] : '#a3a3a3',
+                                        hidden: false,
+                                        index: i
+                                    };
+                                });
+                            }
+                            return [];
+                        }
+                    }
+                },
                 title: { display: true, text: '장애 코드별 비율' },
                 datalabels: {
                     color: '#fff',
@@ -398,6 +404,20 @@ export function renderTroublePieChart(troubleCodeData, chartType, startDate, end
                     }
                 }
             },
+            scales: chartType === 'bar' ? {
+                x: {
+                    ticks: {
+                        callback: function(value, index) {
+                            // x축 레이블이 undefined인 경우 안전하게 처리
+                            const label = this.getLabelForValue(value);
+                            return label || labels[index] || '알 수 없음';
+                        }
+                    }
+                },
+                y: {
+                    beginAtZero: true
+                }
+            } : {},
             animation: {
                 duration: 500, // 페이드 효과
                 easing: 'linear'

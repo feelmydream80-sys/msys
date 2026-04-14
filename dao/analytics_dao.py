@@ -4,6 +4,7 @@ import psycopg2.extras
 from dao.sql_loader import load_sql
 from msys.column_mapper import convert_to_legacy_columns
 from utils.logging_config import log_operation
+from utils.datetime_utils import get_kst_now, format_kst_now, get_kst_now_date
 
 class AnalyticsDAO:
     def __init__(self, conn):
@@ -350,3 +351,19 @@ class AnalyticsDAO:
             results = cur.fetchall()
             logging.info(f"DAO: Fetched {len(results)} records for monthly menu access stats.")
             return [dict(row) for row in results]
+
+    # ==========================================
+    # 시간 제공 메서드 (Dao-centric Time)
+    # ==========================================
+
+    def get_current_date_str(self) -> str:
+        """현재 KST 기준 날짜 문자열 반환 (YYYY-MM-DD)"""
+        return format_kst_now('%Y-%m-%d')
+
+    def get_current_year(self) -> str:
+        """현재 KST 기준 연도 반환"""
+        return format_kst_now('%Y')
+
+    def get_timestamp_for_filename(self) -> str:
+        """파일명용 timestamp 반환 (YYYYMMDD_HHMMSS)"""
+        return format_kst_now('%Y%m%d_%H%M%S')

@@ -9,7 +9,7 @@ import pytz
 import re
 from typing import Optional, Dict, List
 from flask import current_app
-from utils.datetime_utils import utc_to_kst, get_kst_now
+from utils.datetime_utils import utc_to_kst
 
 
 class CollectionScheduleService:

@@ -25,21 +25,37 @@ function formatNumber(number, decimals = 0) {
  * @returns {string} - 포맷팅된 날짜 문자열
  */
 function formatDate(date, format = 'YYYY-MM-DD') {
+    // 문자열이 들어오면 시간대 감지
+    if (typeof date === 'string') {
+        // KST (+09:00) 포함 → 그대로 반환
+        if (date.includes('+09:00')) {
+            return date.replace('+09:00', '').trim();
+        }
+        // KST 형식 (YYYY-MM-DD HH:MM:SS) → 그대로 반환
+        if (date.match(/\d{4}-\d{2}-\d{2}/)) {
+            return date;
+        }
+        // GMT/UTC 포함 → UTC로 파싱
+        if (date.includes('GMT') || date.includes('UTC')) {
+            return formatDate(new Date(date), format);
+        }
+        // 시간대 정보 없으면 그대로 반환
+        return date;
+    }
+    
     let d = new Date(date);
     
     if (isNaN(d.getTime())) {
         return 'Invalid Date';
     }
     
-    // UTC → KST 변환 (UTC+9)
-    d.setHours(d.getUTCHours() + 9);
-    
-    const year = d.getUTCFullYear();
-    const month = String(d.getUTCMonth() + 1).padStart(2, '0');
-    const day = String(d.getUTCDate()).padStart(2, '0');
-    const hours = String(d.getUTCHours()).padStart(2, '0');
-    const minutes = String(d.getUTCMinutes()).padStart(2, '0');
-    const seconds = String(d.getUTCSeconds()).padStart(2, '0');
+    // KST 시간을 그대로 사용 (변환 없음)
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    const seconds = String(d.getSeconds()).padStart(2, '0');
     
     return format
         .replace('YYYY', year)

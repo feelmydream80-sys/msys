@@ -1,10 +1,11 @@
 #
 # 주요 역할: Flask 애플리케이션의 메인 파일로, 라우팅, 서비스 계층 호출, 데이터베이스 연결 관리 등을 담당합니다.
 
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for, g, flash
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for, g, flash, send_from_directory
 from flask_cors import CORS
 from flasgger import Swagger
 from flask_login import LoginManager
+import mimetypes
 import logging
 import logging.handlers
 import sys
@@ -73,6 +74,8 @@ class SimpleScheduler:
         self.running = False
 
 scheduler = SimpleScheduler()
+
+mimetypes.add_type('application/javascript', '.js')
 
 def create_app():
     app = Flask(__name__, static_folder='static', static_url_path='/static')

@@ -4,6 +4,7 @@ from msys.database import get_db_connection
 from psycopg2.extras import RealDictCursor
 from typing import List, Dict, Any
 import logging
+from utils.datetime_utils import get_kst_now, get_kst_now_date
 
 class ApiKeyMngrDao:
     """TB_API_KEY_MNGR 테이블의 CRUD operations"""
@@ -526,7 +527,7 @@ class ApiKeyMngrDao:
             self.logger.error(f"Error upserting schedule settings: {e}")
             raise
 
-    def update_schedule_last_run(self, schd_tp: str, result: str) -> bool:
+    def update_schedule_last_run(self, schd_id: int, result: str) -> bool:
         """스케줄 마지막 실행 정보 업데이트"""
         try:
             conn = get_db_connection()
@@ -537,10 +538,10 @@ class ApiKeyMngrDao:
                 SET last_run_dt = NOW(),
                     last_run_result = %s,
                     upd_dt = NOW()
-                WHERE schd_tp = %s
+                WHERE schd_id = %s
             """
             
-            cursor.execute(query, (result, schd_tp))
+            cursor.execute(query, (result, schd_id))
             conn.commit()
             
             self.logger.debug(f"Updated last run info for schedule {schd_tp}")
@@ -782,3 +783,20 @@ class ApiKeyMngrDao:
         except Exception as e:
             self.logger.error(f"Error counting mail setting history for {mail_tp}: {e}")
             raise
+
+    # ==========================================
+    # 시간 제공 메서드 (Dao-centric Time)
+    # ==========================================
+
+    def get_today_date(self):
+        """현재 KST 기준 날짜 반환 (만료일 계산용)"""
+        return get_kst_now_date()
+
+    def get_current_timestamp(self) -> str:
+        """현재 KST 기준 ISO format timestamp 반환"""
+        return get_kst_now().strftime('%Y-%m-%d %H:%M:%S%z')
+
+    def get_formatted_timestamp(self, format: str = '%Y-%m-%d %H:%M:%S') -> str:
+        """지정된 형식의 현재 KST timestamp 반환"""
+        from utils.datetime_utils import format_kst_now
+        return format_kst_now(format)

@@ -3,6 +3,7 @@ import logging
 from datetime import datetime
 from functools import wraps
 import pytz
+import psycopg2.extras
 
 from msys.database import get_db_connection
 from utils.datetime_utils import convert_datetime_fields_to_kst_str
@@ -82,17 +83,27 @@ def get_analytics_trouble_by_code_api():
 
             trouble_data = dashboard_service.get_trouble_by_code(start_date_str, end_date_str, job_ids, user=user)
 
-            # 장애 코드 매핑 가져오기 (CD900번대 코드들의 cd_nm)
-            error_code_map = mst_service.get_error_code_map()
-            code_to_name = {row['cd']: row['cd_nm'] for row in error_code_map}
+            # TB_STS_CD_MST에서 코드 정보(명칭+색상) 조회 - 일관성 확보
+            cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cur.execute("""
+                SELECT CD, NM, BG_COLR, TXT_COLR 
+                FROM TB_STS_CD_MST
+            """)
+            sts_cd_map = {row['cd']: row for row in cur.fetchall()}
 
-            # 각 장애 코드의 cd_nm으로 변환
+            # 각 장애 코드에 명칭과 색상 정보 추가
             for item in trouble_data:
                 error_code = item.get('error_code')
-                if error_code in code_to_name:
-                    item['error_name'] = code_to_name[error_code]
+                if error_code in sts_cd_map:
+                    code_info = sts_cd_map[error_code]
+                    item['error_name'] = code_info['nm']
+                    item['bg_color'] = code_info['bg_colr']
+                    item['txt_color'] = code_info['txt_colr']
                 else:
-                    item['error_name'] = error_code  # 매핑이 없는 경우 코드 그대로 사용
+                    # TB_STS_CD_MST에 없는 경우 코드 그대로 사용
+                    item['error_name'] = error_code
+                    item['bg_color'] = '#a3a3a3'  # 기본 회색
+                    item['txt_color'] = '#374151'
 
             return jsonify(trouble_data), 200
     except Exception as e:

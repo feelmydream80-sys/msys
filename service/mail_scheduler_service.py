@@ -36,12 +36,12 @@ class MailSchedulerService:
         :param exclude_cds: 제외 대상 CD 목록
         :return: 발송 결과 dict
         """
-        today = date.today()
+        today = self.dao.get_today_date()
         results = {
             'success': [],
             'failed': [],
             'skipped': [],
-            'executed_at': datetime.now().isoformat()
+            'executed_at': self.dao.get_current_timestamp()
         }
         
         try:
@@ -290,13 +290,16 @@ class MailSchedulerService:
             
             # 테스트 메일 내용 생성
             subject = '[테스트] API 키 관리 시스템 메일 발송 테스트'
+            # 테스트 메일 본문에 사용할 시간
+            sent_time = self.dao.get_formatted_timestamp('%Y-%m-%d %H:%M:%S')
+
             body = f'''
             <html>
             <body>
                 <h2>API 키 관리 시스템 - 테스트 메일</h2>
                 <p>이 메일은 API 키 관리 시스템의 메일 발송 기능을 테스트하기 위해 발송되었습니다.</p>
                 <hr>
-                <p><strong>발송 시간:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+                <p><strong>발송 시간:</strong> {sent_time}</p>
                 <p><strong>수신 이메일:</strong> {test_email}</p>
                 <hr>
                 <p style="color: #666; font-size: 12px;">
@@ -319,7 +322,7 @@ class MailSchedulerService:
                 self.dao.insert_mail_send_log(
                     cd='TEST',
                     mail_tp='test',
-                    sent_dt=date.today(),
+                    sent_dt=self.dao.get_today_date(),
                     success=success,
                     error_msg=error_msg
                 )

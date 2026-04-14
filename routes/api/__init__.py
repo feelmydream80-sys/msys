@@ -330,7 +330,7 @@ def get_statistics_data():
             if view_type == 'daily':
                 # 일별 통계
                 if not start_date or not end_date:
-                    start_date = end_date = datetime.now().strftime('%Y-%m-%d')
+                    start_date = end_date = analytics_dao.get_current_date_str()
                 
                 menu_access_stats = analytics_dao.get_menu_access_stats(
                     view_type='daily', 
@@ -352,7 +352,7 @@ def get_statistics_data():
             elif view_type == 'weekly_monthly':
                 # 주별/월별 통계
                 if not year:
-                    year = str(datetime.now().year)
+                    year = analytics_dao.get_current_year()
                 
                 weekly_stats = analytics_dao.get_menu_access_stats_weekly(year, menu_nm)
                 yearly_total = analytics_dao.get_yearly_total_stats(year, menu_nm)
@@ -407,7 +407,7 @@ def get_statistics_data():
             elif view_type == 'comparison':
                 # 연도별 비교 통계
                 if not year:
-                    year = str(datetime.now().year)
+                    year = analytics_dao.get_current_year()
                 
                 this_year = year
                 last_year = str(int(year) - 1)
@@ -531,7 +531,7 @@ def download_statistics():
             
             if view_type == 'daily':
                 if not start_date or not end_date:
-                    start_date = end_date = datetime.now().strftime('%Y-%m-%d')
+                    start_date = end_date = analytics_dao.get_current_date_str()
                 
                 menu_access_stats = analytics_dao.get_menu_access_stats(
                     view_type='daily', 
@@ -545,7 +545,7 @@ def download_statistics():
                 
             elif view_type == 'weekly_monthly':
                 if not year:
-                    year = str(datetime.now().year)
+                    year = analytics_dao.get_current_year()
                 
                 weekly_stats = analytics_dao.get_menu_access_stats_weekly(year, menu_nm)
                 yearly_total = analytics_dao.get_yearly_total_stats(year, menu_nm)
@@ -597,7 +597,7 @@ def download_statistics():
                 
             elif view_type == 'comparison':
                 if not year:
-                    year = str(datetime.now().year)
+                    year = analytics_dao.get_current_year()
                 
                 this_year = year
                 last_year = str(int(year) - 1)
@@ -715,8 +715,10 @@ def save_event_log():
         log_dir = 'log'
         os.makedirs(log_dir, exist_ok=True)
 
-        # 파일명에 타임스탬프 추가
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        # 파일명에 타임스탬프 추가 (DAO에서 제공)
+        with get_db_connection() as conn:
+            analytics_dao = AnalyticsDAO(conn)
+            timestamp = analytics_dao.get_timestamp_for_filename()
         file_path = os.path.join(log_dir, f'event_log_{timestamp}.txt')
 
         # 텍스트 파일로 저장
@@ -799,3 +801,61 @@ def save_event_log():
     except Exception as e:
         logging.error(f"❌ API: 이벤트 로그 저장 실패: {e}", exc_info=True)
         return jsonify({'error': str(e)}), 500
+
+
+# ==========================================
+# 상태 코드 색상 정보 API (TB_STS_CD_MST)
+# ==========================================
+
+@api_bp.route('/api/sts_cd/colors', methods=['GET'])
+def get_sts_cd_colors():
+    """
+    상태 코드별 색상 정보 조회 (TB_STS_CD_MST 테이블)
+    차트에서 동적으로 색상을 적용하기 위해 사용
+    
+    Returns:
+        {
+            'success': True,
+            'data': {
+                'CD901': {'name': '성공', 'color': '#dcfce7', 'bgColor': '#dcfce7', ...},
+                'CD902': {'name': '실패', 'color': '#fee2e2', 'bgColor': '#fee2e2', ...},
+                ...
+            }
+        }
+    """
+    try:
+        with get_db_connection() as conn:
+            cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cur.execute("""
+                SELECT CD, NM, DESCR, COLR, ICON_CD, ORD, BG_COLR, TXT_COLR
+                FROM TB_STS_CD_MST
+                WHERE CD LIKE 'CD9%'
+                ORDER BY ORD, CD
+            """)
+            results = cur.fetchall()
+            
+            # JavaScript에서 사용하기 쉬운 형태로 변환
+            color_map = {}
+            for row in results:
+                color_map[row['cd']] = {
+                    'name': row['nm'],
+                    'description': row['descr'],
+                    'color': row['colr'],
+                    'bgColor': row['bg_colr'],
+                    'txtColor': row['txt_colr'],
+                    'icon': row['icon_cd'],
+                    'order': row['ord']
+                }
+            
+            logging.info(f"✅ API: TB_STS_CD_MST 조회 완료 - {len(color_map)}건")
+            return jsonify({
+                'success': True,
+                'data': color_map
+            }), 200
+            
+    except Exception as e:
+        logging.error(f"❌ API: TB_STS_CD_MST 조회 실패: {e}", exc_info=True)
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500

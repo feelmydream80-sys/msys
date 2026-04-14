@@ -6,7 +6,10 @@ import logging
 from typing import List, Dict, Optional
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from datetime import datetime
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils.datetime_utils import get_kst_now
 
 class GrpMemoDao:
     """
@@ -64,7 +67,7 @@ class GrpMemoDao:
         """
         try:
             with self.conn.cursor() as cur:
-                cur.execute(query, (grp_id, memo_date, depth, content, writer_id, datetime.now()))
+                cur.execute(query, (grp_id, memo_date, depth, content, writer_id, get_kst_now().strftime('%Y-%m-%d %H:%M:%S')))
             self.conn.commit()
             self.logger.info(f"✅ DAO: Memo inserted for {grp_id} on {memo_date}")
         except psycopg2.Error as e:
@@ -83,7 +86,7 @@ class GrpMemoDao:
         """
         try:
             with self.conn.cursor() as cur:
-                cur.execute(query, (content, writer_id, datetime.now(), grp_id, depth, memo_date))
+                cur.execute(query, (content, writer_id, get_kst_now().strftime('%Y-%m-%d %H:%M:%S'), grp_id, depth, memo_date))
             self.conn.commit()
             self.logger.info(f"✅ DAO: Memo updated for {grp_id} on {memo_date}")
         except psycopg2.Error as e:

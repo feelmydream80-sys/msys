@@ -2,10 +2,10 @@
 
 from dao.api_key_mngr_dao import ApiKeyMngrDao
 from dao.con_mst_dao import ConMstDAO
-from datetime import datetime
 from msys.database import get_db_connection
 import logging
 from msys.mail_send import send_email, create_api_key_expiry_email, validate_email_address
+from datetime import datetime
 
 class ApiKeyMngrService:
     """TB_API_KEY_MNGR 서비스 클래스"""
@@ -21,11 +21,11 @@ class ApiKeyMngrService:
             self.logger.info("[API키관리-서비스] get_all_api_key_mngr 호출")
             data = self.dao.select_all()
             self.logger.info(f"[API키관리-서비스] DAO 조회 결과 - 데이터 건수: {len(data)}")
-            
+
             # Convert dates and calculate expiry info
             result = []
-            today = datetime.now().date()
-            
+            today = self.dao.get_today_date()
+
             for item in data:
                 if isinstance(item['start_dt'], str):
                     item['start_dt'] = datetime.strptime(item['start_dt'], '%Y-%m-%d').date()
@@ -72,8 +72,7 @@ class ApiKeyMngrService:
                         start_dt = con_mst_data.get('update_dt')
                         if not start_dt:
                             self.logger.warning(f"No update_dt found for CD: {cd}, using current date")
-                            from datetime import datetime
-                            start_dt = datetime.now().date()
+                            start_dt = self.dao.get_today_date()
                         
                         self.dao.insert(
                             cd=cd,
@@ -180,7 +179,7 @@ class ApiKeyMngrService:
             
             # Convert dates and calculate expiry info
             result = []
-            today = datetime.now().date()
+            today = self.dao.get_today_date()
             
             for item in data:
                 if isinstance(item['start_dt'], str):
@@ -231,7 +230,7 @@ class ApiKeyMngrService:
             
             # Convert dates and calculate expiry info
             result = []
-            today = datetime.now().date()
+            today = self.dao.get_today_date()
             
             for item in data:
                 if isinstance(item['start_dt'], str):

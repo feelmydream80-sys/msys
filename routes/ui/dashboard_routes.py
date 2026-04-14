@@ -1,9 +1,9 @@
 from flask import Blueprint, render_template, session, current_app, request
-from datetime import datetime
 from functools import wraps
 from ..auth_routes import login_required, check_password_change_required
 from msys.database import get_db_connection
 from dao.analytics_dao import AnalyticsDAO
+from utils.datetime_utils import get_kst_now
 
 dashboard_bp = Blueprint('dashboard', __name__)
 
@@ -56,4 +56,4 @@ def dashboard():
     current_app.logger.info(f"--- [LOG] Initial access to root or dashboard route: {request.path}")
     user_permissions = session.get('user', {}).get('permissions', [])
     is_admin = 'mngr_sett' in user_permissions
-    return render_template("dashboard.html", now=datetime.utcnow(), is_admin=is_admin)
+    return render_template("dashboard.html", now=get_kst_now(), is_admin=is_admin)

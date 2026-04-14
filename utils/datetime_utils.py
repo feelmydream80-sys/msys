@@ -98,13 +98,18 @@ def utc_to_kst_str(dt: datetime) -> str:
 
 def get_kst_now() -> datetime:
     """
-    현재 KST 시간을 반환합니다.
+    현재 KST 시간을 datetime 객체로 반환합니다.
+    서버 timezone과 무관하게 정확한 KST 시간을 반환합니다.
+    템플릿에서 .timestamp() 메서드 사용 가능합니다.
 
     Returns:
-        KST timezone이 적용된 현재 datetime 객체
+        KST timezone이 적용된 datetime 객체
     """
     kst = pytz.timezone('Asia/Seoul')
-    return datetime.now(kst)
+    utc = pytz.utc
+
+    # 현재 UTC 시간을 가져와서 KST로 변환 (서버 timezone 무관)
+    return datetime.now(utc).astimezone(kst)
 
 def get_utc_now() -> datetime:
     """

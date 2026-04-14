@@ -2,7 +2,7 @@ import { showToast } from '../utils/toast.js';
 import { downloadExcelTemplate } from '../utils/excelDownload.js';
 import { filterActiveMstData } from '../modules/common/utils.js';
 import { scheduleSettingsApi } from '../services/api.js';
-import { getKSTNow } from '../modules/common/dateUtils.js';
+import { getKSTNow, formatDateTime } from '../modules/common/dateUtils.js';
 
 // 전역 변수
 let mstData = {}; // For mapping job_id to name
@@ -367,7 +367,7 @@ export function init() {
 
             // 날짜 헤더에 카운트 표시 (작은 글씨)
             dayHeader.innerHTML = `
-                <div>${dateStr} <span style="color: #4b5563;">Jobs: ${jobsCount}</span></div>
+                <div>${dateStr}</div>
                 <div style="font-size: 10px; margin-top: 2px;">
                     <span style="color: ${settingsManager.getStatusInfoByCd('CD901')?.txt_colr || '#166534'}">성공: ${statusCounts['CD901']}</span> / 
                     <span style="color: ${settingsManager.getStatusInfoByCd('CD902')?.txt_colr || '#991b1b'}">실패: ${statusCounts['CD902']}</span> / 
@@ -375,6 +375,7 @@ export function init() {
                     <span style="color: ${settingsManager.getStatusInfoByCd('CD907')?.txt_colr || '#6b7280'}">예정: ${statusCounts['CD907']}</span>
                 </div>
             `;
+            dayHeader.title = `Jobs: ${jobsCount}개`;
             
             const jobsContainer = document.createElement('div');
             jobsContainer.className = 'jobs-container';
@@ -1294,9 +1295,20 @@ export function init() {
                     memoWriter.textContent = loadedMemo.writer_id;
                     const createdAt = loadedMemo.created_at || loadedMemo.createdAt;
                     if (createdAt) {
-                        const d = new Date(createdAt);
-                        const dateStr = `${String(d.getFullYear()).slice(2)}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-                        memoDateInfo.textContent = dateStr;
+                        // KST 시간 직접 파싱 (timezone 정보 없음)
+                        const parts = createdAt.match(/(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2})/);
+                        if (parts) {
+                            const year = parts[1].slice(2);
+                            const month = parts[2];
+                            const day = parts[3];
+                            const hours = parts[4];
+                            const minutes = parts[5];
+                            memoDateInfo.textContent = `${year}.${month}.${day} ${hours}:${minutes}`;
+                        } else {
+                            const d = new Date(createdAt);
+                            const dateStr = `${String(d.getFullYear()).slice(2)}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+                            memoDateInfo.textContent = dateStr;
+                        }
                     } else {
                         memoDateInfo.textContent = '';
                     }
