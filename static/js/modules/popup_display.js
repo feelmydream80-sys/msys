@@ -42,6 +42,7 @@ const PopupDisplay = (function() {
 
     // State
     let activePopups = [];
+    let lastClickedPopupId = null;
 
     /**
      * Initialize popup display
@@ -58,16 +59,17 @@ const PopupDisplay = (function() {
     }
     
     /**
-     * Setup ESC key listener to close topmost popup
+     * Setup ESC key listener to close clicked popup
      */
     function setupEscListener() {
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && activePopups.length > 0) {
-                // Find the popup with highest z-index
-                const topPopup = activePopups.reduce((prev, current) => {
-                    return (prev.zIndex > current.zIndex) ? prev : current;
-                });
-                closePopup(topPopup.popup_id, false);
+            if (e.key === 'Escape') {
+                // Close the last clicked popup, or the topmost if none clicked
+                const popupId = lastClickedPopupId || (activePopups.length > 0 ? activePopups[activePopups.length - 1].popup_id : null);
+                if (popupId) {
+                    closePopup(popupId, false);
+                    lastClickedPopupId = null;
+                }
             }
         });
     }
@@ -354,6 +356,11 @@ const PopupDisplay = (function() {
 
         // Add to document
         document.body.appendChild(modal);
+
+        // Track clicked popup
+        content.addEventListener('click', (e) => {
+            lastClickedPopupId = popup.popup_id;
+        });
 
         // Close on backdrop click (without saving)
         modal.addEventListener('click', (e) => {

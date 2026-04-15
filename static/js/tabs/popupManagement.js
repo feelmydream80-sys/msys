@@ -452,6 +452,7 @@ class PopupManagementTab {
         document.getElementById('popupBgColor').value = popup.bg_colr || '#ffffff';
         document.getElementById('popupStatus').value = popup.use_yn === 'Y' ? 'ACTIVE' : 'INACTIVE';
         document.getElementById('popupHideDaysMax').value = popup.hide_days_max || 7;
+        document.getElementById('popupLocation').value = popup.loc || 'CENTER';
 
         if (popup.img_path) {
             this.showImagePreview(popup.img_path);
@@ -644,6 +645,7 @@ class PopupManagementTab {
         formData.append('bg_colr', document.getElementById('popupBgColor').value);
         formData.append('use_yn', document.getElementById('popupStatus').value === 'ACTIVE' ? 'Y' : 'N');
         formData.append('hide_days_max', document.getElementById('popupHideDaysMax').value);
+        formData.append('loc', document.getElementById('popupLocation').value);
 
         if (this.uploadedImageFile) {
             formData.append('image', this.uploadedImageFile);

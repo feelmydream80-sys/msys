@@ -1765,20 +1765,22 @@
                                 </div>
                             </div>
 
-                            <!-- 설정 5개 (한 줄) -->
-                            <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 12px;">
+                            <!-- 설정 6개 (한 줄) - 위치 추가 -->
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px;">
                                 <div class="form-group">
                                     <label for="popupWidth" style="display: block; margin-bottom: 4px; font-weight: 600; font-size: 12px;">너비</label>
-                                    <input type="number" id="popupWidth" value="400" min="100" style="width: 100%; padding: 4px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">
+                                    <input type="number" id="popupWidth" value="400" min="100" max="800" style="width: 100%; padding: 4px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">
                                 </div>
                                 <div class="form-group">
                                     <label for="popupHeight" style="display: block; margin-bottom: 4px; font-weight: 600; font-size: 12px;">높이</label>
-                                    <input type="number" id="popupHeight" value="300" min="100" style="width: 100%; padding: 4px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">
+                                    <input type="number" id="popupHeight" value="300" min="100" max="600" style="width: 100%; padding: 4px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">
                                 </div>
                                 <div class="form-group">
                                     <label for="popupBgColor" style="display: block; margin-bottom: 4px; font-weight: 600; font-size: 12px;">배경색</label>
                                     <input type="color" id="popupBgColor" value="#ffffff" style="width: 100%; height: 28px; padding: 2px; border: 1px solid #ddd; border-radius: 4px;">
                                 </div>
+                            </div>
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px;">
                                 <div class="form-group">
                                     <label for="popupStatus" style="display: block; margin-bottom: 4px; font-weight: 600; font-size: 12px;">상태</label>
                                     <select id="popupStatus" style="width: 100%; padding: 4px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">
@@ -1787,7 +1789,7 @@
                                     </select>
                                 </div>
                                 <div class="form-group">
-                                    <label for="popupHideDaysMax" style="display: block; margin-bottom: 4px; font-weight: 600; font-size: 12px;">숨김</label>
+                                    <label for="popupHideDaysMax" style="display: block; margin-bottom: 4px; font-weight: 600; font-size: 12px;">숨김 기간</label>
                                     <select id="popupHideDaysMax" style="width: 100%; padding: 4px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">
                                         <option value="1">1일</option>
                                         <option value="2">2일</option>
@@ -1796,6 +1798,20 @@
                                         <option value="5">5일</option>
                                         <option value="6">6일</option>
                                         <option value="7" selected>7일</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="popupLocation" style="display: block; margin-bottom: 4px; font-weight: 600; font-size: 12px;">표시 위치</label>
+                                    <select id="popupLocation" style="width: 100%; padding: 4px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">
+                                        <option value="TOP_LEFT">↖ 좌상단</option>
+                                        <option value="TOP_CENTER">↑ 중상단</option>
+                                        <option value="TOP_RIGHT">↗ 우상단</option>
+                                        <option value="CENTER_LEFT">← 좌중단</option>
+                                        <option value="CENTER" selected>● 중앙</option>
+                                        <option value="CENTER_RIGHT">→ 우중단</option>
+                                        <option value="BOTTOM_LEFT">↙ 좌하단</option>
+                                        <option value="BOTTOM_CENTER">↓ 중하단</option>
+                                        <option value="BOTTOM_RIGHT">↘ 우하단</option>
                                     </select>
                                 </div>
                             </div>
