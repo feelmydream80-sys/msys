@@ -231,10 +231,11 @@ def create_popup():
             'HEIGHT': request.form.get('height'),
             'BG_COLR': request.form.get('bg_colr', '#FFFFFF'),
             'HIDE_OPT_YN': request.form.get('hide_opt_yn', 'Y'),
-            'HIDE_DAYS_MAX': request.form.get('hide_days_max', 7)
+            'HIDE_DAYS_MAX': request.form.get('hide_days_max', 7),
+            'LOC': request.form.get('loc', 'CENTER')
         }
         
-        logging.info(f"🔍 API: Processed data TITL='{data['TITL']}', START_DT='{data['START_DT']}', END_DT='{data['END_DT']}'")
+        logging.info(f"🔍 API: Processed data TITL='{data['TITL']}', LOC='{data['LOC']}', START_DT='{data['START_DT']}', END_DT='{data['END_DT']}'")
         
         # Handle image file upload
         if 'image' in request.files:
@@ -355,7 +356,8 @@ def update_popup(popup_id):
             'HEIGHT': request.form.get('height'),
             'BG_COLR': request.form.get('bg_colr', '#FFFFFF'),
             'HIDE_OPT_YN': request.form.get('hide_opt_yn', 'Y'),
-            'HIDE_DAYS_MAX': request.form.get('hide_days_max', 7)
+            'HIDE_DAYS_MAX': request.form.get('hide_days_max', 7),
+            'LOC': request.form.get('loc', 'CENTER')
         }
         
         # Handle image file upload

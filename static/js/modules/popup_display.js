@@ -9,8 +9,8 @@ const PopupDisplay = (function() {
 
     // Configuration
     const CONFIG = {
-        MAX_POPUPS: 5,
-        Z_INDEX_BASE: 1000,  // Nav menu보다 낮게 (Nav는 1100+)
+        MAX_POPUPS: 11,
+        Z_INDEX_BASE: 1000,
         OFFSET_STEP: 20,
         STORAGE_KEY: 'hiddenPopups',
         MAX_WIDTH: 800,
@@ -19,15 +19,15 @@ const PopupDisplay = (function() {
 
     // 9 Positions configuration
     const POSITIONS = {
-        'TOP_LEFT': { top: '60px', left: '20px', transform: 'none' },
-        'TOP_CENTER': { top: '60px', left: '50%', transform: 'translateX(-50%)' },
-        'TOP_RIGHT': { top: '60px', right: '20px', transform: 'none' },
-        'CENTER_LEFT': { top: '50%', left: '20px', transform: 'translateY(-50%)' },
-        'CENTER': { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' },
-        'CENTER_RIGHT': { top: '50%', right: '20px', transform: 'translateY(-50%)' },
-        'BOTTOM_LEFT': { bottom: '20px', left: '20px', transform: 'none' },
-        'BOTTOM_CENTER': { bottom: '20px', left: '50%', transform: 'translateX(-50%)' },
-        'BOTTOM_RIGHT': { bottom: '20px', right: '20px', transform: 'none' }
+        'TOP_LEFT': { top: '10%', left: '5%', transform: 'none' },
+        'TOP_CENTER': { top: '10%', left: '40%', transform: 'translateX(-50%)' },
+        'TOP_RIGHT': { top: '10%', left: '80%', transform: 'none' },
+        'CENTER_LEFT': { top: '40%', left: '5%', transform: 'translateY(-50%)' },
+        'CENTER': { top: '40%', left: '40%', transform: 'translate(-50%, -50%)' },
+        'CENTER_RIGHT': { top: '40%', left: '80%', transform: 'translateY(-50%)' },
+        'BOTTOM_LEFT': { bottom: '30%', left: '5%', transform: 'none' },
+        'BOTTOM_CENTER': { bottom: '30%', left: '40%', transform: 'translateX(-50%)' },
+        'BOTTOM_RIGHT': { bottom: '30%', left: '80%', transform: 'none' }
     };
 
     // Drag state
@@ -43,6 +43,7 @@ const PopupDisplay = (function() {
     // State
     let activePopups = [];
     let lastClickedPopupId = null;
+    let positionOffsetCounter = {};
 
     /**
      * Initialize popup display
@@ -122,6 +123,9 @@ const PopupDisplay = (function() {
      * Load and display active popups
      */
     async function loadAndDisplayPopups() {
+        // Reset position offset counter
+        positionOffsetCounter = {};
+        
         try {
             const response = await fetch('/api/popups/active');
             if (!response.ok) {
@@ -169,9 +173,20 @@ const PopupDisplay = (function() {
             dragState.startX = e.clientX;
             dragState.startY = e.clientY;
             
-            const rect = popupContent.getBoundingClientRect();
-            dragState.initialLeft = rect.left;
-            dragState.initialTop = rect.top;
+            // Get current computed position
+            const computedStyle = window.getComputedStyle(popupContent);
+            const currentLeft = parseInt(computedStyle.left) || 0;
+            const currentTop = parseInt(computedStyle.top) || 0;
+            
+            dragState.initialLeft = currentLeft;
+            dragState.initialTop = currentTop;
+            
+            // Clear transform and set explicit position
+            popupContent.style.transform = 'none';
+            popupContent.style.left = currentLeft + 'px';
+            popupContent.style.top = currentTop + 'px';
+            popupContent.style.right = 'auto';
+            popupContent.style.bottom = 'auto';
             
             titleBar.style.cursor = 'grabbing';
             e.preventDefault();
@@ -183,15 +198,15 @@ const PopupDisplay = (function() {
             const dx = e.clientX - dragState.startX;
             const dy = e.clientY - dragState.startY;
             
-            dragState.popup.style.left = (dragState.initialLeft + dx) + 'px';
-            dragState.popup.style.top = (dragState.initialTop + dy) + 'px';
-            dragState.popup.style.transform = 'none';
-            dragState.popup.style.right = 'auto';
-            dragState.popup.style.bottom = 'auto';
+            const newLeft = dragState.initialLeft + dx;
+            const newTop = dragState.initialTop + dy;
+            
+            dragState.popup.style.left = newLeft + 'px';
+            dragState.popup.style.top = newTop + 'px';
         });
 
         document.addEventListener('mouseup', () => {
-            if (dragState.isDragging && dragState.popup) {
+            if (dragState.isDragging) {
                 titleBar.style.cursor = 'grab';
                 dragState.isDragging = false;
                 dragState.popup = null;
@@ -200,45 +215,85 @@ const PopupDisplay = (function() {
     }
 
     /**
+     * Get initial position in pixels for a position config
+     */
+    function getInitialPosition(position, positionKey) {
+        const offset = (positionOffsetCounter[positionKey] || 0) * CONFIG.OFFSET_STEP;
+        let left = 20;
+        let top = 60;
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        
+        // Parse left value
+        if (position.left !== undefined) {
+            if (position.left.endsWith('%')) {
+                left = (viewportWidth * parseFloat(position.left) / 100) + offset;
+            } else if (position.left === '50%') {
+                left = (viewportWidth / 2) + offset;
+            } else {
+                left = parseInt(position.left) + offset;
+            }
+        }
+        
+        // Parse right value
+        if (position.right !== undefined) {
+            if (position.right.endsWith('%')) {
+                left = (viewportWidth * (100 - parseFloat(position.right)) / 100) + offset;
+            } else {
+                left = viewportWidth - parseInt(position.right) - offset;
+            }
+        }
+        
+        // Parse top value
+        if (position.top !== undefined) {
+            if (position.top.endsWith('%')) {
+                top = (viewportHeight * parseFloat(position.top) / 100);
+            } else if (position.top === '50%') {
+                top = (viewportHeight / 2);
+            } else {
+                top = parseInt(position.top);
+            }
+        }
+        
+        // Parse bottom value
+        if (position.bottom !== undefined) {
+            if (position.bottom.endsWith('%')) {
+                top = (viewportHeight * (100 - parseFloat(position.bottom)) / 100);
+            } else {
+                top = viewportHeight - parseInt(position.bottom);
+            }
+        }
+        
+        return { left, top };
+    }
+
+    /**
      * Create popup DOM element
      */
     function createPopupElement(popup, index) {
         const zIndex = CONFIG.Z_INDEX_BASE + index;
-        const offset = index * CONFIG.OFFSET_STEP;
         popup.zIndex = zIndex;
 
         // Get position from popup.loc or default to CENTER
         const positionKey = (popup.loc && POSITIONS[popup.loc]) ? popup.loc : 'CENTER';
         const position = POSITIONS[positionKey];
 
-        // Create modal overlay
-        const modal = document.createElement('div');
-        modal.className = 'popup-display-modal';
-        modal.id = 'popup-' + popup.popup_id;
-        modal.setAttribute('data-popup-id', popup.popup_id);
-        modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:' + zIndex + ';display:flex;justify-content:center;align-items:center;pointer-events:none;';
-
         // Calculate dimensions with max size limit
         const width = Math.min(popup.width || 500, CONFIG.MAX_WIDTH);
         const height = popup.height ? Math.min(popup.height, CONFIG.MAX_HEIGHT) : null;
 
-        // Build position styles from the POSITIONS config
-        let positionStyles = 'position:fixed;';
-        if (position.top !== undefined) positionStyles += 'top:' + position.top + ';';
-        if (position.bottom !== undefined) positionStyles += 'bottom:' + position.bottom + ';';
-        if (position.left !== undefined) positionStyles += 'left:' + position.left + ';';
-        if (position.right !== undefined) positionStyles += 'right:' + position.right + ';';
-        positionStyles += 'transform:' + position.transform + ';';
-        
-        // Add stacked offset for multiple popups
-        if (positionKey === 'CENTER') {
-            positionStyles += 'margin-left:' + offset + 'px;margin-top:' + offset + 'px;';
-        }
+        // Calculate initial pixel position based on viewport
+        const initialPos = getInitialPosition(position, positionKey);
 
-        // Create popup content
+        // Increment offset counter for this position
+        positionOffsetCounter[positionKey] = (positionOffsetCounter[positionKey] || 0) + 1;
+
+        // Create popup content directly (no modal overlay)
         const content = document.createElement('div');
-        content.className = 'popup-content';
-        content.style.cssText = positionStyles + 'width:' + width + 'px;' + (height ? 'height:' + height + 'px;' : 'max-height:80vh;') + 'max-width:' + CONFIG.MAX_WIDTH + 'px;max-height:' + CONFIG.MAX_HEIGHT + 'px;background:' + (popup.bg_colr || '#FFFFFF') + ';border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.3);pointer-events:auto;display:flex;flex-direction:column;overflow:hidden;';
+        content.className = 'popup-display-content';
+        content.id = 'popup-' + popup.popup_id;
+        content.setAttribute('data-popup-id', popup.popup_id);
+        content.style.cssText = 'position:fixed;left:' + initialPos.left + 'px;top:' + initialPos.top + 'px;width:' + width + 'px;' + (height ? 'height:' + height + 'px;' : 'max-height:80vh;') + 'max-width:' + CONFIG.MAX_WIDTH + 'px;max-height:' + CONFIG.MAX_HEIGHT + 'px;background:' + (popup.bg_colr || '#FFFFFF') + ';border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.3);display:flex;flex-direction:column;overflow:hidden;z-index:' + zIndex + ';transform:none;';
 
         // Title bar with X button
         if (popup.titl) {
@@ -352,22 +407,32 @@ const PopupDisplay = (function() {
         }
 
         content.appendChild(footer);
-        modal.appendChild(content);
 
-        // Add to document
-        document.body.appendChild(modal);
+        // Add to document.body directly (no modal)
+        document.body.appendChild(content);
 
         // Track clicked popup
-        content.addEventListener('click', (e) => {
+        content.addEventListener('mousedown', (e) => {
             lastClickedPopupId = popup.popup_id;
+            // Bring to front
+            bringToFront(popup.popup_id);
         });
+    }
 
-        // Close on backdrop click (without saving)
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                closePopup(popup.popup_id, false);
-            }
-        });
+    /**
+     * Bring popup to front
+     */
+    function bringToFront(popupId) {
+        const popup = document.getElementById('popup-' + popupId);
+        if (popup) {
+            // Find max z-index
+            let maxZ = CONFIG.Z_INDEX_BASE;
+            document.querySelectorAll('.popup-display-content').forEach(p => {
+                const z = parseInt(p.style.zIndex) || CONFIG.Z_INDEX_BASE;
+                if (z > maxZ) maxZ = z;
+            });
+            popup.style.zIndex = maxZ + 1;
+        }
     }
 
     /**
@@ -377,9 +442,9 @@ const PopupDisplay = (function() {
         days = days || 0;
         
         // Hide popup element
-        const modal = document.getElementById('popup-' + popupId);
-        if (modal) {
-            modal.remove();
+        const popup = document.getElementById('popup-' + popupId);
+        if (popup) {
+            popup.remove();
         }
 
         // Remove from active popups array
@@ -423,11 +488,12 @@ const PopupDisplay = (function() {
      */
     function refresh() {
         // Remove existing popups
-        document.querySelectorAll('.popup-display-modal').forEach(function(modal) {
-            modal.remove();
+        document.querySelectorAll('.popup-display-content').forEach(function(popup) {
+            popup.remove();
         });
         
         activePopups = [];
+        positionOffsetCounter = {};
         
         // Reload
         loadAndDisplayPopups();
