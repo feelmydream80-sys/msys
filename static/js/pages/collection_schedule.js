@@ -206,18 +206,26 @@ export function init() {
             const popup = document.getElementById('guide-popup');
             if (!popup) return;
 
+            console.log('[updateGuidePopup] this._statusCodes:', this._statusCodes);
+
             const statusList = this._statusCodes.map(code => {
-                const cd = code.cd || code.CD;
                 return {
-                    key: cd,
-                    label: code.nm || code.NM || cd,
-                    cd: cd,
-                    descr: code.descr || code.DESCR || '',
-                    icon_cd: code.icon_cd || code.ICON_CD,
-                    bg_colr: code.bg_colr || code.BG_COLR,
-                    txt_colr: code.txt_colr || code.TXT_COLR
+                    key: code.cd,
+                    label: code.nm,
+                    cd: code.cd,
+                    descr: code.descr || '',
+                    icon_cd: code.icon_cd,
+                    bg_colr: code.bg_colr,
+                    txt_colr: code.txt_colr
                 };
             });
+
+            console.log('[updateGuidePopup] statusList:', statusList);
+
+            const getStatusName = (cd) => {
+                const status = statusList.find(s => s.key === cd);
+                return status ? status.label : cd;
+            };
 
             const createLi = (status) => {
                 const iconHtml = this._generateIconHtml(status.icon_cd);
@@ -230,16 +238,102 @@ export function init() {
                         ${status.descr || ''}
                     </li>`;
             };
-            
+
             const individualItemsHtml = statusList.map(s => createLi(s)).join('');
-            
+
+            const s = this._settings;
+            const grpMinCnt = s.grpMinCnt || 0;
+            const prgsRtRedThrsval = s.prgsRtRedThrsval || 30;
+            const prgsRtOrgThrsval = s.prgsRtOrgThrsval || 100;
+            const succRtRedThrsval = s.succRtRedThrsval || 30;
+            const succRtOrgThrsval = s.succRtOrgThrsval || 100;
+            const grpColrCrtr = s.grpColrCrtr || 'prgr';
+            const memoBgColr = memoColors.bgColr || '#708090';
+
+            const isProgress = grpColrCrtr === 'prgr';
+            const criteriaLabel = isProgress ? '진행률' : '성공률';
+            const criteriaFormula = isProgress
+                ? '완료항목 / 전체항목 × 100%'
+                : '성공항목 / 완료항목 × 100%';
+            const criteriaNote = isProgress
+                ? '※ 진행률 = (완료항목 / 전체항목) × 100%'
+                : '※ 성공률 = (성공항목 / 완료항목) × 100%';
+            const orgThreshold = isProgress ? prgsRtOrgThrsval : succRtOrgThrsval;
+            const redThreshold = isProgress ? prgsRtRedThrsval : succRtRedThrsval;
+
+            const normalStatus = getStatusName('CD901');
+            const warnStatus = getStatusName('CD902');
+            const scheduledStatus = getStatusName('CD907');
+
+            const cd901Status = statusList.find(s => s.cd === 'CD901');
+            const cd902Status = statusList.find(s => s.cd === 'CD902');
+            const cd907Status = statusList.find(s => s.cd === 'CD907');
+
+            const createStatusBadge = (status, showNm = false) => {
+                if (!status) return '';
+                const bgColor = status.bg_colr || '#808080';
+                const textColor = status.txt_colr || '#ffffff';
+                const icon = status.icon_cd || '';
+                const nm = showNm ? ` ${status.label || ''}` : '';
+                return `<span class="job-pill mr-2" style="background-color:${bgColor}; color:${textColor}; font-size: 0.65rem; padding: 2px 6px;">${icon}${nm}</span>`;
+            };
+
+            const createGroupBadge = (status, opacity = 1) => {
+                if (!status) return '';
+                const bgColor = status.bg_colr || '#808080';
+                const textColor = status.txt_colr || '#ffffff';
+                const nm = status.label || '';
+                return `<span class="job-pill mr-2" style="background-color:${bgColor}; color:${textColor}; opacity:${opacity}; font-size: 0.65rem; padding: 2px 6px;">${nm}</span>`;
+            };
+
             const groupItemsHtml = `
-                <li class="flex items-center"><span class="job-pill status-CD901 mr-2">정상 (녹색)</span> '경고' 임계값 이상</li>
-                <li class="flex items-center"><span class="job-pill status-CD902 mr-2">문제점 (붉은색)</span> '문제점' 임계값 미만</li>
+                <li class="mb-2 text-xs text-gray-600">
+                    <span class="font-semibold text-gray-700">[그룹 생성]</span><br>
+                    • 수집 항목이 ${grpMinCnt}개 이상일 때 그룹으로 표시<br>
+                    • 상위 그룹(CD100) / 하위 그룹(CD101, CD102...)
+                </li>
+                <li class="mb-2 text-xs text-gray-600">
+                    <span class="font-semibold text-gray-700">[색상 기준: ${criteriaLabel}]</span><br>
+                    <span class="text-gray-500">${criteriaFormula}</span>
+                </li>
+                <li class="mb-3 text-xs text-gray-500 border-b border-gray-200 pb-2">
+                    ${criteriaNote}
+                </li>
+                <li class="flex items-center">
+                    ${createGroupBadge(cd901Status)}
+                    <span>→ ${orgThreshold}% 이상</span>
+                </li>
+                <li class="flex items-center">
+                    ${createGroupBadge(cd902Status)}
+                    <span>→ ${redThreshold}% 이상 ~ ${orgThreshold}% 미만</span>
+                </li>
+                <li class="flex items-center">
+                    ${createGroupBadge(cd902Status, 0.5)}
+                    <span>→ ${redThreshold}% 미만</span>
+                </li>
+                <li class="flex items-center">
+                    ${createGroupBadge(cd907Status)}
+                    <span>→ 예정 항목만 존재</span>
+                </li>
+                <li class="flex items-center mt-2 pt-2 border-t border-gray-200">
+                    <span class="job-pill mr-2" style="background-color:${memoBgColr}; color: #ffffff; font-size: 0.65rem; padding: 2px 6px;">메모</span>
+                    <span>메모 등록 시 그룹 배경색 변경</span>
+                </li>
             `;
 
-            popup.querySelector('#individual-status-guide').innerHTML = individualItemsHtml;
+            const detailItemsHtml = `
+                <li class="mb-2 text-xs text-gray-600">
+                    <span class="font-semibold text-gray-700">[상세 데이터란]</span><br>
+                    • 상위/하위 그룹 클릭 시 표시되는<br>
+                    &nbsp;&nbsp;개별 수집 항목의 상태입니다.
+                </li>
+                <div class="flex flex-wrap gap-1">
+                    ${statusList.slice(0, 8).map(status => createStatusBadge(status, true)).join('')}
+                </div>
+            `;
+
             popup.querySelector('#group-status-guide').innerHTML = groupItemsHtml;
+            popup.querySelector('#detail-status-guide').innerHTML = detailItemsHtml;
         },
 
         get(key) {
@@ -972,15 +1066,10 @@ export function init() {
                 return;
             }
 
-            // Update settings manager with the new settings from the API
-            if (data.display_settings) {
-                settingsManager.updateSettings(data.display_settings);
-            }
-
-            // Load memo colors from schedule settings
+            // Load memo colors from schedule settings (before updateSettings to ensure guide popup uses correct colors)
             try {
                 const schedRes = await scheduleSettingsApi.getSettings();
-                
+
                 if (schedRes && typeof schedRes === 'object' && Object.keys(schedRes).length > 0) {
                     const s = schedRes;
                     memoColors = {
@@ -992,9 +1081,22 @@ export function init() {
                 console.warn('[memo colors] 로드 실패:', e);
             }
 
-            if (data.status_codes) {
-                settingsManager.updateStatusCodes(data.status_codes);
-                settingsManager.applyToUI();
+            // Update settings manager with the new settings from the API
+            if (data.display_settings) {
+                settingsManager.updateSettings(data.display_settings);
+            }
+
+            // Fetch status codes from admin settings API
+            try {
+                const statusCodesRes = await fetch('/api/mngr_sett/status_codes');
+                if (statusCodesRes.ok) {
+                    const statusCodes = await statusCodesRes.json();
+                    settingsManager.updateStatusCodes(statusCodes);
+                    settingsManager.updateGuidePopup();
+                    settingsManager.applyToUI();
+                }
+            } catch (e) {
+                console.warn('[status codes] 로드 실패:', e);
             }
 
             cardTitle.textContent = viewType === 'weekly' ? '주간 수집 현황 히트맵' : '월간 수집 현황 히트맵';

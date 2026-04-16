@@ -33,11 +33,11 @@ class StsCdDAO:
                 ORDER BY s.ORD, s.CD
             """)
             
-            columns = [desc[0] for desc in cursor.description]
+            columns = [desc[0].lower() for desc in cursor.description]
             rows = cursor.fetchall()
-            
+
             result = [dict(zip(columns, row)) for row in rows]
-            
+
             return result
         except Exception as e:
             logging.error(f"StsCdDAO.get_all() error: {e}", exc_info=True)
@@ -58,8 +58,8 @@ class StsCdDAO:
             row = cursor.fetchone()
             if not row:
                 return None
-                
-            columns = [desc[0] for desc in cursor.description]
+
+            columns = [desc[0].lower() for desc in cursor.description]
             return dict(zip(columns, row))
         except Exception as e:
             logging.error(f"StsCdDAO.get_by_cd() error: {e}", exc_info=True)
