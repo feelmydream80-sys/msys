@@ -720,10 +720,11 @@ class ApiKeyMngrDao:
             total_count = cursor.fetchone()[0]
             
             select_query = f"""
-                SELECT 
+                SELECT
                     a.cd,
                     b.ITEM10 as api_key,
                     b.cd_nm,
+                    b.cd_cl,
                     a.api_ownr_email_addr,
                     a.due,
                     a.start_dt,
@@ -738,19 +739,20 @@ class ApiKeyMngrDao:
             self.logger.info(f"[API키관리-DAO] SQL 실행 (검색+페이징): search={search_query}, LIMIT {page_size} OFFSET {offset}")
             cursor.execute(select_query, query_params)
             rows = cursor.fetchall()
-            
+
             data = []
             for row in rows:
                 data.append({
                     'cd': row[0],
                     'api_key': row[1],
                     'cd_nm': row[2],
-                    'api_ownr_email_addr': row[3],
-                    'due': row[4],
-                    'start_dt': row[5],
-                    'use_yn': row[6]
+                    'cd_cl': row[3],
+                    'api_ownr_email_addr': row[4],
+                    'due': row[5],
+                    'start_dt': row[6],
+                    'use_yn': row[7]
                 })
-            
+
             self.logger.debug(f"Fetched {len(data)} records (page {page}, search: {search_query}) from TB_API_KEY_MNGR")
             return data, total_count
             

@@ -5,10 +5,14 @@ from datetime import date
 from service.mst_service import ConMstService
 from service.jandi_service import JandiService
 from msys.database import get_db_connection
+from routes.auth_routes import login_required
+from routes.admin_routes import log_menu_access
 
 bp = Blueprint('jandi', __name__, url_prefix='/')
 
 @bp.route('/jandi')
+@login_required
+@log_menu_access
 def jandi_page():
     """Jandi page."""
     user = session.get('user', {})

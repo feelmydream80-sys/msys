@@ -52,17 +52,21 @@ async function loadDashboardSummary(initialLoad = false) {
 
     try {
         const summaryData = await fetchDashboardSummary(startDate, endDate, allData);
+        console.log(`[PIPELINE-10] Data before sort: count=${summaryData.length}, job_ids=${summaryData.map(d => d.job_id).join(', ')}`);
+        
         // Job ID 숫자 값 기준 오름차순 정렬 적용
         summaryData.sort((a, b) => {
             const numA = parseInt(a.job_id.replace('CD', ''), 10);
             const numB = parseInt(b.job_id.replace('CD', ''), 10);
             return numA - numB;
         });
+        console.log(`[PIPELINE-11] Data after sort: count=${summaryData.length}, job_ids=${summaryData.map(d => d.job_id).join(', ')}`);
+        
         setDashboardSummaryData(summaryData); // 전체 데이터 저장
         dataFlowStatus.dashboardSummaryFetch.apiResponseCount = summaryData.length;
 
         if (!summaryData || summaryData.length === 0) {
-            console.warn("No dashboard summary data to render.");
+            console.warn("[PIPELINE-EMPTY] No dashboard summary data to render. summaryData is empty or null.");
             showMessage('대시보드 요약 데이터가 없습니다.', 'info');
             updateSummaryCards([]);
             renderDashboardChartText([]);
@@ -75,7 +79,9 @@ async function loadDashboardSummary(initialLoad = false) {
         }
 
         // Backend now provides settings merged, so no need for client-side merging.
+        console.log(`[PIPELINE-12] Before updateSummaryCards: count=${summaryData.length}`);
         updateSummaryCards(summaryData);
+        console.log(`[PIPELINE-13] Before table render: count=${summaryData.length}, isPaginationInitialized=${isPaginationInitialized}`);
         // renderDashboardChartText(summaryData);
 
         if (isPaginationInitialized) {
@@ -83,6 +89,7 @@ async function loadDashboardSummary(initialLoad = false) {
         } else {
             initPaginationWithData(summaryData);
         }
+        console.log(`[PIPELINE-14] Table render complete: count=${summaryData.length}`);
 
         dataFlowStatus.dashboardSummaryFetch.dataProcessedCount = summaryData.length;
         dataFlowStatus.dashboardSummaryFetch.apiCallSuccess = true;

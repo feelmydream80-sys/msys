@@ -16,16 +16,16 @@ class ConMstDAO:
         try:
             with self.conn.cursor() as cur:
                 query = load_sql('mst/get_all_mst.sql')
-                logging.info("tb_con_mst SQL 쿼리 실행: %s", query)
+                # logging.info("tb_con_mst SQL 쿼리 실행: %s", query)
                 cur.execute(query)
                 columns = [desc[0].lower() for desc in cur.description]
-                logging.info("tb_con_mst SQL 컬럼명: %s", columns)
+                # logging.info("tb_con_mst SQL 컬럼명: %s", columns)
                 results = cur.fetchall()
-                logging.info("tb_con_mst SQL 결과 개수: %d", len(results))
+                # logging.info("tb_con_mst SQL 결과 개수: %d", len(results))
                 
                 # 처음 3개 결과 로그
-                for i, row in enumerate(results[:3]):
-                    logging.info("tb_con_mst SQL 결과 %d: %s", i+1, dict(zip(columns, row)))
+                # for i, row in enumerate(results[:3]):
+                #     logging.info("tb_con_mst SQL 결과 %d: %s", i+1, dict(zip(columns, row)))
                 
                 data = [dict(zip(columns, row)) for row in results]
                 return convert_to_legacy_columns('TB_CON_MST', data)
@@ -41,16 +41,16 @@ class ConMstDAO:
         try:
             with self.conn.cursor() as cur:
                 query = load_sql('mst/get_all_mst_full.sql')
-                logging.info("tb_con_mst SQL 쿼리 실행: %s", query)
+                # logging.info("tb_con_mst SQL 쿼리 실행: %s", query)
                 cur.execute(query)
                 columns = [desc[0].lower() for desc in cur.description]
-                logging.info("tb_con_mst SQL 컬럼명: %s", columns)
+                # logging.info("tb_con_mst SQL 컬럼명: %s", columns)
                 results = cur.fetchall()
-                logging.info("tb_con_mst SQL 결과 개수: %d", len(results))
+                # logging.info("tb_con_mst SQL 결과 개수: %d", len(results))
                 
                 # 처음 5개 결과 로그
-                for i, row in enumerate(results[:5]):
-                    logging.info("tb_con_mst SQL 결과 %d: %s", i+1, dict(zip(columns, row)))
+                # for i, row in enumerate(results[:5]):
+                #     logging.info("tb_con_mst SQL 결과 %d: %s", i+1, dict(zip(columns, row)))
                 
                 data = [dict(zip(columns, row)) for row in results]
                 return convert_to_legacy_columns('TB_CON_MST', data)

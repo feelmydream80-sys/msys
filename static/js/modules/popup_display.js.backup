@@ -1,0 +1,426 @@
+/**
+ * Popup Display Module
+ * Handles displaying active popups on user pages
+ * Features: Multiple popups (max 5), 1-7 days hide option
+ */
+
+const PopupDisplay = (function() {
+    'use strict';
+
+    // Configuration
+    const CONFIG = {
+        MAX_POPUPS: 5,
+        Z_INDEX_BASE: 1000,  // Nav menu보다 낮게 (Nav는 1100+)
+        OFFSET_STEP: 20,
+        STORAGE_KEY: 'hiddenPopups',
+        MAX_WIDTH: 800,
+        MAX_HEIGHT: 600
+    };
+
+    // 9 Positions configuration
+    const POSITIONS = {
+        'TOP_LEFT': { top: '60px', left: '20px', transform: 'none' },
+        'TOP_CENTER': { top: '60px', left: '50%', transform: 'translateX(-50%)' },
+        'TOP_RIGHT': { top: '60px', right: '20px', transform: 'none' },
+        'CENTER_LEFT': { top: '50%', left: '20px', transform: 'translateY(-50%)' },
+        'CENTER': { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' },
+        'CENTER_RIGHT': { top: '50%', right: '20px', transform: 'translateY(-50%)' },
+        'BOTTOM_LEFT': { bottom: '20px', left: '20px', transform: 'none' },
+        'BOTTOM_CENTER': { bottom: '20px', left: '50%', transform: 'translateX(-50%)' },
+        'BOTTOM_RIGHT': { bottom: '20px', right: '20px', transform: 'none' }
+    };
+
+    // Drag state
+    let dragState = {
+        isDragging: false,
+        popup: null,
+        startX: 0,
+        startY: 0
+    };
+
+    // State
+    let activePopups = [];
+
+    /**
+     * Initialize popup display
+     */
+    function init() {
+        // Clean up expired hidden popups
+        cleanupHiddenPopups();
+        
+        // Load and display popups
+        loadAndDisplayPopups();
+        
+        // Setup ESC key listener
+        setupEscListener();
+    }
+    
+    /**
+     * Setup ESC key listener to close topmost popup
+     */
+    function setupEscListener() {
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && activePopups.length > 0) {
+                // Find the popup with highest z-index
+                const topPopup = activePopups.reduce((prev, current) => {
+                    return (prev.zIndex > current.zIndex) ? prev : current;
+                });
+                closePopup(topPopup.popup_id, false);
+            }
+        });
+    }
+
+    /**
+     * Clean up expired hidden popups from localStorage
+     */
+    function cleanupHiddenPopups() {
+        const hiddenPopups = getHiddenPopups();
+        const now = new Date();
+        let hasChanges = false;
+
+        Object.keys(hiddenPopups).forEach(id => {
+            if (new Date(hiddenPopups[id]) < now) {
+                delete hiddenPopups[id];
+                hasChanges = true;
+            }
+        });
+
+        if (hasChanges) {
+            saveHiddenPopups(hiddenPopups);
+        }
+    }
+
+    /**
+     * Get hidden popups from localStorage
+     */
+    function getHiddenPopups() {
+        try {
+            const stored = localStorage.getItem(CONFIG.STORAGE_KEY);
+            return stored ? JSON.parse(stored) : {};
+        } catch (e) {
+            console.error('Error reading hidden popups:', e);
+            return {};
+        }
+    }
+
+    /**
+     * Save hidden popups to localStorage
+     */
+    function saveHiddenPopups(hiddenPopups) {
+        try {
+            localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(hiddenPopups));
+        } catch (e) {
+            console.error('Error saving hidden popups:', e);
+        }
+    }
+
+    /**
+     * Load and display active popups
+     */
+    async function loadAndDisplayPopups() {
+        try {
+            const response = await fetch('/api/popups/active');
+            if (!response.ok) {
+                throw new Error('Failed to load popups');
+            }
+
+            const popups = await response.json();
+            
+            if (!Array.isArray(popups) || popups.length === 0) {
+                return; // No active popups
+            }
+
+            // Filter out hidden popups
+            const hiddenPopups = getHiddenPopups();
+            const now = new Date();
+
+            activePopups = popups
+                .filter(popup => {
+                    const hideUntil = hiddenPopups[popup.popup_id];
+                    return !hideUntil || new Date(hideUntil) < now;
+                })
+                .sort((a, b) => (a.disp_ord || 999) - (b.disp_ord || 999))
+                .slice(0, CONFIG.MAX_POPUPS);
+
+            // Display popups
+            activePopups.forEach((popup, index) => {
+                createPopupElement(popup, index);
+            });
+
+        } catch (error) {
+            console.error('Error loading popups:', error);
+        }
+    }
+
+    /**
+     * Create popup DOM element
+     */
+    function createPopupElement(popup, index) {
+        const zIndex = CONFIG.Z_INDEX_BASE + index;
+        const offset = index * CONFIG.OFFSET_STEP;
+
+        // Create modal overlay
+        const modal = document.createElement('div');
+        modal.className = 'popup-display-modal';
+        modal.id = `popup-${popup.popup_id}`;
+        modal.setAttribute('data-popup-id', popup.popup_id);
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: ${zIndex};
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none;
+        `;
+
+        // Create popup content with max size limit
+        const maxWidth = 800;
+        const maxHeight = 600;
+        const width = Math.min(popup.width || 500, maxWidth);
+        const height = popup.height ? Math.min(popup.height, maxHeight) : null;
+        
+        const content = document.createElement('div');
+        content.className = 'popup-content';
+        content.style.cssText = `
+            position: relative;
+            width: ${width}px;
+            ${height ? `height: ${height}px;` : 'max-height: 80vh;'}
+            max-width: ${maxWidth}px;
+            max-height: ${maxHeight}px;
+            background: ${popup.bg_colr || '#FFFFFF'};
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            transform: translate(${offset}px, ${offset}px);
+            pointer-events: auto;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        `;
+
+
+
+        // Title
+        if (popup.titl) {
+            const title = document.createElement('h3');
+            title.textContent = popup.titl;
+            title.style.cssText = `
+                margin: 0;
+                padding: 15px 20px;
+                border-bottom: 1px solid #eee;
+                font-size: 18px;
+                font-weight: 600;
+            `;
+            content.appendChild(title);
+        }
+
+        // Content area (scrollable)
+        const body = document.createElement('div');
+        body.style.cssText = `
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        `;
+
+        // Image
+        if (popup.img_path) {
+            const imgContainer = document.createElement('div');
+            imgContainer.style.cssText = 'margin-bottom: 15px; text-align: center;';
+            
+            const img = document.createElement('img');
+            img.src = popup.img_path;
+            img.style.cssText = `
+                max-width: 100%;
+                height: auto;
+                border-radius: 4px;
+                cursor: ${popup.lnk_url ? 'pointer' : 'default'};
+            `;
+            
+            if (popup.lnk_url) {
+                img.onclick = () => window.open(popup.lnk_url, '_blank');
+                img.title = '클릭하여 이동';
+            }
+            
+            imgContainer.appendChild(img);
+            body.appendChild(imgContainer);
+        }
+
+        // Text content
+        if (popup.cont) {
+            const text = document.createElement('div');
+            text.innerHTML = popup.cont;
+            text.style.cssText = `
+                white-space: pre-wrap;
+                line-height: 1.6;
+            `;
+            body.appendChild(text);
+        }
+
+        content.appendChild(body);
+
+        // Footer with hide options
+        const footer = document.createElement('div');
+        footer.style.cssText = `
+            padding: 15px 20px;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.02);
+        `;
+
+        // Hide options with Apply button
+        if (popup.hide_opt_yn === 'Y') {
+            const hideContainer = document.createElement('div');
+            hideContainer.style.cssText = 'display: flex; align-items: center; gap: 10px;';
+
+            const label = document.createElement('label');
+            label.textContent = '보지 않기:';
+            label.style.fontSize = '14px';
+            hideContainer.appendChild(label);
+
+            const select = document.createElement('select');
+            select.id = `hide-days-${popup.popup_id}`;
+            select.style.cssText = `
+                padding: 5px 10px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                font-size: 14px;
+            `;
+
+            const maxDays = Math.min(popup.hide_days_max || 7, 7);
+            for (let i = 1; i <= maxDays; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = `${i}일`;
+                if (i === 1) option.selected = true;
+                select.appendChild(option);
+            }
+
+            hideContainer.appendChild(select);
+            
+            // Apply button
+            const applyButton = document.createElement('button');
+            applyButton.textContent = '적용';
+            applyButton.style.cssText = `
+                padding: 5px 15px;
+                background: #28a745;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 14px;
+                margin-left: 5px;
+            `;
+            applyButton.onclick = () => {
+                const hideDays = parseInt(document.getElementById(`hide-days-${popup.popup_id}`).value);
+                closePopup(popup.popup_id, true, hideDays);
+            };
+            hideContainer.appendChild(applyButton);
+            
+            footer.appendChild(hideContainer);
+        }
+
+        content.appendChild(footer);
+        modal.appendChild(content);
+
+        // Add to document
+        document.body.appendChild(modal);
+
+        // Close on backdrop click (without saving)
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closePopup(popup.popup_id, false);
+            }
+        });
+
+        // Close on ESC key (without saving)
+        const escListener = (e) => {
+            if (e.key === 'Escape') {
+                closePopup(popup.popup_id, false);
+                document.removeEventListener('keydown', escListener);
+            }
+        };
+        document.addEventListener('keydown', escListener);
+    }
+
+    /**
+     * Close popup
+     */
+    function closePopup(popupId, shouldHide = false, days = 0) {
+        // Hide popup element
+        const modal = document.getElementById(`popup-${popupId}`);
+        if (modal) {
+            modal.remove();
+        }
+
+        // Save hide preference
+        if (shouldHide && days > 0) {
+            hidePopup(popupId, days);
+        }
+    }
+
+    /**
+     * Hide popup for specified days
+     */
+    function hidePopup(popupId, days) {
+        const hiddenPopups = getHiddenPopups();
+        const hideUntil = new Date();
+        hideUntil.setDate(hideUntil.getDate() + days);
+        hideUntil.setHours(23, 59, 59, 999); // End of the day
+
+        hiddenPopups[popupId] = hideUntil.toISOString();
+        saveHiddenPopups(hiddenPopups);
+
+        console.log(`Popup ${popupId} hidden until ${hideUntil}`);
+    }
+
+    /**
+     * Check if popup should be shown
+     */
+    function shouldShowPopup(popupId) {
+        const hiddenPopups = getHiddenPopups();
+        const hideUntil = hiddenPopups[popupId];
+        
+        if (!hideUntil) return true;
+        
+        return new Date() > new Date(hideUntil);
+    }
+
+    /**
+     * Refresh popups (reload from server)
+     */
+    function refresh() {
+        // Remove existing popups
+        document.querySelectorAll('.popup-display-modal').forEach(modal => {
+            modal.remove();
+        });
+        
+        // Reload
+        loadAndDisplayPopups();
+    }
+
+    // Public API
+    return {
+        init: init,
+        refresh: refresh,
+        closePopup: closePopup,
+        shouldShowPopup: shouldShowPopup
+    };
+})();
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if user is logged in (not on login page)
+    const isLoginPage = window.location.pathname === '/login';
+    if (!isLoginPage) {
+        PopupDisplay.init();
+    }
+});
+
+// Expose to global scope for debugging
+window.PopupDisplay = PopupDisplay;

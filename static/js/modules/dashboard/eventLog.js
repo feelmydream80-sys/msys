@@ -3,20 +3,31 @@
 
 import { showMessage, formatNumberWithCommas } from '../common/utils.js';
 import { initPagination } from '../ui_components/pagination.js';
-import { formatDate, setDefaultDates } from '../common/dateUtils.js';
+import { formatDate, setDefaultDates, getKSTNow } from '../common/dateUtils.js';
 import { displayMinMaxDates } from './ui.js';
 
 // @AI_MOD: 전역 이벤트 로그 배열을 let -> const로 변경하고, toast와 공유
 const eventLog = [];
 let allEventLogData = [];
-let eventLogStartDate = formatDate(new Date());
-let eventLogEndDate = formatDate(new Date());
+let eventLogStartDate = formatDate(getKSTNow());
+let eventLogEndDate = formatDate(getKSTNow());
 let allAdminSettings = [];
 
 function formatDurationHr(start, end) {
     if (!start || !end) return '';
-    const startDate = new Date(start);
-    const endDate = new Date(end);
+    // KST 시간 문자열(YYYY-MM-DD HH:mm:ss)을 안전하게 파싱
+    const parseKSTDateTime = (dateTimeStr) => {
+        const parts = dateTimeStr.match(/(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2})/);
+        if (!parts) return null;
+        // KST 기준으로 Date 객체 생성 (월은 0-based)
+        return new Date(parseInt(parts[1]), parseInt(parts[2]) - 1, parseInt(parts[3]),
+                       parseInt(parts[4]), parseInt(parts[5]), parseInt(parts[6]));
+    };
+    
+    const startDate = parseKSTDateTime(start);
+    const endDate = parseKSTDateTime(end);
+    if (!startDate || !endDate) return '';
+    
     const diffMs = endDate - startDate;
     if (isNaN(diffMs) || diffMs < 0) return '';
     const hours = diffMs / (1000 * 60 * 60);
@@ -281,7 +292,7 @@ export function initEventLog(settings) {
     // setDefaultDates를 사용하여 날짜 초기화
     // eventLog는 다른 페이지와 달리 end_date가 오늘, start_date도 오늘로 시작해야 함
     if (startInput && endInput) {
-        const today = new Date();
+        const today = getKSTNow();
         const todayStr = formatDate(today);
         
         startInput.value = todayStr;

@@ -16,10 +16,10 @@ class DashboardMapper:
         self.conn = conn
 
     def get_summary(self, start_date: Optional[str] = None, end_date: Optional[str] = None, all_data: bool = False, job_ids: Optional[List[str]] = None) -> List[Dict]:
-        logging.debug(f"--- [DEBUG] DashboardMapper.get_summary called with job_ids: {job_ids}")
+        # logging.debug(f"--- [DEBUG] DashboardMapper.get_summary called with job_ids: {job_ids}")
         query, params = DashboardSQL.get_dashboard_summary(start_date, end_date, all_data, job_ids)
-        logging.debug(f"--- [DEBUG] Generated SQL Query:\n{query}")
-        logging.debug(f"--- [DEBUG] Query Parameters: {params}")
+        # logging.debug(f"--- [DEBUG] Generated SQL Query:\n{query}")
+        # logging.debug(f"--- [DEBUG] Query Parameters: {params}")
         with self.conn.cursor() as cur:
             cur.execute(query, params)
             columns = [desc[0] for desc in cur.description]

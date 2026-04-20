@@ -1,1 +1,0 @@
-        expect(loaded.find(s = === 'JOB1').chrt_colr).toBe('#FF0000');

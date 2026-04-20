@@ -180,7 +180,7 @@ export function init() {
             const defaultColors = {
                 'CD901': { bg: '#dcfce7', txt: '#166534' },
                 'CD902': { bg: '#fee2e2', txt: '#991b1b' },
-                'CD907': { bg: '#f3f4f6', txt: '#6b7280' },
+                'CD907': { bg: '#e5e7eb', txt: '#6b7280' },
                 'CD908': { bg: '#e5e7eb', txt: '#374151' }
             };
 

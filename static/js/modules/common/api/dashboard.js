@@ -63,6 +63,8 @@ export async function fetchDashboardSummary(startDate, endDate, allData) {
             throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
         }
         const data = await response.json();
+        console.log(`[PIPELINE-9] Frontend received data count: ${data.length}`);
+        console.log(`[PIPELINE-9.1] Frontend received job_ids: ${data.map(item => item.job_id).join(', ')}`);
         showMessage('대시보드 요약 데이터 로드 성공.', 'success');
         updateApiStatus(apiName, "apiCallSuccess", true);
         updateApiStatus(apiName, "apiResponseCount", data.length);

@@ -573,8 +573,10 @@ async function loadStatusCodes() {
             return options.join('');
         };
 
-        // 상태코드 카드 렌더링
-        container.innerHTML = statusCodes.map(code => `
+        // 상태코드 카드 렌더링 (코드 오름차순 정렬)
+        container.innerHTML = statusCodes
+            .sort((a, b) => a.cd.localeCompare(b.cd))
+            .map(code => `
             <div class="status-card">
                 <div class="status-card-title">${code.cd}(${code.nm})</div>
                 <div class="form-row">

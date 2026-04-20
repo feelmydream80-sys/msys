@@ -13,12 +13,14 @@ from service.user_service import UserService
 from service.password_service import PasswordService
 from utils.datetime_utils import convert_datetime_fields_to_kst_str
 from .auth_routes import login_required, check_password_change_required, admin_required
+from .admin_routes import log_menu_access
 
 mngr_sett_bp = Blueprint('mngr_sett', __name__)
 
 @mngr_sett_bp.route('/mngr_sett', methods=['GET'])
 @login_required
 @check_password_change_required
+@log_menu_access
 def mngr_sett_page():
     """관리자 설정 페이지를 렌더링합니다."""
     return render_template('mngr_sett.html')

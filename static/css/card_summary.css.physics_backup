@@ -1,0 +1,520 @@
+/* 카드 요약 페이지 특화 스타일 */
+
+/* 메인 컨테이너 - flex wrap으로 자연스러운 배치, 한 행 높이 동일 */
+#cardContainer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;  /* 한 행의 카드들 높이 동일 */
+    gap: 12px;
+    padding: 12px;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* 검색 컨테이너 */
+.search-container {
+    width: 100%;
+    max-width: 280px;
+    margin-right: 24px;
+}
+
+/* 라디오 버튼 컨테이너 - 줄바꿈 완전 방지 */
+#display-mode-selector {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 1rem;
+    min-width: fit-content;
+    flex-shrink: 0;
+}
+
+#display-mode-selector label {
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.search-input {
+    width: 100%;
+    padding: 10px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    background-color: #f9fafb;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    background-color: white;
+}
+
+.search-input::placeholder {
+    color: #9ca3af;
+}
+
+/* 그룹 카드 스타일 - 납부 카드 크기에 맞춰 가변, 최대 너비는 카드 옵션 표시 카드와 동일 */
+.group-card {
+    flex: 1 1 auto;
+    width: fit-content;
+    min-width: 200px;
+    max-width: 1400px;  /* 카드 요약 표시 옵션 카드와 동일한 최대 너비 */
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    overflow: hidden;
+    transition: transform 0.2s;
+    display: flex;
+    flex-direction: column;
+}
+
+.group-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+
+/* 그룹 헤더 - 타이트하게 (배경색은 JS에서 동적 적용) */
+.group-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    transition: all 0.3s ease;
+    /* 기본값 */
+    background-color: rgba(107, 114, 128, 0.5);
+    color: #ffffff;
+}
+
+.group-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.group-summary {
+    font-size: 0.75rem;
+    font-weight: 500;
+    opacity: 0.85;
+    background: rgba(255,255,255,0.2);
+    padding: 2px 8px;
+    border-radius: 12px;
+}
+
+.group-total {
+    font-size: 0.95rem;
+    font-weight: 600;
+    opacity: 0.9;
+}
+
+/* 상태 카드 컨테이너 (가로 배열) - 무조건 한 줄, 높이 채우기 */
+.status-cards-container {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 10px;
+    padding: 12px;
+    overflow-x: visible;
+    overflow-y: visible;
+    flex: 1;
+    align-items: stretch;
+}
+
+/* 상태 카드 - 공 수량에 따라 유연하게 조절 */
+.status-card {
+    flex: 0 0 auto;
+    min-width: 80px;          /* 최소 크기 줄임 */
+    max-width: 220px;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    transition: transform 0.2s, box-shadow 0.2s, min-width 0.3s;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+/* 공 수량별 크기 클래스 */
+.status-card.ball-count-1 { min-width: 60px; }
+.status-card.ball-count-2 { min-width: 70px; }
+.status-card.ball-count-3 { min-width: 80px; }
+.status-card.ball-count-4 { min-width: 90px; }
+.status-card.ball-count-5 { min-width: 100px; }
+.status-card.ball-count-6 { min-width: 110px; }
+.status-card.ball-count-7 { min-width: 120px; }
+.status-card.ball-count-8 { min-width: 130px; }
+.status-card.ball-count-9 { min-width: 140px; }
+.status-card.ball-count-10 { min-width: 150px; }
+.status-card.ball-count-many { min-width: 160px; }
+
+.status-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 3px 10px rgba(0,0,0,0.12);
+}
+
+/* 상태 헤더 - 타이트하게 + 그라데이션 */
+.status-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 10px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+    background: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 100%);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);
+}
+
+.status-name {
+    font-size: 0.95rem;
+}
+
+.status-count {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+/* Job 목록 - 물리 시뮬레이션 컨테이너 */
+.status-jobs {
+    padding: 0;
+    min-height: 120px;
+    background-color: #ffffff;
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+}
+
+.status-jobs.physics-container {
+    border-top: 1px solid rgba(0,0,0,0.06);
+}
+
+/* 물리 공 스타일 */
+.physics-ball {
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2), inset 0 -2px 3px rgba(0,0,0,0.1);
+    transition: transform 0.15s, box-shadow 0.15s;
+    will-change: left, top;
+}
+
+.physics-ball:hover {
+    transform: scale(1.2) !important;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3), inset 0 -2px 3px rgba(0,0,0,0.1);
+    z-index: 100;
+}
+
+/* 공 툴팁 */
+.ball-tooltip {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-8px);
+    padding: 6px 12px;
+    background: rgba(0,0,0,0.9);
+    color: white;
+    font-size: 12px;
+    border-radius: 4px;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 1000;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+/* ===== 콩알(모래알) 스타일 - 컵에 부어 넣는 느낌 ===== */
+.job-pill {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15), inset 0 -2px 3px rgba(0,0,0,0.1);
+    transition: transform 0.15s, box-shadow 0.15s;
+    position: relative;
+    animation: pourIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    flex-shrink: 0;
+}
+
+.job-pill:hover {
+    transform: scale(1.25);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.25), inset 0 -2px 3px rgba(0,0,0,0.1);
+    z-index: 10;
+}
+
+/* ===== 와르르 쏟아지는 애니메이션 - 팅기는 공을 컵에 부어 넣는 느낌 ===== */
+@keyframes pourIn {
+    0% {
+        /* 공이 컵 위에서 떨어지기 시작 */
+        opacity: 0;
+        transform: translateY(-80px) translateX(var(--start-x, 0px)) scale(0.3) rotate(var(--start-r, 0deg));
+    }
+    20% {
+        /* 중력가속도로 빠르게 낙하 */
+        opacity: 1;
+        transform: translateY(-20px) translateX(calc(var(--start-x, 0px) * 0.7)) scale(1.1) rotate(calc(var(--start-r, 0deg) * 0.6));
+    }
+    35% {
+        /* 바닥에 첫 충돌 - 튕겨 오름 (높이 15px) */
+        transform: translateY(0px) translateX(calc(var(--start-x, 0px) * 0.5)) scale(0.85, 1.15) rotate(calc(var(--start-r, 0deg) * 0.3));
+    }
+    45% {
+        /* 위로 튕겨 오름 */
+        transform: translateY(-15px) translateX(calc(var(--random-x, 0) * 20px)) scale(1.05) rotate(calc(var(--random-r, 0) * 45deg));
+    }
+    55% {
+        /* 다시 바닥으로 */
+        transform: translateY(0px) translateX(calc(var(--random-x, 0) * 25px)) scale(0.9, 1.1) rotate(calc(var(--random-r, 0) * 30deg));
+    }
+    65% {
+        /* 두 번째 튕김 (높이 8px) - 점점 줄어듦 */
+        transform: translateY(-8px) translateX(calc(var(--random-x, 0) * 30px)) scale(1.02) rotate(calc(var(--random-r, 0) * 20deg));
+    }
+    75% {
+        /* 다시 바닥으로 */
+        transform: translateY(0px) translateX(calc(var(--random-x, 0) * 32px)) scale(0.95, 1.05) rotate(calc(var(--random-r, 0) * 10deg));
+    }
+    85% {
+        /* 마지막 미세 튕김 (높이 3px) */
+        transform: translateY(-3px) translateX(calc(var(--random-x, 0) * 35px)) scale(1.01) rotate(calc(var(--random-r, 0) * 5deg));
+    }
+    100% {
+        /* 최종 정착 */
+        opacity: 1;
+        transform: translateY(0) translateX(var(--final-x, 0px)) scale(1) rotate(0deg);
+    }
+}
+
+/* 충돌 떨림 효과 - 콩알들이 서로 부딪히는 느낌 */
+@keyframes collisionShake {
+    0%, 100% { transform: translateX(0); }
+    10% { transform: translateX(-1px) rotate(-2deg); }
+    20% { transform: translateX(1px) rotate(2deg); }
+    30% { transform: translateX(-1px) rotate(-1deg); }
+    40% { transform: translateX(1px) rotate(1deg); }
+    50% { transform: translateX(0) rotate(0deg); }
+}
+
+/* ===== 툴팁 스타일 ===== */
+.job-pill::before {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-8px);
+    padding: 6px 12px;
+    background: rgba(0,0,0,0.85);
+    color: white;
+    font-size: 12px;
+    border-radius: 4px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s;
+    pointer-events: none;
+    z-index: 100;
+}
+
+/* 툴팁 꼬리 */
+.job-pill::after {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-2px);
+    border: 6px solid transparent;
+    border-top-color: rgba(0,0,0,0.85);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s;
+    pointer-events: none;
+}
+
+.job-pill:hover::before,
+.job-pill:hover::after {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* 가로 스크롤바 스타일링 - 작게 */
+.status-cards-container::-webkit-scrollbar {
+    height: 6px;
+}
+
+.status-cards-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.status-cards-container::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.status-cards-container::-webkit-scrollbar-thumb:hover {
+    background: #a1a1a1;
+}
+
+/* Job 목록 스크롤바 */
+.status-jobs::-webkit-scrollbar {
+    width: 4px;
+}
+
+.status-jobs::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.status-jobs::-webkit-scrollbar-thumb {
+    background: rgba(0,0,0,0.15);
+    border-radius: 2px;
+}
+
+/* 데이터 없음 메시지 */
+.no-data {
+    color: #6b7280;
+    font-style: italic;
+    text-align: center;
+    padding: 30px 20px;
+    font-size: 1rem;
+}
+
+/* 반응형 - flex 레이아웃 조정 */
+@media (max-width: 600px) {
+    #cardContainer {
+        padding: 8px;
+        gap: 8px;
+    }
+    
+    .group-card {
+        max-width: 100%;
+    }
+    
+    .group-header {
+        padding: 8px 12px;
+    }
+    
+    .group-title {
+        font-size: 1rem;
+    }
+    
+    .group-total {
+        font-size: 0.85rem;
+    }
+    
+    .status-cards-container {
+        padding: 8px;
+        gap: 8px;
+    }
+    
+    .status-card {
+        min-width: 140px;
+        max-width: 160px;
+    }
+    
+    .status-header {
+        padding: 6px 8px;
+    }
+    
+    .status-name {
+        font-size: 0.85rem;
+    }
+    
+    .status-jobs {
+        padding: 6px 8px;
+        max-height: 100px;
+    }
+    
+    .job-pill {
+        padding: 2px 6px;
+        font-size: 0.7rem;
+    }
+}
+
+/* 레거시 스타일 (호환성) */
+.card-grid-legacy {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: var(--space-1);
+    position: relative;
+    min-height: 100px;
+}
+
+.card {
+    background: white;
+    border-radius: 12px;
+    padding: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.card-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #1a3c6b;
+}
+
+.status-group {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.status-item {
+    flex: 1;
+    min-width: 80px;
+    text-align: center;
+    padding: 8px 4px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.status-success {
+    background: #e6f7ee;
+    color: #1e8a4a;
+}
+
+.status-progress {
+    background: #fff4e6;
+    color: #d97706;
+}
+
+.status-fail {
+    background: #fce8e8;
+    color: #c53030;
+}
+
+.job-list {
+    margin-top: 12px;
+    font-size: 0.85rem;
+    color: #4a5568;
+    max-height: 80px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.job-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.job-list::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 2px;
+}
+
+.no-data-old {
+    color: #a0aec0;
+    font-style: italic;
+    text-align: center;
+    padding: 20px;
+    grid-column: 1 / -1;
+}

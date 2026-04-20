@@ -42,9 +42,11 @@ def get_dashboard_summary():
 
             user = session.get('user')
             summary_data = dashboard_service.get_summary(start_date_str, end_date_str, all_data, user=user)
+            logging.info(f"[PIPELINE-7] API response data count before conversion: {len(summary_data)}")
 
             # Convert datetime objects to KST strings before jsonify
             convert_datetime_fields_to_kst_str(summary_data)
+            logging.info(f"[PIPELINE-8] API response data count after conversion: {len(summary_data)}")
             # None 값을 빈 문자열로 변환
             for item in summary_data:
                 for key, value in item.items():

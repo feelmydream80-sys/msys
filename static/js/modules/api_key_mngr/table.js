@@ -113,8 +113,9 @@ window.ApiKeyMngrUI.createSortableHeader = function(column, label, tableType) {
  */
 window.ApiKeyMngrUI.getFilteredApiKeyMngrData = function(data) {
     const q = document.getElementById('searchInput')?.value.toLowerCase() || '';
+    const groupFilter = document.getElementById('groupFilter')?.value || '';
     const today = new Date();
-    
+
     // 데이터 변환 (기간 차트와 동일한 로직)
     const keys = data.map(k => {
         const endDate = new Date(k.start_dt);
@@ -124,8 +125,8 @@ window.ApiKeyMngrUI.getFilteredApiKeyMngrData = function(data) {
         if (daysLeft <= 30 && daysLeft > 0) status = 'expiring-30';
         if (daysLeft <= 7 && daysLeft > 0) status = 'expiring-7';
         if (daysLeft <= 0) status = 'err';
-        
-        return { 
+
+        return {
             ...k,
             status: status,
             daysLeft: daysLeft
@@ -136,7 +137,8 @@ window.ApiKeyMngrUI.getFilteredApiKeyMngrData = function(data) {
     let filtered = keys.filter(k => {
         const matchQ = !q || k.cd.toLowerCase().includes(q) || (k.api_key && k.api_key.toLowerCase().includes(q));
         const matchS = window.ApiKeyMngrUI.currentFilter === 'all' || k.status === window.ApiKeyMngrUI.currentFilter;
-        return matchQ && matchS;
+        const matchG = !groupFilter || k.cd_cl === groupFilter;
+        return matchQ && matchS && matchG;
     });
 
     return filtered;
@@ -262,11 +264,14 @@ window.ApiKeyMngrUI.renderAbnormalApiKeyMngrTable = function() {
     
     // 비정상 상태의 API 키 관리 데이터 가져오기
     let abnormalData = ApiKeyMngrData.getAbnormalApiKeyMngrData();
-    
-    // 검색 적용 (필터는 적용하지 않음)
+
+    // 검색 및 그룹 필터링 적용
     const q = document.getElementById('searchInput')?.value.toLowerCase() || '';
+    const groupFilter = document.getElementById('abnormalGroupFilter')?.value || '';
     abnormalData = abnormalData.filter(item => {
-        return !q || item.cd.toLowerCase().includes(q) || (item.api_key && item.api_key.toLowerCase().includes(q));
+        const matchQ = !q || item.cd.toLowerCase().includes(q) || (item.api_key && item.api_key.toLowerCase().includes(q));
+        const matchG = !groupFilter || item.cd_cl === groupFilter;
+        return matchQ && matchG;
     });
     
     // 정렬 적용
@@ -501,7 +506,8 @@ window.ApiKeyMngrUI.handleSearchWithBackend = async function() {
             window.ApiKeyMngrUI.renderApiKeyMngrTable();
             window.ApiKeyMngrUI.renderAbnormalApiKeyMngrTable();
             window.ApiKeyMngrUI.renderApiKeyExpiryChart();
-            
+            window.ApiKeyMngrUI.setupGroupFilter(); // 검색 후 그룹 필터 갱신
+
             console.log(`검색 완료: "${searchQuery}" - ${result.data.length}건 (전체: ${result.pagination.total_count}건)`);
         } else {
             alert('검색에 실패했습니다.');

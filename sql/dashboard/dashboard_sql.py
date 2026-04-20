@@ -254,7 +254,7 @@ class DashboardSQL:
         query = f"""
             SELECT
                 h.job_id,
-                h.start_dt,
+                TO_CHAR(h.start_dt AT TIME ZONE 'Asia/Seoul', 'YYYY-MM-DD HH24:MI:SS') as start_dt,
                 h.status
             FROM
                 TB_CON_HIST h
@@ -279,7 +279,7 @@ class DashboardSQL:
                 h.job_id,
                 {kst_date_expr} as collection_date,
                 h.status,
-                h.start_dt
+                TO_CHAR(h.start_dt AT TIME ZONE 'Asia/Seoul', 'YYYY-MM-DD HH24:MI:SS') as start_dt
             FROM
                 TB_CON_HIST h
         """
@@ -310,12 +310,15 @@ class DashboardSQL:
             exclude_conditions = [f"status <> '{code}'" for code in success_codes]
             conditions.extend(exclude_conditions)
 
+        # KST 기준 날짜로 변환하여 비교 (다른 메서드들과 일관성 유지)
+        kst_date_expr = "(start_dt::timestamp AT TIME ZONE 'Asia/Seoul')::date"
+
         if not all_data:
             if start_date:
-                conditions.append("start_dt >= %s")
+                conditions.append(f"{kst_date_expr} >= %s")
                 params.append(start_date)
             if end_date:
-                conditions.append("start_dt <= %s")
+                conditions.append(f"{kst_date_expr} <= %s")
                 params.append(end_date)
 
         if job_ids:

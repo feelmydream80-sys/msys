@@ -521,9 +521,15 @@
                                 <button class="px-4 py-2 btn-filter-expiring-7 rounded-lg text-sm font-medium transition" onclick="ApiKeyMngrUI.filterByStatus('expiring-7')">만료 임박(7일) (<span id="expiring7Count">0</span>)</button>
                                 <button class="px-4 py-2 btn-filter-err rounded-lg text-sm font-medium transition" onclick="ApiKeyMngrUI.filterByStatus('err')">오버 (<span id="errCount">0</span>)</button>
                             </div>
-                            <input type="text" id="searchInput" placeholder="키 이름 또는 CD 검색..." oninput="ApiKeyMngrUI.handleSearch()" class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" style="width: 30%;">
+                            <div class="flex items-center gap-2">
+                                <label class="text-sm text-gray-600">그룹:</label>
+                                <select id="groupFilter" class="border border-gray-300 rounded-lg px-3 py-1 text-sm" onchange="ApiKeyMngrUI.handleGroupFilter()">
+                                    <option value="">전체 그룹</option>
+                                </select>
+                            </div>
+                            <input type="text" id="searchInput" placeholder="키 이름 또는 CD 검색..." oninput="ApiKeyMngrUI.handleSearch()" class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" style="width: 25%;">
                         </div>
-                        
+
                         <div class="bg-white rounded-3xl shadow overflow-x-auto mb-8">
                             <table class="w-full min-w-[1200px]" style="table-layout: fixed;">
                                 <colgroup>
@@ -571,7 +577,13 @@
                                     <option value="100">100개</option>
                                 </select>
                             </div>
-                            <input type="text" id="searchInput" placeholder="키 이름 또는 CD 검색..." oninput="ApiKeyMngrUI.handleSearch()" class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" style="width: 30%;">
+                            <div class="flex items-center gap-2">
+                                <label class="text-sm text-gray-600">그룹:</label>
+                                <select id="abnormalGroupFilter" class="border border-gray-300 rounded-lg px-3 py-1 text-sm" onchange="ApiKeyMngrUI.handleGroupFilter()">
+                                    <option value="">전체 그룹</option>
+                                </select>
+                            </div>
+                            <input type="text" id="searchInput" placeholder="키 이름 또는 CD 검색..." oninput="ApiKeyMngrUI.handleSearch()" class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" style="width: 25%;">
                         </div>
                         
                         <div class="bg-white rounded-3xl shadow overflow-x-auto mb-8">

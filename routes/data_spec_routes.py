@@ -5,31 +5,16 @@ from functools import wraps
 from service.data_spec_service import DataSpecService
 from msys.database import get_db_connection
 from dao.analytics_dao import AnalyticsDAO
-from routes.auth_routes import data_spec_required
+from routes.auth_routes import data_spec_required, login_required
+from routes.admin_routes import log_menu_access
 
 bp = Blueprint('data_spec', __name__, url_prefix='/')
-
-def log_menu_access(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        try:
-            user_id = session.get('user', {}).get('user_id')
-            if user_id:
-                menu_name = request.endpoint
-                
-                with get_db_connection() as conn:
-                    analytics_dao = AnalyticsDAO(conn)
-                    analytics_dao.insert_user_access_log(user_id, menu_name)
-        except Exception as e:
-            current_app.logger.error(f"Failed to log menu access for endpoint {request.endpoint}: {e}")
-        
-        return f(*args, **kwargs)
-    return decorated_function
 
 # =============================================
 # 데이터 명세서 (Data Specification)
 # =============================================
 @bp.route('/data_spec')
+@login_required
 @log_menu_access
 def data_spec_page():
     """데이터 명세서 페이지를 렌더링합니다."""

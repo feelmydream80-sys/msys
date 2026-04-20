@@ -2,6 +2,7 @@
 
 def init_app(app):
     from . import auth_routes
+    from . import admin_routes  # 순환 참조 방지: mngr_sett_routes보다 먼저 임포트
     from . import data_spec_routes
     from . import jandi_routes
     from . import mngr_sett_routes
@@ -15,7 +16,6 @@ def init_app(app):
     from .api.popup_routes import popup_api_bp
     from .ui import dashboard_routes, collection_schedule_routes, api_key_mngr_routes
     from . import mapping_routes
-    from . import admin_routes
     from . import card_summary_routes
     from . import data_report_routes
     from . import today_routes
