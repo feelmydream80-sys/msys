@@ -15,25 +15,42 @@
         </button>
     </div>
     <div class="bg-white rounded-lg shadow-md mb-6 p-6">
-        <div class="flex justify-between items-center">
-            <h3 class="text-xl font-semibold text-gray-700">카드 요약 표시 옵션</h3>
-            <div id="display-mode-selector" class="flex gap-4">
-                <label class="flex items-center gap-2 cursor-pointer text-sm">
-                    <input type="radio" name="displayMode" value="name" checked>
-                    명칭
-                </label>
-                <label class="flex items-center gap-2 cursor-pointer text-sm">
-                    <input type="radio" name="displayMode" value="code">
-                    코드
-                </label>
-                <label class="flex items-center gap-2 cursor-pointer text-sm">
-                    <input type="radio" name="displayMode" value="both">
-                    명칭+코드
-                </label>
+        <div class="flex items-center justify-between gap-4 flex-nowrap">
+            <div class="flex items-center gap-4 flex-nowrap">
+                <h3 class="text-xl font-semibold text-gray-700 whitespace-nowrap">카드 요약 표시 옵션</h3>
+                <!-- 표/콩 모드 전환 토글 (초기 숨김) -->
+                <div class="view-mode-toggle-container hidden" id="viewModeToggleContainer">
+                    <span class="toggle-label">표</span>
+                    <div class="toggle-switch" id="viewModeToggle"></div>
+                    <span class="toggle-label">콩</span>
+                </div>
+            </div>
+            <div class="flex items-center gap-4 flex-nowrap">
+                <div class="search-container">
+                    <input type="text" id="cardSearchInput" class="search-input" placeholder="검색어를 입력하세요...">
+                </div>
+                <div id="display-mode-selector" class="flex gap-4 flex-nowrap">
+                    <label class="flex items-center gap-2 cursor-pointer text-sm whitespace-nowrap">
+                        <input type="radio" name="displayMode" value="name" checked>
+                        명칭
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer text-sm whitespace-nowrap">
+                        <input type="radio" name="displayMode" value="code">
+                        코드
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer text-sm whitespace-nowrap">
+                        <input type="radio" name="displayMode" value="both">
+                        명칭+코드
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer text-sm whitespace-nowrap">
+                        <input type="radio" name="displayMode" value="desc">
+                        설명
+                    </label>
+                </div>
             </div>
         </div>
     </div>
-    <div class="grid-cards grid-cards-auto" id="cardContainer">
+    <div id="cardContainer">
         <!-- JS로 동적 생성 -->
     </div>
 </div>

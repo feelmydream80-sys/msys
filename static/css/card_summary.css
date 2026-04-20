@@ -1,4 +1,449 @@
-/* 카드 요약 페이지 특화 스타일 */
+/* 카드 요약 페이지 특화 스타일 - REQ-2604-009 */
+
+/* 메인 컨테이너 - flex wrap으로 자연스러운 배치, 한 행 높이 동일 */
+#cardContainer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 12px;
+    padding: 12px;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* 검색 컨테이너 - 라디오 버튼과 한 줄 배치 */
+.search-container {
+    display: inline-flex;
+    width: 100%;
+    max-width: 280px;
+    margin-right: 24px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 10px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    background-color: #f9fafb;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    background-color: white;
+}
+
+.search-input::placeholder {
+    color: #9ca3af;
+}
+
+/* 라디오 버튼 컨테이너 - 줄바꿈 완전 방지 */
+#display-mode-selector {
+    display: inline-flex;
+    flex-wrap: nowrap;
+    gap: 1rem;
+    min-width: fit-content;
+    flex-shrink: 0;
+}
+
+#display-mode-selector label {
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* 그룹 카드 스타일 - 각 그룹이 독립적으로 크기 결정, 높이만 같은 행에서 맞춤 */
+.group-card {
+    flex: 0 0 auto;
+    width: auto;
+    min-width: 200px;    /* 최소 너비 */
+    max-width: 100%;     /* 부모 컨테이너를 넘지 않도록 */
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    overflow: hidden;
+    transition: transform 0.2s;
+    display: flex;
+    flex-direction: column;
+}
+
+.group-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+
+/* 그룹 헤더 - 타이트하게 (배경색은 JS에서 동적 적용) */
+.group-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    transition: all 0.3s ease;
+    background-color: rgba(107, 114, 128, 0.5);
+    color: #ffffff;
+}
+
+.group-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.group-summary {
+    font-size: 0.75rem;
+    font-weight: 500;
+    opacity: 0.85;
+    background: rgba(255,255,255,0.2);
+    padding: 2px 8px;
+    border-radius: 12px;
+}
+
+.group-total {
+    font-size: 0.95rem;
+    font-weight: 600;
+    opacity: 0.9;
+}
+
+/* 상태 카드 컨테이너 (가로 배열) - 각 그룹 내에서만 크기 계산 */
+.status-cards-container {
+    display: flex;
+    flex-wrap: wrap;  /* 상태 카드가 많으면 다음 줄로 */
+    gap: 10px;
+    padding: 12px;
+    overflow-x: visible;
+    overflow-y: visible;
+    flex: 1;
+    align-items: flex-start;
+    width: auto;
+    min-width: min-content;
+}
+
+/* 상태 카드 - 각 그룹 내에서 독립적으로 크기 결정 */
+.status-card {
+    flex: 0 0 auto;
+    width: fit-content;  /* 내용물에 따라 독립적 너비 */
+    min-width: min-content;
+    max-width: 300px;    /* 최대 너비 제한 (예비) */
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+    height: auto;        /* 내용물에 따라 높이 자동 */
+    background-color: #ffffff !important; /* 낸부 카드 낸부는 하얀색 */
+}
+
+.status-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 3px 10px rgba(0,0,0,0.12);
+}
+
+/* 공 수량별 크기 클래스 - 내용물에 맞춰 자동 조절 */
+/* 모든 상태 카드는 내용물에 따라 독립적인 너비를 가짐 */
+.status-card.ball-count-1,
+.status-card.ball-count-2,
+.status-card.ball-count-3,
+.status-card.ball-count-4,
+.status-card.ball-count-5,
+.status-card.ball-count-6,
+.status-card.ball-count-7,
+.status-card.ball-count-8,
+.status-card.ball-count-9,
+.status-card.ball-count-10,
+.status-card.ball-count-many {
+    width: fit-content;
+    min-width: min-content;
+}
+
+/* 상태 헤더 - 타이트하게 + 동적 배경색 */
+.status-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 10px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.2);
+}
+
+.status-name {
+    font-size: 0.95rem;
+}
+
+.status-count {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+/* Job 목록 - 세로 배치, 최대 4개 표시 후 스크롤 */
+.status-jobs {
+    padding: 8px 10px;
+    max-height: 120px;  /* 약 4개 Job 표시 후 스크롤 */
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    gap: 5px;
+    background-color: #ffffff;
+    flex: 1;
+    align-items: flex-start;
+}
+
+/* Job pill - 작은 사이즈, 상태코드 색상 적용 */
+.job-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    white-space: nowrap;
+    transition: transform 0.15s;
+    cursor: pointer;
+}
+
+.job-pill:hover {
+    transform: scale(1.05);
+}
+
+/* 상태 카드 컨테이너는 더 이상 가로 스크롤을 사용하지 않음 (flex-wrap: wrap 사용) */
+
+/* Job 목록 스크롤바 */
+.status-jobs::-webkit-scrollbar {
+    width: 4px;
+}
+
+.status-jobs::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.status-jobs::-webkit-scrollbar-thumb {
+    background: rgba(0,0,0,0.15);
+    border-radius: 2px;
+}
+
+/* 데이터 없음 메시지 */
+.no-data {
+    color: #6b7280;
+    font-style: italic;
+    text-align: center;
+    padding: 30px 20px;
+    font-size: 1rem;
+}
+
+/* 반응형 - flex 레이아웃 조정 */
+@media (max-width: 600px) {
+    #cardContainer {
+        padding: 8px;
+        gap: 8px;
+    }
+    
+    .group-card {
+        max-width: 100%;
+        min-width: 150px;
+    }
+    
+    .group-header {
+        padding: 8px 12px;
+    }
+    
+    .group-title {
+        font-size: 1rem;
+    }
+    
+    .group-total {
+        font-size: 0.85rem;
+    }
+    
+    .status-cards-container {
+        padding: 8px;
+        gap: 8px;
+    }
+    
+    .status-card {
+        min-width: min-content;
+        max-width: none;
+        width: fit-content;
+    }
+    
+    .status-header {
+        padding: 6px 8px;
+    }
+    
+    .status-name {
+        font-size: 0.85rem;
+    }
+    
+    .status-jobs {
+        padding: 6px 8px;
+        max-height: 100px;  /* 모바일에서도 최대 4개 정도 */
+        flex-direction: column;
+        flex-wrap: nowrap;
+    }
+    
+    .job-pill {
+        padding: 2px 6px;
+        font-size: 0.7rem;
+    }
+}
+
+/* ============================================
+   표/콩 모드 전환 토글 스위치
+   ============================================ */
+.view-mode-toggle-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 16px;
+    padding-left: 16px;
+    border-left: 1px solid #e5e7eb;
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.view-mode-toggle-container.hidden {
+    display: none;
+    opacity: 0;
+    visibility: hidden;
+}
+
+.toggle-label {
+    font-size: 13px;
+    color: #666;
+    font-weight: 500;
+}
+
+.toggle-switch {
+    position: relative;
+    width: 50px;
+    height: 26px;
+    background: #ccc;
+    border-radius: 13px;
+    cursor: pointer;
+    transition: background 0.3s;
+    flex-shrink: 0;
+}
+
+.toggle-switch.active {
+    background: #52c41a;
+}
+
+.toggle-switch::after {
+    content: '';
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    background: white;
+    border-radius: 50%;
+    top: 2px;
+    left: 2px;
+    transition: transform 0.3s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.toggle-switch.active::after {
+    transform: translateX(24px);
+}
+
+/* ============================================
+   콩 모드 스타일
+   ============================================ */
+
+/* 상태 카드 - 공 수량별 크기 (콩 모드용) */
+.status-card.ball-count-1 { min-width: 60px; }
+.status-card.ball-count-2 { min-width: 70px; }
+.status-card.ball-count-3 { min-width: 80px; }
+.status-card.ball-count-4 { min-width: 90px; }
+.status-card.ball-count-5 { min-width: 100px; }
+.status-card.ball-count-6 { min-width: 110px; }
+.status-card.ball-count-7 { min-width: 120px; }
+.status-card.ball-count-8 { min-width: 130px; }
+.status-card.ball-count-9 { min-width: 140px; }
+.status-card.ball-count-10 { min-width: 150px; }
+.status-card.ball-count-many { min-width: 160px; }
+
+/* 일반 목록 모드 컨테이너 */
+.list-container {
+    padding: 8px 10px;
+    max-height: 120px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    gap: 5px;
+    background-color: #ffffff;
+    flex: 1;
+    align-items: flex-start;
+}
+
+/* 물리 애니메이션 모드 컨테이너 */
+.physics-container {
+    height: 120px;
+    min-width: 120px;  /* 표 모드와 동일한 최소 너비 */
+    background-color: #ffffff;
+    position: relative;
+    overflow: hidden;
+    border-top: 1px solid rgba(0,0,0,0.06);
+}
+
+.physics-ball {
+    position: absolute;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2), inset 0 -2px 3px rgba(0,0,0,0.1);
+    transition: transform 0.15s, box-shadow 0.15s;
+    will-change: left, top;
+}
+
+.physics-ball:hover {
+    transform: scale(1.2) !important;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3), inset 0 -2px 3px rgba(0,0,0,0.1);
+    z-index: 100;
+}
+
+.ball-tooltip {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-8px);
+    padding: 6px 12px;
+    background: rgba(0,0,0,0.9);
+    color: white;
+    font-size: 12px;
+    border-radius: 4px;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 1000;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.ball-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: rgba(0,0,0,0.9);
+}
+
+/* 모드 숨김 */
+.hidden {
+    display: none !important;
+}
+
+/* 레거시 스타일 (호환성) */
 .card-grid-legacy {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -6,6 +451,7 @@
     position: relative;
     min-height: 100px;
 }
+
 .card {
     background: white;
     border-radius: 12px;
@@ -13,25 +459,30 @@
     box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     transition: transform 0.2s;
 }
+
 .card:hover {
     transform: translateY(-4px);
 }
+
 .card-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 16px;
 }
+
 .card-title {
     font-size: 1.3rem;
     font-weight: 600;
     color: #1a3c6b;
 }
+
 .status-group {
     display: flex;
     gap: 12px;
     flex-wrap: wrap;
 }
+
 .status-item {
     flex: 1;
     min-width: 80px;
@@ -41,18 +492,22 @@
     font-size: 0.9rem;
     font-weight: 500;
 }
+
 .status-success {
     background: #e6f7ee;
     color: #1e8a4a;
 }
+
 .status-progress {
     background: #fff4e6;
     color: #d97706;
 }
+
 .status-fail {
     background: #fce8e8;
     color: #c53030;
 }
+
 .job-list {
     margin-top: 12px;
     font-size: 0.85rem;
@@ -61,21 +516,20 @@
     overflow-y: auto;
     padding-right: 4px;
 }
+
 .job-list::-webkit-scrollbar {
     width: 4px;
 }
+
 .job-list::-webkit-scrollbar-thumb {
     background: #cbd5e0;
     border-radius: 2px;
 }
-.no-data {
+
+.no-data-old {
     color: #a0aec0;
     font-style: italic;
     text-align: center;
     padding: 20px;
     grid-column: 1 / -1;
-    position: absolute;
-    top: calc(50% + 25px);
-    left: 50%;
-    transform: translate(-50%, -50%);
 }
