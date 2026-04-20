@@ -37,8 +37,8 @@ function createPeriodRateDisplay(
     let periodStatusIcon = successIcon;
 
     if (calculatedPeriodTotal === 0) {
-        periodStatusColor = '#6c757d'; // 미수집 (회색)
-        periodStatusIcon = ''; // 데이터 없을 때 아이콘 없음
+        periodStatusColor = '#adb5bd'; // 미수집 (옅은 회색)
+        periodStatusIcon = '⚪'; // 데이터 없을 때 흰 동그라미
     } else if (parseFloat(displayRate) < parseFloat(threshold)) {
         periodStatusColor = warningColor;
         periodStatusIcon = warningIcon;
