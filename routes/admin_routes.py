@@ -18,51 +18,41 @@ admin_bp = Blueprint('admin', __name__)
 def log_menu_access(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        conn = None
         try:
             user_id = session.get('user', {}).get('user_id')
             if user_id:
                 url = request.path
                 
-                with get_db_connection() as conn:
-                    mngr_sett_dao = MngrSettDAO(conn)
-                    menu = mngr_sett_dao.get_menu_by_url(url)
-                    
-                    # menu_nm을 우선적으로 사용하고, 없으면 url 기록
-                    menu_to_log = menu['menu_nm'] if menu and menu.get('menu_nm') else url
-                    if not (menu and menu.get('menu_nm')):
-                        current_app.logger.warning(f"Could not find menu name for url '{url}'. Logging url itself.")
-                    
-                    analytics_dao = AnalyticsDAO(conn)
-                    analytics_dao.insert_user_access_log(user_id, menu_to_log)
+                # Flask g 객체를 사용하여 커넥션 획득
+                conn = get_db_connection()
+                
+                # 메뉴 이름 조회
+                mngr_sett_dao = MngrSettDAO(conn)
+                menu = mngr_sett_dao.get_menu_by_url(url)
+                
+                # menu_nm을 우선적으로 사용하고, 없으면 url 기록
+                menu_to_log = menu['menu_nm'] if menu and menu.get('menu_nm') else url
+                if not (menu and menu.get('menu_nm')):
+                    current_app.logger.warning(f"[ACCESS_LOG] Menu name not found for URL '{url}'. Using URL itself.")
+                else:
+                    current_app.logger.debug(f"[ACCESS_LOG] Found menu name '{menu_to_log}' for URL '{url}'")
+                
+                # 접속 로그 기록 (DAO 낵에서 commit 처리)
+                analytics_dao = AnalyticsDAO(conn)
+                analytics_dao.insert_user_access_log(user_id, menu_to_log)
+                current_app.logger.info(f"[ACCESS_LOG] Success: User '{user_id}' accessed '{menu_to_log}' (URL: {url})")
         
         except Exception as e:
-            current_app.logger.error(f"Failed to log menu access for url {request.path}: {e}")
+            current_app.logger.error(f"[ACCESS_LOG_ERROR] Failed to log menu access for URL {request.path}: {type(e).__name__}: {e}", exc_info=True)
+            # 예외 발생 시에도 원래 함수는 실행되어야 함 (로깅 실패가 서비스 중단을 일으키지 않도록)
+        
+        finally:
+            # 커넥션은 요청 종료 시 close_db_connection에서 반환됨
+            pass
         
         return f(*args, **kwargs)
     return decorated_function
-
-@admin_bp.route('/admin/mngr_sett')
-@login_required
-@log_menu_access
-def mngr_sett_page():
-    """
-    Renders the manager settings page.
-    """
-    if 'mngr_sett' not in session.get('user', {}).get('permissions', []):
-        return render_template("unauthorized.html")
-    conn = None
-    try:
-        conn = get_db_connection()
-        mngr_sett_dao = MngrSettDAO(conn)
-        menus = mngr_sett_dao.get_all_menu_settings()
-    except Exception as e:
-        logging.error(f"Error fetching menu settings for mngr_sett_page: {e}", exc_info=True)
-        menus = []  # 에러 발생 시 빈 리스트 전달
-    finally:
-        if conn:
-            conn.close()
-            
-    return render_template('mngr_sett.html', menus=menus)
 
 @admin_bp.route('/api/statistics/config', methods=['GET'])
 @login_required

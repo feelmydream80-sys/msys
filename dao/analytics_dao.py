@@ -13,11 +13,14 @@ class AnalyticsDAO:
     def insert_user_access_log(self, user_id: str, menu_name: str):
         """
         사용자 접속 로그를 데이터베이스에 삽입합니다.
+        KST 시간을 Python에서 생성하여 전달합니다.
         """
         query = load_sql('analytics/insert_user_access_log.sql')
         try:
+            # KST 현재 시간 생성
+            kst_now = get_kst_now()
             with self.conn.cursor() as cur:
-                cur.execute(query, (user_id, menu_name))
+                cur.execute(query, (user_id, menu_name, kst_now))
             self.conn.commit()
             log_operation("분석", "접속 로그", "데이터 삽입", "성공")
         except Exception as e:
@@ -55,9 +58,11 @@ class AnalyticsDAO:
         params = []
         
         if year and month:
+            # ACS_DT는 이미 KST로 저장됨
             conditions.append("EXTRACT(YEAR FROM ACS_DT) = %s AND EXTRACT(MONTH FROM ACS_DT) = %s")
             params.extend([year, month])
         elif start_date and end_date:
+            # ACS_DT는 이미 KST로 저장됨
             conditions.append("ACS_DT::date BETWEEN %s AND %s")
             params.extend([start_date, end_date])
             
@@ -72,7 +77,7 @@ class AnalyticsDAO:
 
     def get_menu_access_stats(self, view_type: str = 'daily', start_date: Optional[str] = None, end_date: Optional[str] = None, year: Optional[str] = None, month: Optional[str] = None) -> List[Dict]:
         """
-        기간별, 메뉴별 접속 통계(총 접속수, 순 방문자수)를 조회합니다.
+        기간별, 메뉴접속 통계(총 접속수, 순 방문자수)를 조회합니다.
         """
         base_query = load_sql('analytics/get_menu_access_stats.sql')
         
@@ -84,13 +89,17 @@ class AnalyticsDAO:
             conditions.append("ACS_DT >= %s::timestamp AND ACS_DT < (%s::timestamp + INTERVAL '1 day')")
             params.extend([start_date, end_date])
         elif view_type == 'monthly' and year and month:
+            # ACS_DT는 이미 KST로 저장됨
             conditions.append("EXTRACT(YEAR FROM ACS_DT) = %s AND EXTRACT(MONTH FROM ACS_DT) = %s")
             params.extend([year, month])
         elif view_type == 'yearly' and year:
+            # ACS_DT는 이미 KST로 저장됨
             conditions.append("EXTRACT(YEAR FROM ACS_DT) = %s")
             params.append(year)
-        else: # 기본값: 오늘 하루
-            conditions.append("ACS_DT::date = CURRENT_DATE")
+        else: # 기본값: 오늘 하루 (KST 기준)
+            today_kst = format_kst_now('%Y-%m-%d')
+            conditions.append("ACS_DT::date = %s")
+            params.append(today_kst)
 
         where_clause = "WHERE " + " AND ".join(conditions) if conditions else ""
         query = base_query.format(where_clause=where_clause)
@@ -104,8 +113,9 @@ class AnalyticsDAO:
 
     def get_most_recent_data_date(self) -> Optional[str]:
         """
-        가장 최근 접속 데이터가 있는 날짜를 조회합니다.
+        가장 최근 접속 데이터가 있는 날짜를 조회합니다. (KST 기준)
         """
+        # ACS_DT는 이미 KST로 저장됨
         query = "SELECT MAX(ACS_DT::date) FROM TB_USER_ACS_LOG"
         try:
             with self.conn.cursor() as cur:
@@ -140,9 +150,11 @@ class AnalyticsDAO:
             conditions.append("ACS_DT >= %s::timestamp AND ACS_DT < (%s::timestamp + INTERVAL '1 day')")
             params.extend([start_date, end_date])
         elif view_type == 'monthly' and year and month:
+            # ACS_DT는 이미 KST로 저장됨
             conditions.append("EXTRACT(YEAR FROM ACS_DT) = %s AND EXTRACT(MONTH FROM ACS_DT) = %s")
             params.extend([year, month])
         elif view_type == 'yearly' and year:
+            # ACS_DT는 이미 KST로 저장됨
             conditions.append("EXTRACT(YEAR FROM ACS_DT) = %s")
             params.append(year)
 
@@ -291,6 +303,7 @@ class AnalyticsDAO:
         
         with self.conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
             # 1. Get total_access_count
+            # ACS_DT는 이미 KST로 저장됨
             query1 = "SELECT COUNT(*) AS total_access_count FROM TB_USER_ACS_LOG WHERE EXTRACT(YEAR FROM ACS_DT) = %s"
             params1 = [year]
             if menu_nm and menu_nm != 'all':
@@ -302,6 +315,7 @@ class AnalyticsDAO:
                 final_result['total_access_count'] = int(res1['total_access_count'])
 
             # 2. Get total_menu_unique_user_count (sum of daily unique users per menu)
+            # ACS_DT는 이미 KST로 저장됨
             query2_base = """
                 SELECT SUM(t.daily_unique_users) as total_menu_unique_user_count
                 FROM (
@@ -324,6 +338,7 @@ class AnalyticsDAO:
                 final_result['total_menu_unique_user_count'] = int(res2['total_menu_unique_user_count'])
 
             # 3. Get total_site_unique_user_count (sum of daily unique users for the whole site)
+            # ACS_DT는 이미 KST로 저장됨
             query3 = """
                 SELECT SUM(t.daily_site_unique_count) as total_site_unique_user_count
                 FROM (
