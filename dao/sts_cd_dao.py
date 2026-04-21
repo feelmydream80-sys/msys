@@ -81,79 +81,170 @@ class StsCdDAO:
             return False
 
     @staticmethod
+    def get_synced_status_codes() -> List[Dict]:
+        """
+        tb_con_mst(CD900 그룹)을 기준으로 tb_sts_cd_mst와 join하여 조회합니다.
+        tb_con_mst: cd, cd_nm 제공 (마스터 데이터)
+        tb_sts_cd_mst: icon_cd, bg_colr, txt_colr 제공 (UI 설정값)
+
+        Returns:
+            List[Dict]: 동기화된 상태코드 목록
+                [
+                    {
+                        'cd': 'CD901',
+                        'nm': '성공',  # tb_con_mst.cd_nm
+                        'icon_cd': 'check',
+                        'bg_colr': '#F3F4F6',
+                        'txt_colr': '#374151',
+                        'icon_nm': 'Check Icon'  # TB_ICON join
+                    }
+                ]
+        """
+        try:
+            db = get_db_connection()
+            cursor = db.cursor()
+            cursor.execute("""
+                SELECT
+                    m.CD,
+                    m.CD_NM AS NM,
+                    s.ICON_CD,
+                    s.BG_COLR,
+                    s.TXT_COLR,
+                    i.ICON_NM
+                FROM TB_CON_MST m
+                LEFT JOIN TB_STS_CD_MST s ON m.CD = s.CD
+                LEFT JOIN TB_ICON i ON s.ICON_CD = i.ICON_CD
+                WHERE m.CD_CL = 'CD900'
+                  AND m.CD > 'CD900'
+                  AND m.CD <= 'CD999'
+                ORDER BY m.CD
+            """)
+
+            columns = [desc[0].lower() for desc in cursor.description]
+            rows = cursor.fetchall()
+
+            result = [dict(zip(columns, row)) for row in rows]
+            logging.info(f"StsCdDAO.get_synced_status_codes() 성공: {len(result)}개 조회")
+            return result
+
+        except Exception as e:
+            logging.error(f"StsCdDAO.get_synced_status_codes() 실패: {e}", exc_info=True)
+            return []
+
+    @staticmethod
+    def sync_missing_codes_from_con_mst() -> int:
+        """
+        tb_con_mst의 CD900~CD999 중 tb_sts_cd_mst에 없는 CD를
+        기본값으로 자동 삽입하고 삽입된 건수를 반환합니다.
+
+        Returns:
+            int: 새로 삽입된 코드 건수
+        """
+        try:
+            db = get_db_connection()
+            cursor = db.cursor()
+
+            # tb_con_mst에만 있고 tb_sts_cd_mst에 없는 CD 찾기 (CD900은 그룹코드이므로 제외)
+            cursor.execute("""
+                SELECT m.CD
+                FROM TB_CON_MST m
+                LEFT JOIN TB_STS_CD_MST s ON m.CD = s.CD
+                WHERE m.CD_CL = 'CD900'
+                  AND m.CD > 'CD900'
+                  AND m.CD <= 'CD999'
+                  AND s.CD IS NULL
+            """)
+
+            missing_codes = cursor.fetchall()
+
+            if not missing_codes:
+                logging.info("StsCdDAO.sync_missing_codes_from_con_mst() 동기화할 새로운 코드 없음")
+                return 0
+
+            inserted_count = 0
+            for (cd,) in missing_codes:
+                # CD 번호로부터 순서(ord) 계산 (CD901 → 901)
+                try:
+                    ord_value = int(cd.replace('CD', ''))
+                except ValueError:
+                    ord_value = 999
+
+                cursor.execute("""
+                    INSERT INTO TB_STS_CD_MST (
+                        CD, NM, DESCR, COLR, ICON_CD, ORD, BG_COLR, TXT_COLR,
+                        REG_DT, UPD_DT
+                    ) VALUES (%s, '', '', '', '', %s, '#F3F4F6', '#374151',
+                              CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                """, (cd, ord_value))
+                inserted_count += 1
+                logging.info(f"StsCdDAO: 새로운 상태코드 자동 삽입 - {cd}")
+
+            db.commit()
+            logging.info(f"StsCdDAO.sync_missing_codes_from_con_mst() 성공: {inserted_count}개 삽입")
+            return inserted_count
+
+        except Exception as e:
+            logging.error(f"StsCdDAO.sync_missing_codes_from_con_mst() 실패: {e}", exc_info=True)
+            if 'db' in locals():
+                db.rollback()
+            raise
+
+    @staticmethod
     def upsert_status_code(data: dict) -> bool:
         """
-        TB_STS_CD_MST에 상태코드를 upsert합니다.
-        
+        TB_STS_CD_MST에 상태코드 UI 설정값을 upsert합니다.
+        nm, descr 등은 tb_con_mst에서 관리하므로 저장하지 않습니다.
+
         Args:
-            data: 상태코드 데이터
+            data: 상태코드 UI 설정 데이터
                 {
                     'cd': 'CD901',
-                    'nm': '성공',
-                    'descr': 'Total Finished',
-                    'colr': '#28a745',
-                    'icon_cd': '✅',
-                    'ord': 901,
-                    'use_yn': 'Y'
+                    'icon_cd': 'check',      # 선택적
+                    'bg_colr': '#F3F4F6',    # 선택적 (기본값: '#F3F4F6')
+                    'txt_colr': '#374151'    # 선택적 (기본값: '#374151')
                 }
-        
+
         Returns:
             bool: 성공 여부
         """
         try:
             db = get_db_connection()
             cursor = db.cursor()
-            
+
             # 필수 필드 검증
             cd = data.get('cd')
             if not cd:
                 raise ValueError("상태코드(cd)는 필수입니다.")
-            
-            # CD 코드 기반 NM 기본값 매핑
-            nm_default_map = {
-                'CD901': '성공',
-                'CD902': '실패',
-                'CD903': '데이터 존재안함',
-                'CD904': '진행중',
-                'CD905': 'DMZ완료',
-                'CD906': '재시도',
-                'CD907': '예정',
-                'CD908': '미수집'
-            }
-            
-            # NM이 빈 문자열이면 CD 코드 기반 기본값 사용
-            nm_value = data.get('nm', '') or nm_default_map.get(cd, '')
-            
-            # PostgreSQL 호환 upsert
+
+            # CD 번호로부터 순서(ord) 계산 (CD901 → 901)
+            try:
+                ord_value = int(cd.replace('CD', ''))
+            except ValueError:
+                ord_value = 999
+
+            # PostgreSQL 호환 upsert - UI 설정값만 저장
             cursor.execute("""
                 INSERT INTO TB_STS_CD_MST (
                     CD, NM, DESCR, COLR, ICON_CD, ORD, BG_COLR, TXT_COLR,
                     REG_DT, UPD_DT
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                ) VALUES (%s, '', '', '', %s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
                 ON CONFLICT(CD) DO UPDATE SET
-                    NM = EXCLUDED.NM,
-                    DESCR = EXCLUDED.DESCR,
-                    COLR = EXCLUDED.COLR,
                     ICON_CD = EXCLUDED.ICON_CD,
-                    ORD = EXCLUDED.ORD,
                     BG_COLR = EXCLUDED.BG_COLR,
                     TXT_COLR = EXCLUDED.TXT_COLR,
                     UPD_DT = CURRENT_TIMESTAMP
             """, (
                 cd,
-                nm_value,
-                data.get('descr', ''),
-                data.get('colr', ''),
                 data.get('icon_cd', ''),
-                data.get('ord', 999),
+                ord_value,
                 data.get('bg_colr', '#F3F4F6'),
                 data.get('txt_colr', '#374151')
             ))
-            
+
             db.commit()
             logging.info(f"StsCdDAO.upsert_status_code() 성공: CD={cd}")
             return True
-            
+
         except Exception as e:
             logging.error(f"StsCdDAO.upsert_status_code() 실패: {e}", exc_info=True)
             if 'db' in locals():

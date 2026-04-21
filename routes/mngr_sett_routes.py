@@ -343,16 +343,47 @@ def export_icons():
 @mngr_sett_required
 def get_all_status_codes():
     """
-    상태코드 마스터 목록 조회 API
-    ✅ 기존 소스 수정 없이 신규 추가
-    ✅ TB_STS_CD_MST 테이블에서 직접 조회
+    상태코드 마스터 목록 조회 API (동기화 버전)
+    ✅ tb_con_mst(CD900 그룹)을 기준으로 tb_sts_cd_mst와 동기화하여 조회
+    ✅ 새로운 CD 자동 삽입
+    ✅ tb_con_mst.cd_nm을 우선 사용
     """
     try:
-        status_codes = StsCdDAO.get_all()
+        conn = get_db_connection()
+        service = MngrSettService(conn)
+        status_codes = service.get_status_codes_service()
         return jsonify(status_codes), 200
     except Exception as e:
         logging.error(f"❌ API: 상태코드 목록 조회 실패: {e}", exc_info=True)
         return jsonify({"message": "상태코드 목록 조회 중 오류가 발생했습니다."}), 500
+
+
+@api_mngr_sett_bp.route('/status_codes/sync', methods=['POST'])
+@login_required
+@check_password_change_required
+@mngr_sett_required
+def sync_status_codes():
+    """
+    상태코드 수동 동기화 API
+    ✅ tb_con_mst의 CD900 그룹과 tb_sts_cd_mst를 강제 동기화
+    ✅ 새로운 CD 자동 삽입 및 결과 반환
+    """
+    try:
+        conn = get_db_connection()
+        service = MngrSettService(conn)
+        result = service.sync_status_codes_from_con_mst_service()
+
+        if result['success']:
+            logging.info(f"✅ API: 상태코드 동기화 완료 - {result['message']}")
+            return jsonify(result), 200
+        else:
+            return jsonify(result), 500
+    except Exception as e:
+        logging.error(f"❌ API: 상태코드 동기화 실패: {e}", exc_info=True)
+        return jsonify({
+            'success': False,
+            'message': f'동기화 중 오류가 발생했습니다: {str(e)}'
+        }), 500
 
 @api_mngr_sett_bp.route('/status_codes/save', methods=['POST'])
 @login_required

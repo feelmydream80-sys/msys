@@ -524,7 +524,7 @@ function renderScheduleSettingsForm(settings) {
     // 상태코드 동기화 버튼 이벤트 리스너 등록
     const syncBtn = document.getElementById('syncStatusCodesBtn');
     if (syncBtn) {
-        syncBtn.addEventListener('click', loadStatusCodes);
+        syncBtn.addEventListener('click', syncStatusCodes);
     }
 
     // 페이지 렌더링 후 상태코드 자동 로드
@@ -634,15 +634,63 @@ async function loadStatusCodes() {
 }
 
 /**
+ * tb_con_mst(CD900 그룹)과 tb_sts_cd_mst를 수동 동기화합니다
+ */
+async function syncStatusCodes() {
+    console.log('🔵 === CD900: syncStatusCodes() 수동 동기화 시작 ===');
+
+    const syncBtn = document.getElementById('syncStatusCodesBtn');
+    if (syncBtn) {
+        syncBtn.disabled = true;
+        syncBtn.innerHTML = '🔄 동기화 중...';
+    }
+
+    try {
+        const response = await fetch('/api/mngr_sett/status_codes/sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            throw new Error(result.message || '상태코드 동기화에 실패했습니다.');
+        }
+
+        console.log('🟢 동기화 결과:', result);
+
+        // 동기화 후 최신 데이터 다시 로드
+        await loadStatusCodes();
+
+        showToast(`상태코드 동기화 완료: ${result.inserted_count}개 새로운 코드 추가`, 'success');
+
+    } catch (error) {
+        console.error('🔴 상태코드 동기화 오류:', error);
+        showToast(`동기화 실패: ${error.message}`, 'error');
+    } finally {
+        if (syncBtn) {
+            syncBtn.disabled = false;
+            syncBtn.innerHTML = '🔄 상태코드 동기화';
+        }
+    }
+
+    console.log('🔵 === CD900: syncStatusCodes() 종료 ===');
+}
+
+/**
  * 상태코드 설정을 저장합니다
+ * UI 설정값(icon_id, bg_colr, txt_colr)만 tb_sts_cd_mst에 저장
+ * nm(상태코드명)은 tb_con_mst에서 관리하므로 저장하지 않음
  */
 async function saveStatusCodes() {
     console.log('🔵 === CD900: saveStatusCodes() 시작 ===');
-    
+
     try {
         const response = await fetch('/api/mngr_sett/status_codes');
         const statusCodes = await response.json();
-        
+
+        // UI 설정값만 저장 (cd, icon_id, bg_colr, txt_colr)
+        // nm은 tb_con_mst에서 관리하므로 포함하지 않음
         const saveData = statusCodes.map(code => {
             return {
                 cd: code.cd,
@@ -652,7 +700,7 @@ async function saveStatusCodes() {
             };
         });
 
-        console.log('🟢 저장할 데이터:', saveData);
+        console.log('🟢 저장할 데이터 (UI 설정값만):', saveData);
 
         const saveResponse = await fetch('/api/mngr_sett/status_codes/save', {
             method: 'POST',

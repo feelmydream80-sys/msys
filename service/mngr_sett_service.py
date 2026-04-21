@@ -546,27 +546,39 @@ class MngrSettService:
             raise
     
     def _save_single_status_code(self, status_data: dict):
-        """단일 상태코드 저장 (내부 메서드)"""
+        """
+        단일 상태코드 UI 설정값 저장 (낮부 메서드)
+        nm, descr 등은 tb_con_mst에서 관리하므로 저장하지 않습니다.
+        icon_id, bg_colr, txt_colr만 TB_STS_CD_MST에 저장합니다.
+        """
         try:
             cd = status_data.get('cd', 'UNKNOWN')
-            self.logger.info(f"Service: 상태코드 저장 시작 - CD: {cd}")
-            
-            processed_data = status_data.copy()
-            
-            if 'icon_id' in processed_data and processed_data['icon_id']:
-                icon_id = processed_data['icon_id']
+            self.logger.info(f"Service: 상태코드 UI 설정 저장 시작 - CD: {cd}")
+
+            # 저장할 데이터 준비 (UI 설정값만)
+            processed_data = {
+                'cd': cd,
+                'bg_colr': status_data.get('bg_colr', '#F3F4F6'),
+                'txt_colr': status_data.get('txt_colr', '#374151')
+            }
+
+            # icon_id가 있으면 icon_cd로 변환
+            if 'icon_id' in status_data and status_data['icon_id']:
+                icon_id = status_data['icon_id']
                 icon_code = self.icon_service.get_icon_code_by_id(icon_id)
                 if icon_code:
                     processed_data['icon_cd'] = icon_code
                     self.logger.info(f"Service: icon_id({icon_id}) → icon_cd({icon_code}) 변환 완료")
                 else:
                     self.logger.warning(f"Service: icon_id({icon_id})에 해당하는 icon_code를 찾을 수 없음")
-            
+            else:
+                processed_data['icon_cd'] = status_data.get('icon_cd', '')
+
             from dao.sts_cd_dao import StsCdDAO
             StsCdDAO.upsert_status_code(processed_data)
-            
-            self.logger.info(f"Service: 상태코드 저장 완료 - CD: {cd}")
-            
+
+            self.logger.info(f"Service: 상태코드 UI 설정 저장 완료 - CD: {cd}")
+
         except Exception as e:
             cd = status_data.get('cd', 'UNKNOWN')
             self.logger.error(f"Service: 단일 상태코드 저장 실패 - CD: {cd}: {e}", exc_info=True)
@@ -574,21 +586,68 @@ class MngrSettService:
     
     def get_status_codes_service(self) -> List[Dict]:
         """
-        상태코드 목록 조회 서비스
-        tb_sts_cd_mst 테이블에서 모든 사용 가능한 상태코드를 조회합니다.
-        
+        상태코드 목록 조회 서비스 (동기화 버전)
+        1. tb_con_mst의 CD900 그룹과 tb_sts_cd_mst를 동기화
+        2. tb_con_mst 기준으로 join된 데이터 반환
+
         Returns:
-            List[Dict]: 상태코드 목록 (cd, nm, descr, colr, icon_cd, ord 포함)
+            List[Dict]: 동기화된 상태코드 목록
+                (cd, nm: tb_con_mst.cd_nm, icon_cd, bg_colr, txt_colr, icon_nm 포함)
         """
         try:
-            self.logger.info("=== SERVICE: get_status_codes_service() 시작 ===")
+            self.logger.info("=== SERVICE: get_status_codes_service() 동기화 모드 시작 ===")
             from dao.sts_cd_dao import StsCdDAO
-            status_codes = StsCdDAO.get_all()
-            self.logger.info(f"SERVICE: 상태코드 {len(status_codes)}개 조회 완료")
+
+            # 1. tb_con_mst에만 있고 tb_sts_cd_mst에 없는 코드 자동 삽입
+            inserted_count = StsCdDAO.sync_missing_codes_from_con_mst()
+            if inserted_count > 0:
+                self.logger.info(f"SERVICE: 새로운 상태코드 {inserted_count}개 자동 삽입됨")
+
+            # 2. tb_con_mst 기준으로 tb_sts_cd_mst와 join하여 조회
+            status_codes = StsCdDAO.get_synced_status_codes()
+            self.logger.info(f"SERVICE: 동기화된 상태코드 {len(status_codes)}개 조회 완료")
             return status_codes
         except Exception as e:
             self.logger.error(f"SERVICE: 상태코드 조회 실패: {e}", exc_info=True)
             return []
+
+    def sync_status_codes_from_con_mst_service(self) -> Dict:
+        """
+        tb_con_mst 기준으로 tb_sts_cd_mst를 강제 동기화합니다.
+        수동 동기화 API용으로 사용됩니다.
+
+        Returns:
+            Dict: 동기화 결과
+                {
+                    'success': True/False,
+                    'inserted_count': 0,
+                    'message': '동기화 완료 메시지'
+                }
+        """
+        try:
+            self.logger.info("=== SERVICE: sync_status_codes_from_con_mst_service() 시작 ===")
+            from dao.sts_cd_dao import StsCdDAO
+
+            inserted_count = StsCdDAO.sync_missing_codes_from_con_mst()
+            synced_codes = StsCdDAO.get_synced_status_codes()
+
+            message = f"동기화 완료: {inserted_count}개 새로운 코드 추가, 총 {len(synced_codes)}개 코드 동기화됨"
+            self.logger.info(f"SERVICE: {message}")
+
+            return {
+                'success': True,
+                'inserted_count': inserted_count,
+                'total_count': len(synced_codes),
+                'message': message
+            }
+        except Exception as e:
+            self.logger.error(f"SERVICE: 상태코드 동기화 실패: {e}", exc_info=True)
+            return {
+                'success': False,
+                'inserted_count': 0,
+                'total_count': 0,
+                'message': f'동기화 실패: {str(e)}'
+            }
     
     def save_schedule_settings_service(self, settings_data: Dict, user_id: str):
         """
