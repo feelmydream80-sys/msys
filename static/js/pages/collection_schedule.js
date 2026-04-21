@@ -10,10 +10,11 @@ let monthOffset = 0; // 월 오프셋: 0=현재월, -1=지난달, 1=다음달
 let weekOffset = 0; // 주 오프셋: 0=이번 주, -1=지난 주, 1=다음 주
 let subGroupsByParent = {}; // 상위 그룹별 하위 jobs (스케줄 데이터 기반)
 let memoColors = { iconId: null, bgColr: '#fef08b', txtColr: '#a16207' };
+let isAdminUser = false; // 사용자 권한 (관리자: true, 게스트: false)
 
 export function init() {
     // Get user info from body data attribute
-    let isAdminUser = false;
+    isAdminUser = false;
     const body = document.body;
     if (body && body.dataset.user) {
         try {
@@ -99,6 +100,7 @@ export function init() {
         _settings: {},
         _icons: {},
         _statusCodes: [],
+        _statusMapByCd: {},
 
         _generateIconHtml(iconCode) {
             if (!iconCode) {
@@ -564,10 +566,15 @@ export function init() {
                     const redThreshold = settingsManager.get('prgsRtRedThrsval') || 30;
                     const orangeThreshold = settingsManager.get('prgsRtOrgThrsval') || 100;
                     
+                    // 버튼 HTML 분기 생성 (게스트는 숨김 상태로 생성)
+                    const memoBtnHtml = isAdminUser 
+                        ? `<span class="memo-btn" data-grp-id="${parentGroupName}" data-date="${currentDateStr}" data-depth="1" style="cursor: pointer; font-size: 0.65rem; padding: 1px 3px; border-radius: 4px;">+</span>`
+                        : `<span class="memo-btn" data-grp-id="${parentGroupName}" data-date="${currentDateStr}" data-depth="1" style="cursor: pointer; font-size: 0.65rem; padding: 1px 3px; border-radius: 4px; display: none;">+</span>`;
+                    
                     groupPill.innerHTML = `
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${parentDisplayName} <span class="expand-icon">▶</span></span>
-                            <span class="memo-btn" data-grp-id="${parentGroupName}" data-date="${currentDateStr}" data-depth="1" style="cursor: pointer; font-size: 0.65rem; padding: 1px 3px; border-radius: 4px;">+</span>
+                            ${memoBtnHtml}
                         </div>
                         <div style="display: flex; align-items: center; gap: 0.5rem;">
                             ${createProgressBarHtml(progressRate, redThreshold, orangeThreshold)}
@@ -1066,19 +1073,21 @@ export function init() {
                 return;
             }
 
-            // Load memo colors from schedule settings (before updateSettings to ensure guide popup uses correct colors)
-            try {
-                const schedRes = await scheduleSettingsApi.getSettings();
+            // Load memo colors from schedule settings (관리자만)
+            if (isAdminUser) {
+                try {
+                    const schedRes = await scheduleSettingsApi.getSettings();
 
-                if (schedRes && typeof schedRes === 'object' && Object.keys(schedRes).length > 0) {
-                    const s = schedRes;
-                    memoColors = {
-                        bgColr: s.memoBgColr || '#708090',
-                        txtColr: s.memoTxtColr || '#ffffff'
-                    };
+                    if (schedRes && typeof schedRes === 'object' && Object.keys(schedRes).length > 0) {
+                        const s = schedRes;
+                        memoColors = {
+                            bgColr: s.memoBgColr || '#708090',
+                            txtColr: s.memoTxtColr || '#ffffff'
+                        };
+                    }
+                } catch (e) {
+                    console.warn('[memo colors] 로드 실패:', e);
                 }
-            } catch (e) {
-                console.warn('[memo colors] 로드 실패:', e);
             }
 
             // Update settings manager with the new settings from the API
@@ -1086,17 +1095,19 @@ export function init() {
                 settingsManager.updateSettings(data.display_settings);
             }
 
-            // Fetch status codes from admin settings API
-            try {
-                const statusCodesRes = await fetch('/api/mngr_sett/status_codes');
-                if (statusCodesRes.ok) {
-                    const statusCodes = await statusCodesRes.json();
-                    settingsManager.updateStatusCodes(statusCodes);
-                    settingsManager.updateGuidePopup();
-                    settingsManager.applyToUI();
+            // Fetch status codes from admin settings API (관리자만)
+            if (isAdminUser) {
+                try {
+                    const statusCodesRes = await fetch('/api/mngr_sett/status_codes');
+                    if (statusCodesRes.ok) {
+                        const statusCodes = await statusCodesRes.json();
+                        settingsManager.updateStatusCodes(statusCodes);
+                        settingsManager.updateGuidePopup();
+                        settingsManager.applyToUI();
+                    }
+                } catch (e) {
+                    console.warn('[status codes] 로드 실패:', e);
                 }
-            } catch (e) {
-                console.warn('[status codes] 로드 실패:', e);
             }
 
             cardTitle.textContent = viewType === 'weekly' ? '주간 수집 현황 히트맵' : '월간 수집 현황 히트맵';
@@ -1459,9 +1470,14 @@ async function updateMemoButtons() {
         
         if (!result.memos || result.memos.length === 0) {
             memoBtns.forEach(btn => {
-                btn.textContent = '+';
-                btn.style.color = '';
-                btn.style.backgroundColor = '';
+                if (isAdminUser) {
+                    btn.textContent = '+';
+                    btn.style.color = '';
+                    btn.style.backgroundColor = '';
+                    btn.style.display = '';  // 관리자는 + 표시
+                } else {
+                    btn.style.display = 'none';  // 게스트는 숨김
+                }
             });
             return;
         }
@@ -1480,6 +1496,7 @@ async function updateMemoButtons() {
                 btn.textContent = '✓';
                 btn.style.color = memoColors.txtColr;
                 btn.style.backgroundColor = memoColors.bgColr;
+                btn.style.display = '';  // 메모 있으면 모두 표시
                 
                 // 그룹 전체에 메모 색상 적용 (최우선 순위)
                 const groupContainer = btn.closest('.group-container');
@@ -1489,9 +1506,14 @@ async function updateMemoButtons() {
                     groupPill.style.setProperty('color', memoColors.txtColr, 'important');
                 }
             } else {
-                btn.textContent = '+';
-                btn.style.color = '';
-                btn.style.backgroundColor = '';
+                if (isAdminUser) {
+                    btn.textContent = '+';
+                    btn.style.color = '';
+                    btn.style.backgroundColor = '';
+                    btn.style.display = '';  // 관리자는 + 표시
+                } else {
+                    btn.style.display = 'none';  // 게스트는 숨김
+                }
                 
                 // 메모가 없는 그룹은 색상 초기화 (삭제된 경우)
                 const groupContainer = btn.closest('.group-container');
