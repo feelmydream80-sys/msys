@@ -1073,21 +1073,19 @@ export function init() {
                 return;
             }
 
-            // Load memo colors from schedule settings (관리자만)
-            if (isAdminUser) {
-                try {
-                    const schedRes = await scheduleSettingsApi.getSettings();
+            // Load memo colors from schedule settings (모든 인증된 사용자)
+            try {
+                const schedRes = await scheduleSettingsApi.getSettings();
 
-                    if (schedRes && typeof schedRes === 'object' && Object.keys(schedRes).length > 0) {
-                        const s = schedRes;
-                        memoColors = {
-                            bgColr: s.memoBgColr || '#708090',
-                            txtColr: s.memoTxtColr || '#ffffff'
-                        };
-                    }
-                } catch (e) {
-                    console.warn('[memo colors] 로드 실패:', e);
+                if (schedRes && typeof schedRes === 'object' && Object.keys(schedRes).length > 0) {
+                    const s = schedRes;
+                    memoColors = {
+                        bgColr: s.memoBgColr || '#708090',
+                        txtColr: s.memoTxtColr || '#ffffff'
+                    };
                 }
+            } catch (e) {
+                console.warn('[memo colors] 로드 실패:', e);
             }
 
             // Update settings manager with the new settings from the API
@@ -1095,19 +1093,17 @@ export function init() {
                 settingsManager.updateSettings(data.display_settings);
             }
 
-            // Fetch status codes from admin settings API (관리자만)
-            if (isAdminUser) {
-                try {
-                    const statusCodesRes = await fetch('/api/mngr_sett/status_codes');
-                    if (statusCodesRes.ok) {
-                        const statusCodes = await statusCodesRes.json();
-                        settingsManager.updateStatusCodes(statusCodes);
-                        settingsManager.updateGuidePopup();
-                        settingsManager.applyToUI();
-                    }
-                } catch (e) {
-                    console.warn('[status codes] 로드 실패:', e);
+            // Fetch status codes from settings API (모든 인증된 사용자)
+            try {
+                const statusCodesRes = await fetch('/api/mngr_sett/status_codes');
+                if (statusCodesRes.ok) {
+                    const statusCodes = await statusCodesRes.json();
+                    settingsManager.updateStatusCodes(statusCodes);
+                    settingsManager.updateGuidePopup();
+                    settingsManager.applyToUI();
                 }
+            } catch (e) {
+                console.warn('[status codes] 로드 실패:', e);
             }
 
             cardTitle.textContent = viewType === 'weekly' ? '주간 수집 현황 히트맵' : '월간 수집 현황 히트맵';

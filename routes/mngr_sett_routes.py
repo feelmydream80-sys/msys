@@ -340,7 +340,6 @@ def export_icons():
 @api_mngr_sett_bp.route('/status_codes', methods=['GET'])
 @login_required
 @check_password_change_required
-@mngr_sett_required
 def get_all_status_codes():
     """
     상태코드 마스터 목록 조회 API (동기화 버전)
@@ -670,7 +669,6 @@ def update_bulk_user_permissions():
 @api_mngr_sett_bp.route('/schedule_settings', methods=['GET'])
 @login_required
 @check_password_change_required
-@mngr_sett_required
 def get_schedule_display_settings():
     """데이터 수집 일정 표시 설정을 조회합니다."""
     logging.info("=== ROUTE: get_schedule_display_settings() 시작 ===")
