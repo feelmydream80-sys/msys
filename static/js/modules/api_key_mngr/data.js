@@ -30,17 +30,7 @@ window.ApiKeyMngrData = {
             const data = await apiFetch('/api/api_key_mngr');
             
             if (data.success) {
-                // [파이프라인:API] 로그①: API 응답 데이터 개수 및 샘플
-                console.log('[파이프라인:API] 응답 데이터:', data.data.length, '건');
-                console.log('[파이프라인:API] 샘플 (첫번째):', data.data[0]);
-                
                 this.apiKeyMngrData = data.data;
-                
-                // [파이프라인:저장] 로그②: 저장된 데이터 확인 (cd_cl 존재 여부)
-                console.log('[파이프라인:저장] apiKeyMngrData.length:', this.apiKeyMngrData.length);
-                console.log('[파이프라인:저장] 첫번째 항목 cd_cl:', this.apiKeyMngrData[0]?.cd_cl);
-                console.log('[파이프라인:저장] cd_cl 있는 항목 수:', this.apiKeyMngrData.filter(i => i.cd_cl).length);
-                
                 return true;
             } else {
                 console.error('API 키 관리 데이터 로드 실패:', data.message);
@@ -177,40 +167,6 @@ window.ApiKeyMngrData = {
      */
     getRiskApiKeyMngrData: function() {
         return this.apiKeyMngrData.filter(item => item.api_key && item.days_remaining <= 30);
-    },
-
-    /**
-     * 고유한 그룹(cd_cl) 목록 추출
-     */
-    getUniqueGroups: function() {
-        // [파이프라인:추출] 로그④: 추출 시작 및 데이터 순회
-        console.log('[파이프라인:추출] getUniqueGroups() 시작');
-        console.log('[파이프라인:추출] 전체 데이터 개수:', this.apiKeyMngrData.length);
-        
-        // 데이터 샘플 출력 (앞 5개)
-        const sample = this.apiKeyMngrData.slice(0, 5).map(i => ({cd: i.cd, cd_cl: i.cd_cl}));
-        console.log('[파이프라인:추출] 데이터 샘플 (5개):', sample);
-        
-        const groups = new Set();
-        let hasCdClCount = 0;
-        let noCdClCount = 0;
-        
-        this.apiKeyMngrData.forEach(item => {
-            if (item.cd_cl) {
-                groups.add(item.cd_cl);
-                hasCdClCount++;
-            } else {
-                noCdClCount++;
-            }
-        });
-        
-        const result = Array.from(groups).sort();
-        
-        // [파이프라인:추출] 로그⑤: 추출 결과
-        console.log('[파이프라인:추출] cd_cl 있는 항목:', hasCdClCount, 'cd_cl 없는 항목:', noCdClCount);
-        console.log('[파이프라인:추출] 추출된 고유 그룹:', result, '(' + result.length + '개)');
-        
-        return result;
     },
 
     /**

@@ -1,3 +1,8 @@
+1. api 키 관리 페이지에서 데이터 쉽게 수정하는 방법(그룹별)
+2. 사용자 접속 현황(ID별) 페이지 생성->주간, 월간, 연간
+3. 사용자 접속 현황 페이지에 미접속 정보 그룹별 분류 생성
+4. tb_sts_cd_mngr과 tb_
+
 byungjae.park3
 0. .env 제외하고 압축
 1. 외부망 모니터링#1(125) 서버 접속
@@ -38,18 +43,3 @@ Kepco123456/
 일반 테스트 방법
 [etl_user@cib040l5 ~]$ source /data/external_data_monitoring/.web/bin/activate
 (.web) [etl_user@cib040l5 ~]$  python /data/external_data_monitoring/msys/msys_app.py
-
-
-msys/column_mapping.json not found. Starting with empty mappings.
-Traceback (most recent call last):
-  File "/data/external_data_monitoring/msys/msys_app.py", line 20, in <module>
-    from routes.admin_routes import admin_bp
-  File "/data/external_data_monitoring/msys/routes/admin_routes.py", line 3, in <module>
-    from .auth_routes import login_required, admin_required
-  File "/data/external_data_monitoring/msys/routes/auth_routes.py", line 8, in <module>
-    from service.auth_service import AuthService
-  File "/data/external_data_monitoring/msys/service/__init__.py", line 1, in <module>
-    from .api_key_mngr_service import ApiKeyMngrService
-  File "/data/external_data_monitoring/msys/service/api_key_mngr_service.py", line 8, in <module>
-    from mail_send import send_email, create_api_key_expiry_email, validate_email_address
-ModuleNotFoundError: No module named 'mail_send'

@@ -358,7 +358,6 @@ window.ApiKeyMngrUI.handlePageLoad = async function() {
             window.ApiKeyMngrUI.renderApiKeyMngrTable();
             window.ApiKeyMngrUI.renderAbnormalApiKeyMngrTable();
             window.ApiKeyMngrUI.renderApiKeyExpiryChart();
-            window.ApiKeyMngrUI.setupGroupFilter(); // 그룹 필터 초기화
         } else {
             alert('API 키 관리 데이터 로드에 실패했습니다.');
         }
@@ -382,7 +381,6 @@ window.ApiKeyMngrUI.handlePageLoadPaged = async function(page = 1, pageSize = 10
             window.ApiKeyMngrUI.renderApiKeyMngrTable();
             window.ApiKeyMngrUI.renderAbnormalApiKeyMngrTable();
             window.ApiKeyMngrUI.renderApiKeyExpiryChart();
-            window.ApiKeyMngrUI.setupGroupFilter(); // 그룹 필터 초기화
             console.log(`페이징 데이터 로드 완료: ${result.data.length}건 (전체: ${result.pagination.total_count}건)`);
         } else {
             alert('API 키 관리 데이터 로드에 실패했습니다.');
@@ -478,56 +476,11 @@ window.ApiKeyMngrUI.setupSearchEvent = function() {
 };
 
 /**
- * 그룹 필터 초기화
- */
-window.ApiKeyMngrUI.setupGroupFilter = function() {
-    const groups = ApiKeyMngrData.getUniqueGroups();
-
-    // 정상 테이블 그룹 필터
-    const groupFilter = document.getElementById('groupFilter');
-    if (groupFilter) {
-        // 기존 옵션 유지 ("전체 그룹")
-        groupFilter.innerHTML = '<option value="">전체 그룹</option>';
-        groups.forEach(group => {
-            const option = document.createElement('option');
-            option.value = group;
-            option.textContent = group;
-            groupFilter.appendChild(option);
-        });
-    }
-
-    // 비정상 테이블 그룹 필터
-    const abnormalGroupFilter = document.getElementById('abnormalGroupFilter');
-    if (abnormalGroupFilter) {
-        abnormalGroupFilter.innerHTML = '<option value="">전체 그룹</option>';
-        groups.forEach(group => {
-            const option = document.createElement('option');
-            option.value = group;
-            option.textContent = group;
-            abnormalGroupFilter.appendChild(option);
-        });
-    }
-};
-
-/**
- * 그룹 필터 변경 핸들러
- */
-window.ApiKeyMngrUI.handleGroupFilter = function() {
-    // 현재 활성 탭에 따라 렌더링
-    const currentActiveTab = document.querySelector('.api-tab-btn.active');
-    if (currentActiveTab && currentActiveTab.dataset.apiTab === 'normal') {
-        window.ApiKeyMngrUI.renderApiKeyMngrTable();
-    } else {
-        window.ApiKeyMngrUI.renderAbnormalApiKeyMngrTable();
-    }
-};
-
-/**
  * 페이지 초기화
  */
-window.ApiKeyMngrUI.init = async function() {
-    // 초기 데이터 로드 (await 추가 - 데이터 로드 완료 후 다음 단계 진행)
-    await window.ApiKeyMngrUI.handlePageLoad();
+window.ApiKeyMngrUI.init = function() {
+    // 초기 데이터 로드
+    window.ApiKeyMngrUI.handlePageLoad();
 
     // 탭 전환 이벤트
     window.ApiKeyMngrUI.setupTabNavigation();
