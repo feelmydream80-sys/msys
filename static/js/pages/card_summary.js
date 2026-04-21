@@ -367,14 +367,18 @@ function getGroupDisplayName(group, groupData) {
         const match = firstJob.match(/([^(]+)/);
         if (match) {
             const baseJobId = match[1].trim();
-            // CD101 -> CD100 (그룹 코드로 변환)
+            // CD101 -> CD100, CD1001 -> CD1000 (그룹 코드로 변환)
             const numericPart = baseJobId.substring(2);
             let groupJobId = '';
-            if (numericPart.length >= 3) {
-                // CD10x -> CD100
-                groupJobId = baseJobId.substring(0, 4) + '0';
+            if (numericPart.length >= 4) {
+                // CD10xx -> CD1000 (4자리 이상)
+                groupJobId = 'CD' + numericPart.substring(0, 2) + '00';
+            } else if (numericPart.length >= 3) {
+                // CD1xx -> CD100 (3자리)
+                groupJobId = 'CD' + numericPart.substring(0, 1) + '00';
             } else {
-                groupJobId = baseJobId.substring(0, 3) + '00';
+                // CDxx -> CDxx00 (1~2자리)
+                groupJobId = 'CD' + numericPart + '00';
             }
             groupName = mstData[groupJobId] || mstData[baseJobId] || '';
         }

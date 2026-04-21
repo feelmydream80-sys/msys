@@ -194,12 +194,17 @@ class CardSummaryService:
                 continue
             
             if job_id and job_id.startswith('CD'):
-                # 그룹 결정 (CD100, CD200 등)
+                # 그룹 결정 (CD100, CD1000 등) - 100단위 그룹화
                 numeric_part = job_id[2:]
-                if len(numeric_part) == 4:
+                if len(numeric_part) >= 4:
+                    # CD10xx -> CD1000 (4자리 이상)
                     group = f"CD{numeric_part[:2]}00"
-                else:
+                elif len(numeric_part) >= 3:
+                    # CD1xx -> CD100 (3자리)
                     group = f"CD{numeric_part[0]}00"
+                else:
+                    # CDxx -> CDxx00 (1~2자리)
+                    group = f"CD{numeric_part}00"
                 
                 # 시간 추출
                 schedule_time_str = job.get('date', '')

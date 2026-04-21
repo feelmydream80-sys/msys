@@ -5,7 +5,7 @@ from service.data_definition_service import DataDefinitionService
 from msys.database import get_db_connection
 from routes.auth_routes import login_required, check_password_change_required
 from utils.datetime_utils import convert_datetime_fields_to_kst_str
-from utils.job_utils import should_exclude_job
+from utils.job_utils import should_exclude_job, validate_job_id_format
 
 bp = Blueprint('data_definition_api', __name__, url_prefix='/api/data_definition')
 
@@ -73,6 +73,13 @@ def create_data():
     """새로운 데이터를 생성합니다."""
     try:
         data = request.json
+        cd = data.get('cd')
+        
+        # Job ID 형식 및 범위 검증 (10만 단위 이상 방지)
+        is_valid, error_message = validate_job_id_format(cd)
+        if not is_valid:
+            return jsonify({"message": error_message}), 400
+        
         with get_db_connection() as conn:
             service = DataDefinitionService(conn)
             service.create_data(data)

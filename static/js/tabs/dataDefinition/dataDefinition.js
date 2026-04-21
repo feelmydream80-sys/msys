@@ -869,7 +869,8 @@ async function showAddGroupModal() {
 
     saveBtn.addEventListener('click', async () => {
         const cd_cl = 'CD' + document.getElementById('newGroupCdCl').value.trim();
-        const cd = 'CD' + document.getElementById('newGroupCd').value.trim();
+        const cdInput = document.getElementById('newGroupCd').value.trim();
+        const cd = 'CD' + cdInput;
         const cd_nm = document.getElementById('newGroupNm').value.trim();
         const cd_desc = document.getElementById('newGroupDesc').value.trim();
         const item1 = document.getElementById('newGroupItem1').value.trim();
@@ -968,11 +969,22 @@ async function showAddGroupModal() {
             isValid = false;
         } else {
             const cdClNum = parseInt(cdClValue);
-            if (isNaN(cdClNum) || cdClNum % 100 !== 0) {
+            
+            // 10만 단위(5자리) 이상 체크
+            if (cdClNum >= 10000) {
+                document.getElementById('newGroupCdClMaxError').style.display = 'block';
+                document.getElementById('newGroupCdClFormatError').style.display = 'none';
+                document.getElementById('newGroupCdClError').style.display = 'none';
+                cdClInput.style.borderColor = '#dc3545';
+                isValid = false;
+            } else if (isNaN(cdClNum) || cdClNum % 100 !== 0) {
+                document.getElementById('newGroupCdClMaxError').style.display = 'none';
                 document.getElementById('newGroupCdClFormatError').style.display = 'block';
+                document.getElementById('newGroupCdClError').style.display = 'none';
                 cdClInput.style.borderColor = '#dc3545';
                 isValid = false;
             } else {
+                document.getElementById('newGroupCdClMaxError').style.display = 'none';
                 document.getElementById('newGroupCdClFormatError').style.display = 'none';
                 const exists = allData.some(item => item.cd === 'CD' + cdClValue);
                 if (exists) {
@@ -989,11 +1001,22 @@ async function showAddGroupModal() {
         if (!cdValue) {
             isValid = false;
         } else {
-            if (cdClValue) {
+            const cdNum = parseInt(cdValue);
+            
+            // 10만 단위(5자리) 이상 체크
+            if (cdNum >= 10000) {
+                document.getElementById('newGroupCdMaxError').style.display = 'block';
+                document.getElementById('newGroupCdRangeError').style.display = 'none';
+                document.getElementById('newGroupCdError').style.display = 'none';
+                cdInput.style.borderColor = '#dc3545';
+                isValid = false;
+            } else if (cdClValue) {
                 const cdClNum = parseInt(cdClValue);
-                const cdNum = parseInt(cdValue);
+                document.getElementById('newGroupCdMaxError').style.display = 'none';
+                
                 if (cdNum < cdClNum || cdNum > cdClNum + 99) {
                     document.getElementById('newGroupCdRangeError').style.display = 'block';
+                    document.getElementById('newGroupCdError').style.display = 'none';
                     cdInput.style.borderColor = '#dc3545';
                     isValid = false;
                 } else {

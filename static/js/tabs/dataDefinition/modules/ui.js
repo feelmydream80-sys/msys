@@ -224,6 +224,9 @@ export function getAddGroupModalHTML() {
                     <div id="newGroupCdClFormatError" style="color: #dc3545; font-size: 0.85rem; margin-top: 3px; display: none;">
                         그룹 코드는 100배수로 입력해주세요 (예: 100, 200, 300...)
                     </div>
+                    <div id="newGroupCdClMaxError" style="color: #dc3545; font-size: 0.85rem; margin-top: 3px; display: none;">
+                        그룹 코드는 100단위로 CD100 ~ CD9900까지만 입력 가능합니다.
+                    </div>
                 </div>
                 <div style="margin-bottom: 10px;">
                     <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #555;">데이터 코드 (cd)</label>
@@ -238,6 +241,9 @@ export function getAddGroupModalHTML() {
                     </div>
                     <div id="newGroupCdRangeError" style="color: #dc3545; font-size: 0.85rem; margin-top: 3px; display: none;">
                         데이터 코드는 그룹 코드 + 99 이내로 입력해주세요
+                    </div>
+                    <div id="newGroupCdMaxError" style="color: #dc3545; font-size: 0.85rem; margin-top: 3px; display: none;">
+                        데이터 코드는 CD1 ~ CD9999까지만 입력 가능합니다. (4자리 이하)
                     </div>
                 </div>
                 <div style="margin-bottom: 10px;">
