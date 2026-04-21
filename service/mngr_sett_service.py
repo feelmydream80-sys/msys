@@ -133,6 +133,12 @@ class MngrSettService:
         Applies default values for new settings.
         """
         try:
+            # CD900~CD999 및 100의 배수는 저장하지 않음 (상태코드, 그룹코드 제외)
+            job_cd = settings_data.get('cd') or settings_data.get('sett_id') or settings_data.get('job_id')
+            if should_exclude_job(job_cd):
+                self.logger.warning(f"Service: CD900~CD999 및 100의 배수는 tb_mngr_sett에 저장할 수 없습니다: {job_cd}")
+                return
+            
             mapper = self.mngr_sett_mapper
             converted_settings = convert_to_new_columns('TB_MNGR_SETT', settings_data)
             job_cd = converted_settings.get('cd')
@@ -223,6 +229,13 @@ class MngrSettService:
 
         # Filter this list to include only jobs that are also in the master list.
         jobs_to_create_settings_for = hist_jobs_missing_settings.intersection(all_mst_job_ids)
+        
+        # CD900~CD999 및 100의 배수 제외 (상태코드, 그룹코드는 tb_mngr_sett에 저장하지 않음)
+        jobs_to_create_settings_for = {
+            job_id for job_id in jobs_to_create_settings_for
+            if not should_exclude_job(job_id)
+        }
+        
         self.logger.info(f"Service: jobs_to_create_settings_for: {jobs_to_create_settings_for}")
 
         if jobs_to_create_settings_for:
@@ -300,9 +313,16 @@ class MngrSettService:
     def import_settings(self, settings_list: List[Dict]):
         try:
             self.logger.info(f"Service: Importing {len(settings_list)} settings.")
+            skipped_count = 0
             for settings_data in settings_list:
+                # CD900~CD999 및 100의 배수는 import하지 않음
+                job_id = settings_data.get('cd') or settings_data.get('sett_id') or settings_data.get('job_id')
+                if should_exclude_job(job_id):
+                    self.logger.warning(f"Service: Import skipped for excluded job: {job_id}")
+                    skipped_count += 1
+                    continue
                 self.insert_or_update_settings(settings_data)
-            self.logger.info("Service: Batch import of admin settings successful.")
+            self.logger.info(f"Service: Batch import of admin settings successful. (skipped: {skipped_count})")
         except Exception as e:
             self.logger.error(f"Service: Batch import failed: {e}", exc_info=True)
             raise
