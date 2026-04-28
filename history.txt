@@ -12,10 +12,10 @@ byungjae.park3
 scp -P22002  /home/etl_user/msys.zip etl_user@CIB040L5:/home/etl_user/
 → PW: Kepco123456/
 4. 내부망 접속: 
-ssh -p 2202 etl_user@CIB040L5
+ssh -p 22002 etl_user@CIB040L5
 5. 파일 이동
 mv msys.zip /data/external_data_monitoring/msys/
-cd msys.zip /data/external_data_monitoring/msys/
+cd /data/external_data_monitoring/msys/
 6. 압축풀기
 unzip msys.zip
 7. 스크립트위치로 이동(/home/etl_user

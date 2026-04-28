@@ -1132,6 +1132,16 @@ async function initializePage() {
     popupManagementTab.initElements();
     popupManagementTab.initEventListeners();
 
+    // 사용자접속정보 탭 초기화
+    const userAccessInfoContainer = document.getElementById('userAccessInfo');
+    if (userAccessInfoContainer) {
+        console.log('Initializing userAccessInfo tab...');
+        // 동적 import로 지연 로드
+        import('../tabs/userAccessInfo/index.js').then(({ default: userAccessInfo }) => {
+            userAccessInfo.init().catch(err => console.error('userAccessInfo init error:', err));
+        }).catch(err => console.error('userAccessInfo module load error:', err));
+    }
+
     // 데이터정의 탭 초기화 (조건부)
     const dataDefinitionContainer = document.getElementById('dataDefinition');
     if (dataDefinitionContainer) {

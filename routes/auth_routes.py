@@ -169,6 +169,25 @@ def login():
             # --------------------------
 
             if user_info:
+                # --- [ACC_STS 상태 체크] ---
+                # 사용자의 계정 상태 확인 (PENDING, APPROVED, DORMANT, INACTIVE)
+                acc_sts = user_info.get('acc_sts', 'APPROVED')
+                
+                # 접속 제한 상태 체크
+                if acc_sts == 'DORMANT':
+                    flash("휴면 상태입니다. 관리자에게 문의하세요.", "error")
+                    current_app.logger.warning(f"DORMANT user login attempt: {user_id}")
+                    return redirect(url_for('auth.login'))
+                elif acc_sts == 'INACTIVE':
+                    flash("비활성화 처리가 되었습니다. 관리자에게 문의하세요.", "error")
+                    current_app.logger.warning(f"INACTIVE user login attempt: {user_id}")
+                    return redirect(url_for('auth.login'))
+                elif acc_sts == 'PENDING':
+                    flash("계정 승인 대기 중입니다. 관리자에게 문의하세요.", "error")
+                    current_app.logger.warning(f"PENDING user login attempt: {user_id}")
+                    return redirect(url_for('auth.login'))
+                # --- [ACC_STS 상태 체크 끝] ---
+
                 # --- [기본 권한 추가] ---
                 # 모든 승인된 사용자는 기본적으로 'dashboard'와 'collection_schedule' 조회 권한을 가집니다.
                 # 이 메뉴들은 모든 사용자가 기본적으로 접근할 수 있어야 하는 핵심 기능입니다.

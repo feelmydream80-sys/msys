@@ -1,13 +1,45 @@
-침반(Compass) 문서란?
-
-"문서는 직접 정보를 담지 않는다. 정보가 있는 곳을 가리킨다."
-
-MAIN_GUIDE.md          ← 나침반: 하위 문서 경로 목록만 포함
-├── src/GUIDE.md        ← 나침반: src 폴더 하위 경로 목록
-│   ├── api/GUIDE.md    ← 상세문서: api 폴더 역할 + 파일별 기능
-│   └── utils/GUIDE.md  ← 상세문서: utils 폴더 역할 + 파일별 기능
-└── docs/GUIDE.md       ← 나침반 또는 상세문서
-
-나침반 문서: 80줄 초과 시 해당 주제를 폴더로 분리하고 경로만 나열
-상세 문서: 80줄 이하, 실제 역할·파일 설명·체크리스트 포함
-규칙: 80줄 초과 → 즉시 폴더 생성 후 내용 재분류
+userList.js:147  GET http://127.0.0.1:18080/api/analytics/statistics/user-detail/test3?mode=distinct 500 (INTERNAL SERVER ERROR)
+(익명) @ userList.js:147
+fetchUsers @ userList.js:145
+await in fetchUsers
+render @ userList.js:107
+setMode @ userList.js:96
+setMode @ index.js:176
+onclick @ mngr_sett:1941이 오류 이해하기
+userList.js:147  GET http://127.0.0.1:18080/api/analytics/statistics/user-detail/admin?mode=distinct 500 (INTERNAL SERVER ERROR)
+(익명) @ userList.js:147
+fetchUsers @ userList.js:145
+await in fetchUsers
+render @ userList.js:107
+setMode @ userList.js:96
+setMode @ index.js:176
+onclick @ mngr_sett:1941이 오류 이해하기
+userList.js:147  GET http://127.0.0.1:18080/api/analytics/statistics/user-detail/Test2?mode=distinct 500 (INTERNAL SERVER ERROR)
+(익명) @ userList.js:147
+fetchUsers @ userList.js:145
+await in fetchUsers
+render @ userList.js:107
+setMode @ userList.js:96
+setMode @ index.js:176
+onclick @ mngr_sett:1941이 오류 이해하기
+userList.js:147  GET http://127.0.0.1:18080/api/analytics/statistics/user-detail/etl_user?mode=distinct 500 (INTERNAL SERVER ERROR)
+(익명) @ userList.js:147
+fetchUsers @ userList.js:145
+await in fetchUsers
+render @ userList.js:107
+setMode @ userList.js:96
+setMode @ index.js:176
+onclick @ mngr_sett:1941이 오류 이해하기
+userList.js:147  GET http://127.0.0.1:18080/api/analytics/statistics/user-detail/test5?mode=distinct 500 (INTERNAL SERVER ERROR)
+(익명) @ userList.js:147
+fetchUsers @ userList.js:145
+await in fetchUsers
+render @ userList.js:107
+setMode @ userList.js:96
+setMode @ index.js:176
+onclick @ mngr_sett:1941이 오류 이해하기
+index.js:238  GET http://127.0.0.1:18080/api/analytics/statistics/user-detail/admin?mode=distinct 500 (INTERNAL SERVER ERROR)
+showDetail @ index.js:238
+onclick @ mngr_sett:1이 오류 이해하기
+index.js:295 Failed to load user detail: Error: Failed to fetch user detail
+    at UserAccessInfo.showDetail (index.js:240:23)

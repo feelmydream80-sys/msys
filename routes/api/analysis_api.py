@@ -369,3 +369,115 @@ def get_dynamic_chart_data():
     except Exception as e:
         logging.error(f"❌ API: 동적 차트 데이터 조회 실패: {e}", exc_info=True)
         return jsonify({"message": "동적 차트 데이터 조회 중 오류가 발생했습니다."}), 500
+
+
+# ==========================================
+# 사용자접속정보 탭용 API
+# ==========================================
+
+@analysis_api_bp.route('/statistics/user-list', methods=['GET'])
+@login_required
+def get_user_list_api():
+    """
+    사용자 목록과 접속 통계를 조회하는 API (사용자접속정보 탭용).
+    
+    Query Parameters:
+        mode: 'all' (중복 포함, 기본값) 또는 'distinct' (1일 1접속)
+    """
+    try:
+        page = request.args.get('page', 1, type=int)
+        page_size = request.args.get('page_size', 10, type=int)
+        search = request.args.get('search', '')
+        mode = request.args.get('mode', 'all')
+        if mode not in ['all', 'distinct']:
+            mode = 'all'
+        
+        with get_db_connection() as conn:
+            analysis_service = AnalysisService(conn)
+            result = analysis_service.get_user_list_with_stats(
+                page=page,
+                page_size=page_size,
+                search_term=search if search else None,
+                mode=mode
+            )
+            return jsonify(result), 200
+    except Exception as e:
+        logging.error(f"❌ API: 사용자 목록 조회 실패: {e}", exc_info=True)
+        return jsonify({"message": "사용자 목록 조회 중 오류가 발생했습니다."}), 500
+
+@analysis_api_bp.route('/statistics/user-detail/<user_id>', methods=['GET'])
+@login_required
+def get_user_detail_api(user_id: str):
+    """
+    특정 사용자의 상세 통계를 조회하는 API (히트맵, 차트 데이터 포함).
+    
+    Query Parameters:
+        mode: 'all' (중복 포함, 기본값) 또는 'distinct' (1일 1접속)
+    """
+    try:
+        # 쿼리 파라미터에서 모드 추출
+        mode = request.args.get('mode', 'all')
+        if mode not in ['all', 'distinct']:
+            mode = 'all'
+        
+        with get_db_connection() as conn:
+            analysis_service = AnalysisService(conn)
+            result = analysis_service.get_user_detail_stats(user_id, mode=mode)
+            return jsonify(result), 200
+    except ValueError as ve:
+        return jsonify({"message": str(ve)}), 404
+    except Exception as e:
+        logging.error(f"❌ API: 사용자 상세 조회 실패: {e}", exc_info=True)
+        return jsonify({"message": "사용자 상세 조회 중 오류가 발생했습니다."}), 500
+
+
+@analysis_api_bp.route('/settings/thresholds', methods=['GET'])
+@login_required
+def get_thresholds_api():
+    """
+    사용자 접속 상태 판정 기준 임계값을 조회하는 API.
+    TB_CON_MST 테이블에서 CD991(최근), CD992(활성), CD993(휴 면)의 item1 값을 조회.
+    """
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                query = """
+                    SELECT cd, item1
+                    FROM tb_con_mst
+                    WHERE cd IN ('CD991', 'CD992', 'CD993')
+                    ORDER BY cd
+                """
+                cur.execute(query)
+                rows = cur.fetchall()
+                
+                # 기본값 설정
+                thresholds = {
+                    'cd991': 30,  # 최근 접속 기준 (일)
+                    'cd992': 7,   # 활성 사용자 기준 (일)
+                    'cd993': 90   # 휴 면 전환 기준 (일)
+                }
+                
+                # DB 값으로 업데이트
+                for row in rows:
+                    cd, item1 = row
+                    if item1:
+                        try:
+                            value = int(item1)
+                            if cd == 'CD991':
+                                thresholds['cd991'] = value
+                            elif cd == 'CD992':
+                                thresholds['cd992'] = value
+                            elif cd == 'CD993':
+                                thresholds['cd993'] = value
+                        except (ValueError, TypeError):
+                            logging.warning(f"Invalid threshold value for {cd}: {item1}")
+                
+                return jsonify(thresholds), 200
+    except Exception as e:
+        logging.error(f"❌ API: 임계값 조회 실패: {e}", exc_info=True)
+        # 오류 시 기본값 반환
+        return jsonify({
+            'cd991': 30,
+            'cd992': 7,
+            'cd993': 90
+        }), 200

@@ -368,6 +368,264 @@ class AnalyticsDAO:
             return [dict(row) for row in results]
 
     # ==========================================
+    # 사용자접속정보 탭용 메서드
+    # ==========================================
+
+    def get_user_list_with_stats(self, page: int = 1, page_size: int = 10, search_term: str = None, mode: str = 'all') -> Dict:
+        """
+        사용자 목록과 접속 통계를 조회합니다 (사용자접속정보 탭용).
+        TB_USER와 TB_USER_ACS_LOG를 조인하여 사용자별 접속 통계를 계산합니다.
+        
+        Args:
+            mode: 'all' (중복 포함, 기본값) 또는 'distinct' (1일 1접속)
+        """
+        offset = (page - 1) * page_size
+        
+        # mode에 따른 COUNT 방식 결정
+        count_expr = "COUNT(DISTINCT DATE(acs_dt))" if mode == 'distinct' else "COUNT(*)"
+        total_count_expr = "COUNT(DISTINCT DATE(ul.acs_dt))" if mode == 'distinct' else "COUNT(ul.acs_dt)"
+        
+        # 기본 쿼리 - 최근 6개월 월별 데이터 포함
+        base_query = """
+            WITH user_stats AS (
+                SELECT 
+                    u.user_id,
+                    u.acc_sts,
+                    u.acc_cre_dt,
+                    COUNT(DISTINCT DATE(ul.acs_dt)) as total_days,
+                    MAX(ul.acs_dt) as last_acs_dt,
+                    """ + total_count_expr + """ as total_acs_cnt
+                FROM tb_user u
+                LEFT JOIN tb_user_acs_log ul ON u.user_id = ul.user_id
+                {where_clause}
+                GROUP BY u.user_id, u.acc_sts, u.acc_cre_dt
+            ),
+            monthly_6m AS (
+                SELECT 
+                    user_id,
+                    """ + count_expr + """ FILTER (WHERE acs_dt >= DATE_TRUNC('month', CURRENT_TIMESTAMP) - INTERVAL '0 months') as m0,
+                    """ + count_expr + """ FILTER (WHERE acs_dt >= DATE_TRUNC('month', CURRENT_TIMESTAMP) - INTERVAL '1 months' AND acs_dt < DATE_TRUNC('month', CURRENT_TIMESTAMP) - INTERVAL '0 months') as m1,
+                    """ + count_expr + """ FILTER (WHERE acs_dt >= DATE_TRUNC('month', CURRENT_TIMESTAMP) - INTERVAL '2 months' AND acs_dt < DATE_TRUNC('month', CURRENT_TIMESTAMP) - INTERVAL '1 months') as m2,
+                    """ + count_expr + """ FILTER (WHERE acs_dt >= DATE_TRUNC('month', CURRENT_TIMESTAMP) - INTERVAL '3 months' AND acs_dt < DATE_TRUNC('month', CURRENT_TIMESTAMP) - INTERVAL '2 months') as m3,
+                    """ + count_expr + """ FILTER (WHERE acs_dt >= DATE_TRUNC('month', CURRENT_TIMESTAMP) - INTERVAL '4 months' AND acs_dt < DATE_TRUNC('month', CURRENT_TIMESTAMP) - INTERVAL '3 months') as m4,
+                    """ + count_expr + """ FILTER (WHERE acs_dt >= DATE_TRUNC('month', CURRENT_TIMESTAMP) - INTERVAL '5 months' AND acs_dt < DATE_TRUNC('month', CURRENT_TIMESTAMP) - INTERVAL '4 months') as m5
+                FROM tb_user_acs_log
+                WHERE acs_dt >= DATE_TRUNC('month', CURRENT_TIMESTAMP) - INTERVAL '5 months'
+                GROUP BY user_id
+            )
+            SELECT 
+                us.user_id,
+                us.acc_sts,
+                TO_CHAR(us.acc_cre_dt, 'YYYY-MM-DD') as acc_cre_dt,
+                COALESCE(us.total_days, 0) as total_days,
+                TO_CHAR(us.last_acs_dt, 'YYYY-MM-DD HH24:MI:SS') as last_acs_dt,
+                COALESCE(us.total_acs_cnt, 0) as total_acs_cnt,
+                COALESCE(m6.m0, 0) as m0,
+                COALESCE(m6.m1, 0) as m1,
+                COALESCE(m6.m2, 0) as m2,
+                COALESCE(m6.m3, 0) as m3,
+                COALESCE(m6.m4, 0) as m4,
+                COALESCE(m6.m5, 0) as m5
+            FROM user_stats us
+            LEFT JOIN monthly_6m m6 ON us.user_id = m6.user_id
+            ORDER BY us.last_acs_dt DESC NULLS LAST, us.user_id
+            LIMIT %s OFFSET %s
+        """
+        
+        # 검색 조건
+        where_clause = ""
+        params = []
+        if search_term:
+            where_clause = "WHERE u.user_id ILIKE %s"
+            params = [f"%{search_term}%"]
+        
+        query = base_query.format(where_clause=where_clause)
+        params.extend([page_size, offset])
+        
+        with self.conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            # 사용자 목록 조회
+            cur.execute(query, params)
+            rows = cur.fetchall()
+            
+            # 결과 가공 - monthly_counts 배열 추가
+            users = []
+            for row in rows:
+                user = dict(row)
+                # 6개월 월별 데이터 배열로 변환 (최근→과거 순: m0, m1, m2, m3, m4, m5)
+                user['monthly_counts'] = [user['m0'], user['m1'], user['m2'], user['m3'], user['m4'], user['m5']]
+                del user['m0'], user['m1'], user['m2'], user['m3'], user['m4'], user['m5']
+                users.append(user)
+            
+            # 전체 카운트 조회
+            count_query = """
+                SELECT COUNT(*) as total FROM tb_user
+                {where_clause}
+            """.format(where_clause=where_clause.replace('u.', ''))
+            count_params = [f"%{search_term}%"] if search_term else []
+            cur.execute(count_query, count_params)
+            total = cur.fetchone()['total']
+        
+        logging.info(f"DAO: Fetched {len(users)} users with stats (page {page}/{page_size}, mode={mode}).")
+        return {
+            'items': users,
+            'total': total,
+            'page': page,
+            'page_size': page_size,
+            'total_pages': (total + page_size - 1) // page_size
+        }
+
+    def get_user_monthly_heatmap(self, user_id: str, distinct_mode: bool = False) -> List[int]:
+        """
+        특정 사용자의 최근 6개월 히트맵 데이터를 조회합니다.
+        월별 접속 횟수를 배열로 반환합니다 [6개월 전, ..., 이번 달].
+        
+        Args:
+            distinct_mode: True인 경우 1일 1접속으로 계산
+        """
+        # COUNT 표현식 결정
+        count_expr = "COUNT(DISTINCT DATE(ul.acs_dt))" if distinct_mode else "COUNT(ul.acs_dt)"
+        
+        query = f"""
+            WITH months AS (
+                SELECT 
+                    DATE_TRUNC('month', CURRENT_TIMESTAMP - INTERVAL '5 months') + 
+                    (INTERVAL '1 month' * generate_series(0, 5)) as month_start,
+                    generate_series(0, 5) as month_idx
+            )
+            SELECT 
+                m.month_idx,
+                m.month_start,
+                COALESCE({count_expr}, 0) as access_count
+            FROM months m
+            LEFT JOIN tb_user_acs_log ul ON 
+                ul.user_id = %s AND
+                ul.acs_dt >= m.month_start AND
+                ul.acs_dt < m.month_start + INTERVAL '1 month'
+            GROUP BY m.month_idx, m.month_start
+            ORDER BY m.month_idx
+        """
+        
+        with self.conn.cursor() as cur:
+            cur.execute(query, [user_id])
+            results = cur.fetchall()
+            return [r[2] for r in results] if results else [0, 0, 0, 0, 0, 0]
+
+    def get_user_weekly_heatmap(self, user_id: str, distinct_mode: bool = False) -> List[int]:
+        """
+        특정 사용자의 최근 6개월 주차별 히트맵 데이터를 조회합니다.
+        - distinct_mode=True: 1일 1접속 (중복 제거)
+        - distinct_mode=False: 중복 포함 (전체 접속)
+        - 반환: 26주 (6개월) 접속 횟수 배열, 월 구분을 위한 None 값 포함
+        """
+        # 26주 (6개월) 기준, 매월 4주씩 + 구분자
+        if distinct_mode:
+            # 1일 1접속 모드: 날짜별 DISTINCT COUNT
+            query = """
+                WITH weeks AS (
+                    SELECT 
+                        DATE_TRUNC('week', CURRENT_TIMESTAMP - INTERVAL '25 weeks') + 
+                        (INTERVAL '1 week' * generate_series(0, 25)) as week_start,
+                        generate_series(0, 25) as week_idx
+                )
+                SELECT 
+                    w.week_idx,
+                    w.week_start,
+                    COALESCE(COUNT(DISTINCT DATE(ul.acs_dt)), 0) as access_count
+                FROM weeks w
+                LEFT JOIN tb_user_acs_log ul ON 
+                    ul.user_id = %s AND
+                    ul.acs_dt >= w.week_start AND
+                    ul.acs_dt < w.week_start + INTERVAL '1 week'
+                GROUP BY w.week_idx, w.week_start
+                ORDER BY w.week_idx
+            """
+        else:
+            # 중복 포함 모드: 전체 접속 COUNT
+            query = """
+                WITH weeks AS (
+                    SELECT 
+                        DATE_TRUNC('week', CURRENT_TIMESTAMP - INTERVAL '25 weeks') + 
+                        (INTERVAL '1 week' * generate_series(0, 25)) as week_start,
+                        generate_series(0, 25) as week_idx
+                )
+                SELECT 
+                    w.week_idx,
+                    w.week_start,
+                    COALESCE(COUNT(ul.acs_dt), 0) as access_count
+                FROM weeks w
+                LEFT JOIN tb_user_acs_log ul ON 
+                    ul.user_id = %s AND
+                    ul.acs_dt >= w.week_start AND
+                    ul.acs_dt < w.week_start + INTERVAL '1 week'
+                GROUP BY w.week_idx, w.week_start
+                ORDER BY w.week_idx
+            """
+        
+        with self.conn.cursor() as cur:
+            cur.execute(query, [user_id])
+            results = cur.fetchall()
+            
+            # 26주 데이터 생성
+            weekly_data = [r[2] for r in results] if results else [0] * 26
+            
+            # 월 구분을 위한 포맷팅 (4주씩 묶어서, 매월 마지막에 None 추가)
+            formatted_data = []
+            for i, count in enumerate(weekly_data):
+                formatted_data.append(count)
+                # 매월 마지막 주 (3, 7, 11, 15, 19, 23 인덱스) 다음에 구분자 추가
+                if i in [3, 7, 11, 15, 19, 23]:
+                    formatted_data.append(None)  # 구분자
+            
+            return formatted_data
+
+    def get_user_hourly_distribution(self, user_id: str) -> List[int]:
+        """
+        특정 사용자의 시간대별 접속 분포를 조회합니다 (0-23시).
+        """
+        query = """
+            SELECT 
+                EXTRACT(HOUR FROM acs_dt)::int as hour,
+                COUNT(*) as cnt
+            FROM tb_user_acs_log
+            WHERE user_id = %s
+                AND acs_dt >= CURRENT_TIMESTAMP - INTERVAL '30 days'
+            GROUP BY EXTRACT(HOUR FROM acs_dt)
+            ORDER BY hour
+        """
+        
+        with self.conn.cursor() as cur:
+            cur.execute(query, [user_id])
+            results = cur.fetchall()
+            
+            # 0-23시 배열 초기화
+            hourly = [0] * 24
+            for hour, cnt in results:
+                if 0 <= hour < 24:
+                    hourly[hour] = cnt
+            return hourly
+
+    def get_user_recent_logs(self, user_id: str, limit: int = 10) -> List[Dict]:
+        """
+        특정 사용자의 최근 접속 로그를 조회합니다.
+        """
+        query = """
+            SELECT 
+                TO_CHAR(MIN(acs_dt), 'YYYY-MM-DD') as d,
+                COUNT(*) as cnt,
+                MIN(TO_CHAR(acs_dt, 'HH24:MI')) as first,
+                MAX(TO_CHAR(acs_dt, 'HH24:MI')) as last
+            FROM tb_user_acs_log
+            WHERE user_id = %s
+            GROUP BY acs_dt::date
+            ORDER BY MIN(acs_dt) DESC
+            LIMIT %s
+        """
+        
+        with self.conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(query, [user_id, limit])
+            return [dict(row) for row in cur.fetchall()]
+
+    # ==========================================
     # 시간 제공 메서드 (Dao-centric Time)
     # ==========================================
 
