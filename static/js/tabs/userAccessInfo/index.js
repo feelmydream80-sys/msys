@@ -7,6 +7,7 @@
 import { config } from './config.js';
 import statusManager from './statusManager.js';
 import userListRenderer, { setThresholds } from './userList.js';
+import { getKSTNow, getLast6Months } from '../../modules/common/dateUtils.js';
 
 // Chart.js가 로드되어 있는지 확인
 function ensureChartJS() {
@@ -116,14 +117,12 @@ class UserAccessInfo {
     }
 
     updateMonthHeaders() {
-        // 최근 6개월 월 라벨 업데이트
-        const monthHeaders = document.querySelectorAll('#heatmapMonthHeaders .heatmap-month-header');
-        const today = new Date();
-        const monthNames = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
-        
-        monthHeaders.forEach((header, index) => {
-            const d = new Date(today.getFullYear(), today.getMonth() - 5 + index, 1);
-            header.textContent = monthNames[d.getMonth()];
+        const monthLabels = getLast6Months(6);
+
+        document.querySelectorAll('.month-header-col').forEach((th, idx) => {
+            if (th && monthLabels[idx]) {
+                th.textContent = monthLabels[idx];
+            }
         });
     }
 
@@ -360,7 +359,8 @@ class UserAccessInfo {
             }
         };
 
-        const months = ['11월', '12월', '1월', '2월', '3월', '4월'];
+        // 최근 6개월 라벨 동적 생성 (KST 기준) - YY.M 형식
+        const months = getLast6Months(6);
 
         // 월별 접속 추이 차트
         const chartCanvas = document.getElementById('ua-chart');

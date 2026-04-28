@@ -30,6 +30,85 @@ export function toKST(date) {
 }
 
 /**
+ * 과거 N개월의 月 배열을 반환합니다 (가장 최근 月 first).
+ * 예: 현재 4월 → ['26.4', '26.3', '26.2', '26.1', '25.12', '25.11']
+ * @param {number} months - 개월 수 (기본값: 6)
+ * @returns {string[]} YY.M 형식의 月 배열
+ */
+export function getLast6Months(months = 6) {
+    const result = [];
+    const now = getKSTNow();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1; // 1-12
+
+    for (let i = 0; i < months; i++) {
+        let month = currentMonth - i;
+        let year = currentYear;
+
+        while (month <= 0) {
+            month += 12;
+            year -= 1;
+        }
+
+        const shortYear = String(year).slice(2);
+        const monthStr = String(month).padStart(2, '0');
+        result.push(`${shortYear}.${monthStr}`);
+    }
+
+    return result;
+}
+
+/**
+ * 지정된 月의 첫 번째 주차 번호(1-5)를 반환합니다.
+ * 주 开始이 月 시작과 다른 경우 분할로 처리.
+ * @param {number} year - 연도
+ * @param {number} month - 월 (1-12)
+ * @returns {number} 첫 번째 주차 번호 (1-5)
+ */
+export function getFirstWeekOfMonth(year, month) {
+    const firstDay = new Date(year, month - 1, 1);
+    const dayOfWeek = firstDay.getDay();
+    return dayOfWeek === 0 ? 1 : dayOfWeek < 4 ? 1 : 2;
+}
+
+/**
+ * 각 月의 주차 수 배열을 동적으로 계산합니다.
+ * [4,5,4,5,4,4] - 현재 4월 기준 6개월
+ * @param {number} months - 개월 수 (기본값: 6)
+ * @returns {number[]} 각 月별 주차 수 배열
+ */
+export function getWeeksPerMonthFn(months = 6) {
+    const now = getKSTNow();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
+
+    const result = [];
+    for (let i = 0; i < months; i++) {
+        let month = currentMonth - i;
+        let year = currentYear;
+        while (month <= 0) {
+            month += 12;
+            year -= 1;
+        }
+
+        const firstDay = new Date(year, month - 1, 1);
+        const lastDay = new Date(year, month, 0);
+        const daysInMonth = lastDay.getDate();
+        const firstDayOfWeek = firstDay.getDay();
+
+        let weeks = Math.ceil((daysInMonth + firstDayOfWeek) / 7);
+        weeks = Math.min(5, Math.max(4, weeks));
+        result.push(weeks);
+    }
+
+    while (result.length < months) {
+        result.unshift(4);
+    }
+
+    return result.reverse();
+}
+
+/**
  * 날짜를 YYYY-MM-DD 형식의 문자열로 변환합니다.
  * @param {Date} date - 변환할 Date 객체
  * @returns {string} YYYY-MM-DD 형식의 날짜 문자열

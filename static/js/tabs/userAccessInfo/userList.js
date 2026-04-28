@@ -5,7 +5,7 @@
 
 import { config } from './config.js';
 import statusManager from './statusManager.js';
-import { formatDBDateTime } from '../../modules/common/dateUtils.js';
+import { formatDBDateTime, getLast6Months, getWeeksPerMonthFn } from '../../modules/common/dateUtils.js';
 
 // 히트맵 색상 계산 (모드별 다른 기준)
 function hmColor(value, mode = 'all') {
@@ -140,24 +140,11 @@ class UserListRenderer {
             
             const data = await response.json();
             
-            // 사용자별 주간 데이터(26주)를 병렬로 가져오기
-            const usersWithWeeklyData = await Promise.all(
-                data.items.map(async (user) => {
-                    try {
-                        const weeklyResponse = await fetch(`/api/analytics/statistics/user-detail/${user.user_id}?mode=${this.mode}`);
-                        if (weeklyResponse.ok) {
-                            const detailData = await weeklyResponse.json();
-                            return {
-                                ...user,
-                                weekly_data: detailData.hm || [] // 26주 주간 데이터
-                            };
-                        }
-                    } catch (e) {
-                        console.warn(`Failed to fetch weekly data for ${user.user_id}:`, e);
-                    }
-                    return { ...user, weekly_data: [] };
-                })
-            );
+            // 사용자별 주간 데이터(26주)는 이미 API 응답에 포함됨 (backend get_user_list_with_stats에서 주입)
+            const usersWithWeeklyData = data.items.map(user => ({
+                ...user,
+                weekly_data: user.weekly_data || [] // 26주 주간 데이터 (이미 포함됨)
+            }));
             
             // API 응답을 프론트엔드 형식으로 변환
             return {
@@ -165,7 +152,7 @@ class UserListRenderer {
                     user_id: user.user_id,
                     user_nm: user.user_id, // TB_USER에 이름 필드가 없으면 ID 사용
                     acc_sts: user.acc_sts,
-                    monthly_counts: user.monthly_counts || [0, 0, 0, 0, 0, 0], // 6개월 월별 데이터
+                    monthly_counts: user.monthly_counts || [0,0,0,0,0,0], // 6개월 월별 데이터
                     weekly_data: user.weekly_data || [], // 26주 주간 데이터
                     total: user.total_acs_cnt || 0,
                     last_acs_dt: user.last_acs_dt,
@@ -249,16 +236,16 @@ class UserListRenderer {
             const lastAccessDate = user.last_acs_dt ? 
                 formatDBDateTime(user.last_acs_dt).split(' ')[0] : '-';
 
-            // 주차별 데이터를 월별로 그룹화 [4,5,4,5,4,4] = 26주
-            const weeksPerMonth = [4, 5, 4, 5, 4, 4];
+            // 주차별 데이터를 월별로 그룹화 - 동적 계산
+            const weeksPerMonth = getWeeksPerMonthFn(6);
             const weeklyData = user.weekly_data || [];
             
-            // 월별 데이터 렌더링 (차트 타입에 따라 다름)
+            // 월별 데이터 렌더링 (차트 타입에 따라 다름) - 둘 다 동일한 26주 데이터 사용
             let monthlyCells;
             
             if (this.chartType === 'line') {
-                // 선차트 모드: 월별 미니 선차트
-                monthlyCells = this._renderMonthlyLineCells(user.monthly_counts || [0, 0, 0, 0, 0, 0]);
+                // 선차트 모드: 26주 데이터를 월별로 집계하여 선으로 표시
+                monthlyCells = this._renderWeeklyLineCells(weeklyData, weeksPerMonth);
             } else {
                 // 히트맵(막대 차트) 모드: 주차별 막대
                 monthlyCells = this._renderMonthlyHeatmapCells(weeklyData, weeksPerMonth);
@@ -398,30 +385,49 @@ class UserListRenderer {
         }).join('');
     }
 
-    // 선차트 모드: 월별 미니 선차트
-    _renderMonthlyLineCells(monthlyCounts) {
-        const maxVal = Math.max(...monthlyCounts, 1);
-        
-        return monthlyCounts.map((count, idx) => {
-            const color = hmColor(count, this.mode);
-            // SVG 미니 차트 생성
-            const points = monthlyCounts.map((val, i) => {
-                const x = (i / (monthlyCounts.length - 1 || 1)) * 50;
+    // 선차트 모드: 26주 데이터 → 주차별 선차트 (히트맵과 동일한 데이터 사용)
+    _renderWeeklyLineCells(weeklyData, weeksPerMonth) {
+        const cleanWeeklyData = (weeklyData || []).filter(v => v !== null).slice(0, 26);
+        while (cleanWeeklyData.length < 26) {
+            cleanWeeklyData.push(0);
+        }
+
+        let weekIndex = 0;
+
+        return weeksPerMonth.map((weekCount, monthIdx) => {
+            const monthWeeks = [];
+            for (let i = 0; i < weekCount && weekIndex < cleanWeeklyData.length; i++) {
+                monthWeeks.push(cleanWeeklyData[weekIndex]);
+                weekIndex++;
+            }
+
+            if (monthWeeks.length === 0) {
+                return `<td style="text-align: center; padding: 8px 4px;">
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
+                        <svg width="50" height="25"></svg>
+                        <span style="font-size: 10px; font-weight: 500; color: #999;">0</span>
+                    </div>
+                </td>`;
+            }
+
+            const maxVal = Math.max(...monthWeeks, 1);
+            const points = monthWeeks.map((val, i) => {
+                const x = (i / (monthWeeks.length - 1 || 1)) * 50;
                 const y = 25 - ((val / maxVal) * 20);
                 return `${x},${y}`;
             }).join(' ');
-            
+
             return `<td style="text-align: center; padding: 8px 4px;">
                 <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
                     <svg width="50" height="25" style="vertical-align: middle;">
                         <polyline points="${points}" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        ${monthlyCounts.map((val, i) => {
-                            const x = (i / (monthlyCounts.length - 1 || 1)) * 50;
+                        ${monthWeeks.map((val, i) => {
+                            const x = (i / (monthWeeks.length - 1 || 1)) * 50;
                             const y = 25 - ((val / maxVal) * 20);
-                            return `<circle cx="${x}" cy="${y}" r="2" fill="${i === idx ? '#1e40af' : '#93c5fd'}"/>`;
+                            return `<circle cx="${x}" cy="${y}" r="2" fill="${i === monthWeeks.length - 1 ? '#1e40af' : '#93c5fd'}"/>`;
                         }).join('')}
                     </svg>
-                    <span style="font-size: 10px; font-weight: 500; color: ${count > 0 ? '#333' : '#999'};">${count}</span>
+                    <span style="font-size: 10px; font-weight: 500; color: ${monthWeeks[monthWeeks.length - 1] > 0 ? '#333' : '#999'};">${monthWeeks[monthWeeks.length - 1]}</span>
                 </div>
             </td>`;
         }).join('');
