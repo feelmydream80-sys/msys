@@ -21,11 +21,11 @@ function debounce(func, delay) {
 }
 
 export async function init() {
-    console.log('데이터 정의 탭 초기화');
+    
     
     // 중복 호출 방지
     if (isInitialized) {
-        console.log('데이터 정의 탭이 이미 초기화되어 있습니다.');
+        
         return;
     }
     
@@ -56,9 +56,9 @@ export async function init() {
     // API 데이터로 카드 렌더링
     try {
         await renderGroupCards();
-        console.log('데이터 정의 탭 초기화 완료');
+        
     } catch (error) {
-        console.error('데이터 정의 탭 초기화 실패:', error);
+        
         // 오류 발생시 사용자에게 알림
         const container = document.getElementById('definitionCardContainer');
         container.innerHTML = '<div style="text-align: center; color: #94a3b8; padding: 20px;">데이터 정의 탭 초기화에 실패했습니다. 페이지를 새로고침해 주세요.</div>';
@@ -73,7 +73,7 @@ function setupUIElements() {
     // 기존 검색 UI가 있는지 확인하여 중복 생성 방지
     const existingSearchContainer = document.getElementById('dataDefinitionSearch')?.parentElement;
     if (existingSearchContainer) {
-        console.log('검색 UI가 이미 존재하므로 중복 생성을 방지합니다.');
+        
         return;
     }
     
@@ -179,9 +179,9 @@ async function renderGroupCards() {
 
     try {
         // API에서 전체 데이터 가져오기
-        console.log('API에서 데이터 정의 그룹 정보 가져오기');
+        
         allData = await getGroups();
-        console.log('API 응답 데이터:', allData);
+        
         
         if (allData && allData.length > 0) {
             // 전체 데이터를 그룹별로 분류
@@ -228,7 +228,7 @@ async function renderGroupCards() {
             });
             
             const groups = Object.values(groupedData);
-            console.log('분류된 그룹 데이터:', groups);
+            
             
             groups.sort((a, b) => {
                 const numA = parseInt(a.cd.replace('CD', ''));
@@ -270,7 +270,7 @@ async function renderGroupCards() {
             container.innerHTML = '<div style="text-align: center; color: #94a3b8; padding: 20px;">그룹 데이터를 불러오지 못했습니다.</div>';
         }
     } catch (error) {
-        console.log('그룹 데이터 로드 실패:', error);
+        
         container.innerHTML = '<div style="text-align: center; color: #94a3b8; padding: 20px;">그룹 데이터를 불러오지 못했습니다.</div>';
     }
 }
@@ -287,7 +287,7 @@ function selectGroup(group) {
         selectedGroup = group;
         loadGroupDetails(group.cd);
     } else {
-        console.error('선택된 카드를 찾을 수 없습니다:', group.cd);
+        
     }
 }
 
@@ -298,7 +298,7 @@ const itemsPerPageOptions = [5, 10, 20, 50, 100]; // 표시 수량 옵션
 
 // 3. 그룹 상세 정보 로드 및 렌더링
 async function loadGroupDetails(groupCd) {
-    console.log(`그룹 상세 정보 로드 시작: ${groupCd}`);
+    
     
     // selectedRow 상태 초기화 (새 그룹을 선택하면 이전 선택된 행이 초기화됨)
     selectedRow = null;
@@ -463,7 +463,7 @@ async function loadGroupDetails(groupCd) {
     }
     
     updateActionButtons();
-    console.log(`그룹 상세 정보 로드 완료: ${groupCd}`);
+    
 }
 
 // 페이징된 데이터 렌더링 함수 (정렬 상태 적용)
@@ -572,7 +572,7 @@ async function deactivateSelectedItems() {
         await loadGroupDetails(selectedGroup.cd);
         await renderGroupCards(); // 그룹 카드 리로드
     } catch (error) {
-        console.error('비활성화 실패:', error);
+        
         showToast('항목 비활성화에 실패했습니다.', TOAST_TYPES.ERROR);
     }
 }
@@ -678,7 +678,7 @@ async function activateSelectedItems() {
         await loadGroupDetails(selectedGroup.cd);
         await renderGroupCards(); // 그룹 카드 리로드
     } catch (error) {
-        console.error('활성화 실패:', error);
+        
         showToast('항목 활성화에 실패했습니다.', TOAST_TYPES.ERROR);
     }
 }
@@ -721,7 +721,7 @@ function renderDetailRow(item) {
         <td>${item.update_dt ? formatDateTime(item.update_dt, 'YYYY-MM-DD HH:mm:ss') : ''}</td>
     `;
     
-    console.log('DEBUG dataDefinition: item.update_dt =', item.update_dt, '-> formatDateTime result =', item.update_dt ? formatDateTime(item.update_dt, 'YYYY-MM-DD HH:mm:ss') : '');
+    
     
     return row;
 }
@@ -743,9 +743,9 @@ function updateActionButtons() {
     const deactivateBtn = document.getElementById('deactivateBtn');
     const addDetailBtn = document.querySelector('#buttonContainer .btn-primary');
     
-    // 디버그 로그 추가
-    console.log('updateActionButtons 호출');
-    console.log('addDetailBtn:', addDetailBtn);
+    
+    
+    
     
     const selectedCheckboxes = document.querySelectorAll('#detailTableBody input[type="checkbox"]:checked');
     const selectedCount = selectedCheckboxes.length;
@@ -754,7 +754,7 @@ function updateActionButtons() {
         activateBtn.disabled = false;
         deactivateBtn.disabled = false;
         addDetailBtn.disabled = true;
-        editBtn.disabled = selectedCount > 1; // 2개 이상 선택시 수정 버튼 비활성화
+        editBtn.disabled = !selectedRow;
     } else {
         activateBtn.disabled = true;
         deactivateBtn.disabled = true;
@@ -768,7 +768,7 @@ function updateActionButtons() {
     }
     
     // 최종 상태 로그 추가
-    console.log('addDetailBtn.disabled:', addDetailBtn.disabled);
+    
 }
 
 // 7. 이벤트 리스너 설정
@@ -795,16 +795,16 @@ setupEventListeners.hasRun = false;
 // 8. 그룹 액션 버튼 설정
 function setupGroupActionButtons() {
     // setupGroupActionButtons.hasRun 플래그 제거하여 항상 이벤트 리스너를 재설정하도록 변경
-    console.log('setupGroupActionButtons 함수 실행');
+    
     
     const addGroupBtn = document.getElementById('addGroupBtn');
     const editGroupBtn = document.getElementById('editGroupBtn');
     const deleteGroupBtn = document.getElementById('deleteGroupBtn');
 
-    console.log('DOM 요소 접근 결과:');
-    console.log('addGroupBtn:', addGroupBtn);
-    console.log('editGroupBtn:', editGroupBtn);
-    console.log('deleteGroupBtn:', deleteGroupBtn);
+    
+    
+    
+    
 
     if (addGroupBtn) {
         // 기존 이벤트 리스너 제거 후 새로 추가
@@ -827,7 +827,7 @@ function setupGroupActionButtons() {
 
 // 그룹 액션 버튼 클릭 핸들러 함수들
 function handleAddGroupClick() {
-    console.log('addGroupBtn 버튼 클릭 감지');
+    
     showAddGroupModal();
 }
 
@@ -850,7 +850,7 @@ function handleDeleteGroupClick() {
 // 9. 그룹 추가 모달 표시 (tb_con_mst 스키마 기반)
 async function showAddGroupModal() {
     if (window.isModalOpen === true) {
-        console.log('모달이 이미 열려있습니다.');
+        
         return;
     }
 
@@ -915,7 +915,7 @@ async function showAddGroupModal() {
                     allData = await getGroups(); // 전역 데이터 재로드
                     await renderGroupCards();
                 } catch (error) {
-                    console.error('그룹 활성화 실패:', error);
+                    
                     alert('그룹 활성화에 실패했습니다.');
                 }
             } else {
@@ -948,7 +948,7 @@ async function showAddGroupModal() {
                 allData = await getGroups(); // 전역 데이터 재로드
                 await renderGroupCards();
             } catch (error) {
-                console.error('그룹 추가 실패:', error);
+                
                 alert('그룹 추가에 실패했습니다.');
             }
         }
@@ -1058,21 +1058,16 @@ async function showEditGroupModal(group) {
             item.cd_cl === group.cd && item.cd === group.cd
         );
         
-        console.log('그룹 수정 모달 사용 데이터:', {
-            group: group,
-            groupHeader: groupHeader,
-            use_yn: group.use_yn,
-            trimmed_use_yn: group.use_yn ? group.use_yn.trim() : 'undefined'
-        });
+        
         
         // groupHeader가 없을 경우 직접 API 호출로 그룹 헤더 데이터를 가져오기
         let safeGroupHeader = groupHeader;
         if (!safeGroupHeader) {
-            console.log('groupHeader가 없어 직접 API 호출로 데이터 가져오기');
+            
             const response = await fetch(`/api/data_definition/groups`);
             if (response.ok) {
                 const data = await response.json();
-                console.log('API에서 가져온 데이터:', data);
+                
                 safeGroupHeader = data.find(item => item.cd_cl === group.cd && item.cd === group.cd) || {};
             } else {
                 safeGroupHeader = {};
@@ -1126,13 +1121,13 @@ async function showEditGroupModal(group) {
                     allData = await getGroups(); // 전역 데이터 재로드
                     await renderGroupCards();
                 } catch (error) {
-                    console.error('그룹 수정 실패:', error);
+                    
                     alert('그룹 수정에 실패했습니다.');
                 }
             }
         });
     } catch (error) {
-        console.log('그룹 데이터 로드 실패:', error);
+        
         alert('그룹 데이터를 불러오는데 실패했습니다.');
     }
 }
@@ -1158,7 +1153,7 @@ async function showDeleteGroupConfirm(group) {
                 selectedGroup = null;
                 selectedRow = null;
             } catch (error) {
-                console.error('그룹 삭제 실패:', error);
+                
                 alert('그룹 삭제에 실패했습니다.');
             }
     }
@@ -1167,12 +1162,12 @@ async function showDeleteGroupConfirm(group) {
 // 12. 수정 모달 표시
 async function showEditModal(item) {
     try {
-        console.log('상세 수정 모달 표시 시작:', item);
+        
         let groupItemFields = [];
         
         // allData가 없거나 유효하지 않은 경우 API로 다시 가져오기
         if (!allData || !Array.isArray(allData) || allData.length === 0) {
-            console.log('allData가 없거나 유효하지 않아 API로 다시 가져오기');
+            
             allData = await getGroups();
         }
         
@@ -1181,7 +1176,7 @@ async function showEditModal(item) {
         
         // groupHeader를 찾지 못한 경우 API로 직접 가져오기
         if (!groupHeader) {
-            console.log('groupHeader를 찾지 못해 직접 API 호출로 가져오기');
+            
             const response = await fetch(`/api/data_definition/groups`);
             if (response.ok) {
                 const data = await response.json();
@@ -1189,7 +1184,7 @@ async function showEditModal(item) {
             }
         }
         
-        console.log('찾은 groupHeader:', groupHeader);
+        
         
         if (groupHeader) {
             const itemFields = ['item1', 'item2', 'item3', 'item4', 'item5', 'item6', 'item7', 'item8', 'item9', 'item10'];
@@ -1204,7 +1199,7 @@ async function showEditModal(item) {
             });
         }
         
-        console.log('groupItemFields:', groupItemFields);
+        
         
         createModal(getDetailModalHTML(`${item.cd} - ${item.cd_nm} 수정`, item, groupItemFields), {
             title: `${item.cd} - ${item.cd_nm} 수정`,
@@ -1240,13 +1235,13 @@ async function showEditModal(item) {
                     await loadGroupDetails(selectedGroup.cd);
                     await renderGroupCards(); // 그룹 카드 리로드
                 } catch (error) {
-                    console.error('데이터 수정 실패:', error);
+                    
                     alert('데이터 수정에 실패했습니다.');
                 }
             }
         });
     } catch (error) {
-        console.error('상세 데이터 로드 실패:', error);
+        
         alert('상세 데이터를 불러오는데 실패했습니다.');
     }
 }
@@ -1366,28 +1361,28 @@ async function showAddDetailModal(group) {
             const cdValue = document.getElementById('newDetailCd').value.trim();
             const cd_nm = document.getElementById('newDetailNm').value.trim();
             
-            console.log('validateAddModal 호출:', { cdValue, cd_nm });
+            
             
             let isValid = true;
             
             if (!cdValue || !cd_nm) {
-                console.log('cdValue 또는 cd_nm이 비어있음');
+                
                 isValid = false;
             } else {
                 const cdNum = parseInt(cdValue);
                 const groupNum = parseInt(group.cd.replace('CD', ''));
                 
-                console.log('cdNum:', cdNum, 'groupNum:', groupNum);
+                
                 
                 if (isNaN(cdNum) || cdNum % 100 === 0 || cdNum < groupNum || cdNum > groupNum + 99) {
-                    console.log('cdNum이 유효하지 않음');
+                    
                     isValid = false;
                 } else {
                     const cd = 'CD' + cdValue;
                     const exists = allData.some(item => item.cd_cl === group.cd && item.cd === cd);
-                    console.log('cd exists:', exists);
+                    
                     if (exists) {
-                        console.log('cd가 이미 존재함');
+                        
                         isValid = false;
                         document.getElementById('newDetailCdError').textContent = '이미 존재하는 데이터 코드입니다.';
                         document.getElementById('newDetailCdError').style.display = 'block';
@@ -1399,9 +1394,9 @@ async function showAddDetailModal(group) {
                 }
             }
             
-            console.log('최종 isValid:', isValid);
+            
             saveBtn.disabled = !isValid;
-            console.log('saveBtn.disabled:', saveBtn.disabled);
+            
         }, 300);
         
         document.getElementById('newDetailCd').addEventListener('input', validateAddModal);
@@ -1434,8 +1429,8 @@ async function showAddDetailModal(group) {
             };
 
             try {
-                console.log('=== 데이터 추가 시작 ===');
-                console.log('=== newDetailData:', newDetailData);
+                
+                
                 await createItem(newDetailData);
                 alert('새 데이터가 추가되었습니다.');
                 document.body.removeChild(modal);
@@ -1444,35 +1439,35 @@ async function showAddDetailModal(group) {
                 await renderGroupCards(); // 그룹 카드 리로드
                 
                 // 관리자 설정 데이터 캐시 갱신 (CD309 추가 후 기본설정과 차트/시각화 관리에 표시되도록)
-                console.log('=== 관리자 설정 데이터 캐시 갱신 시작 ===');
+                
                 try {
                     // dataManager의 refreshAdminSettings 함수를 사용하여 관리자 설정 데이터의 캐시를 갱신합니다.
                     await import('../../modules/common/dataManager.js').then(async (dataManager) => {
                         const refreshedData = await dataManager.refreshAdminSettings();
-                        console.log('=== 관리자 설정 데이터 캐시 갱신 완료 ===');
-                        console.log('=== 관리자 설정 데이터:', refreshedData);
+                        
+                        
                         
                         // 관리자 설정 페이지의 테이블 갱신
                         if (typeof window.loadPageData === 'function') {
-                            console.log('=== 관리자 설정 테이블 갱신 시작 ===');
+                            
                             window.loadPageData();
-                            console.log('=== 관리자 설정 테이블 갱신 완료 ===');
+                            
                         } else {
-                            console.log('=== 관리자 설정 테이블 갱신 함수가 존재하지 않습니다. ===');
+                            
                         }
                     });
                 } catch (error) {
-                    console.error('=== 관리자 설정 데이터 캐시 갱신 실패 ===');
-                    console.error('=== 오류:', error);
+                    
+                    
                 }
             } catch (error) {
-                console.error('=== 데이터 추가 실패 ===');
-                console.error('=== 오류:', error);
+                
+                
                 alert('데이터 추가에 실패했습니다.');
             }
         });
     } catch (error) {
-        console.log('상세 데이터 로드 실패:', error);
+        
         alert('상세 데이터를 불러오는데 실패했습니다.');
     }
 }
@@ -1511,7 +1506,7 @@ async function checkGroupCodeDuplicate(inputId) {
             inputElement.style.borderColor = '#ddd';
         }
     } catch (error) {
-        console.log('중복 체크 실패:', error);
+        
         errorElement.style.display = 'none';
         inputElement.style.borderColor = '#ddd';
     }

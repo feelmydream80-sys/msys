@@ -25,7 +25,7 @@ const DEFAULT_CHART_COLORS = [
 export function renderJobCheckboxes(labelDisplayType = 'name', dataPermissions = []) {
     const jobCheckboxesContainer = document.getElementById('jobCheckboxes');
     if (!jobCheckboxesContainer) {
-        console.error("Error: jobCheckboxes container not found.");
+        
         return;
     }
 
@@ -151,7 +151,7 @@ export function initializeLabelDisplayRadios(dataPermissions = []) {
 export function renderSuccessRateChart(data, chartType, mngrSettings, labelDisplayType = 'name') {
     const ctx = document.getElementById('successRateChart')?.getContext('2d');
     if (!ctx) {
-        console.error("Success Rate Chart canvas element not found.");
+        
         return;
     }
 
@@ -247,23 +247,7 @@ export function renderSuccessRateChart(data, chartType, mngrSettings, labelDispl
                     display: false // 완전 비활성화 - 차트 위 데이터 값 표시하지 않음
                 },
                 legend: {
-                    display: true,
-                    position: 'bottom',
-                    labels: {
-                        usePointStyle: true,
-                        padding: 15,
-                        // 범례 라벨을 Job 이름만 표시 (성공률 값 제거)
-                        generateLabels: (chart) => {
-                            return chart.data.datasets.map((dataset, i) => ({
-                                text: dataset.label,
-                                fillStyle: dataset.borderColor,
-                                strokeStyle: dataset.borderColor,
-                                lineWidth: 2,
-                                hidden: !chart.isDatasetVisible(i),
-                                index: i
-                            }));
-                        }
-                    }
+                    display: false
                 },
                 title: { display: true, text: '기간별 Job ID별 수집 성공률 추이' }
             },
@@ -291,6 +275,30 @@ export function renderSuccessRateChart(data, chartType, mngrSettings, labelDispl
         }
     });
     observer.observe(chartContainer);
+
+    const legendContainer = document.getElementById('successRateLegend');
+    if (legendContainer) {
+        legendContainer.innerHTML = '';
+        const datasets = successRateChart.data.datasets;
+        datasets.forEach((dataset, i) => {
+            const item = document.createElement('span');
+            item.style.cssText = 'display:inline-flex;align-items:center;cursor:pointer;font-size:12px;gap:4px;padding:2px 0;';
+            const colorDot = document.createElement('span');
+            colorDot.style.cssText = 'display:inline-block;width:12px;height:12px;border-radius:50%;background:' + dataset.borderColor + ';flex-shrink:0;';
+            const label = document.createElement('span');
+            label.style.cssText = 'color:#555;white-space:nowrap;';
+            label.textContent = dataset.label;
+            item.appendChild(colorDot);
+            item.appendChild(label);
+            item.addEventListener('click', () => {
+                const meta = successRateChart.getDatasetMeta(i);
+                meta.hidden = !meta.hidden;
+                successRateChart.update();
+                item.style.opacity = meta.hidden ? '0.4' : '1';
+            });
+            legendContainer.appendChild(item);
+        });
+    }
 }
 
 /**
@@ -345,6 +353,7 @@ export function renderTroublePieChart(troubleCodeData, chartType, startDate, end
         // API에서 제공하는 색상 사용 (TB_STS_CD_MST 기준)
         return item.bg_color || '#a3a3a3';
     });
+    const txtColors = troubleCodeData.map(item => item.txt_color || '#374151');
 
     if (troublePieChart) {
         troublePieChart.destroy();
@@ -391,7 +400,7 @@ export function renderTroublePieChart(troubleCodeData, chartType, startDate, end
                 },
                 title: { display: true, text: '장애 코드별 비율' },
                 datalabels: {
-                    color: '#fff',
+                    color: (context) => txtColors[context.dataIndex] || '#fff',
                     formatter: (value, ctx) => {
                         const sum = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
                         if (sum === 0) return '0%';
