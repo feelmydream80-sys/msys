@@ -315,7 +315,7 @@ window.ApiKeyMngrUI.renderApiKeyMngrTable = function(data) {
             }
 
             row.innerHTML = `
-                <td class="py-4 px-6 text-center" onclick="event.stopPropagation()"><input type="checkbox" data-cd="${item.cd}" ${isSelected ? 'checked' : ''} onclick="event.stopPropagation(); ApiKeyMngrUI.toggleCdSelection('${item.cd}', this.checked); ApiKeyMngrUI.updateSelectAllCheckbox('normal');"></td>
+                <td class="py-4 px-6 text-center"><input type="checkbox" data-cd="${item.cd}" ${isSelected ? 'checked' : ''} onclick="if(!event.shiftKey) event.stopPropagation(); ApiKeyMngrUI.toggleCdSelection('${item.cd}', this.checked); ApiKeyMngrUI.updateSelectAllCheckbox('normal');"></td>
                 <td class="py-4 px-6 font-medium text-gray-800">${item.cd}</td>
                 <td class="py-4 px-6 text-gray-700">${item.cd_nm || '-'}</td>
                 <td class="py-4 px-6 font-mono text-gray-700">${item.api_key}</td>
@@ -337,7 +337,7 @@ window.ApiKeyMngrUI.renderApiKeyMngrTable = function(data) {
 
             row.addEventListener('click', (e) => {
                 if (e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
-                if (e.target.tagName === 'INPUT' && e.target.type === 'checkbox') return;
+                if (e.target.tagName === 'INPUT' && e.target.type === 'checkbox' && !e.shiftKey) return;
 
                 if (e.shiftKey && window.ApiKeyMngrUI.lastClickedIndex.normal !== -1) {
                     const startIdx = Math.min(window.ApiKeyMngrUI.lastClickedIndex.normal, index);
@@ -453,7 +453,7 @@ window.ApiKeyMngrUI.renderAbnormalApiKeyMngrTable = function() {
             }
 
             row.innerHTML = `
-                <td class="py-4 px-6 text-center" onclick="event.stopPropagation()"><input type="checkbox" data-cd="${item.cd}" ${isSelected ? 'checked' : ''} onclick="event.stopPropagation(); ApiKeyMngrUI.toggleCdSelection('${item.cd}', this.checked); ApiKeyMngrUI.updateSelectAllCheckbox('abnormal');"></td>
+                <td class="py-4 px-6 text-center"><input type="checkbox" data-cd="${item.cd}" ${isSelected ? 'checked' : ''} onclick="if(!event.shiftKey) event.stopPropagation(); ApiKeyMngrUI.toggleCdSelection('${item.cd}', this.checked); ApiKeyMngrUI.updateSelectAllCheckbox('abnormal');"></td>
                 <td class="py-4 px-6 font-medium text-gray-800">${item.cd}</td>
                 <td class="py-4 px-6 text-gray-700">${item.cd_nm || '-'}</td>
                 <td class="py-4 px-6 font-mono text-gray-500">${item.api_key || '없음'}</td>
@@ -475,7 +475,7 @@ window.ApiKeyMngrUI.renderAbnormalApiKeyMngrTable = function() {
 
             row.addEventListener('click', (e) => {
                 if (e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
-                if (e.target.tagName === 'INPUT' && e.target.type === 'checkbox') return;
+                if (e.target.tagName === 'INPUT' && e.target.type === 'checkbox' && !e.shiftKey) return;
 
                 if (e.shiftKey && window.ApiKeyMngrUI.lastClickedIndex.abnormal !== -1) {
                     const startIdx = Math.min(window.ApiKeyMngrUI.lastClickedIndex.abnormal, index);
@@ -594,7 +594,7 @@ window.ApiKeyMngrUI.renderRiskApiKeyMngrTable = async function() {
             const isSelected = window.ApiKeyMngrUI.selectedCds.has(item.cd);
 
             row.innerHTML = `
-                <td class="py-4 px-4 text-center" onclick="event.stopPropagation()"><input type="checkbox" data-cd="${item.cd}" ${isSelected ? 'checked' : ''} onclick="event.stopPropagation(); ApiKeyMngrUI.toggleCdSelection('${item.cd}', this.checked); ApiKeyMngrUI.updateSelectAllCheckbox('risk');"></td>
+                <td class="py-4 px-4 text-center"><input type="checkbox" data-cd="${item.cd}" ${isSelected ? 'checked' : ''} onclick="if(!event.shiftKey) event.stopPropagation(); ApiKeyMngrUI.toggleCdSelection('${item.cd}', this.checked); ApiKeyMngrUI.updateSelectAllCheckbox('risk');"></td>
                 <td class="py-4 px-4 font-medium text-gray-800 text-sm">${item.cd}</td>
                 <td class="py-4 px-4 text-gray-700 text-sm">${item.cd_nm || '-'}</td>
                 <td class="py-4 px-4 text-red-600 font-medium text-sm text-center">${remainingDays}일</td>
@@ -611,7 +611,7 @@ window.ApiKeyMngrUI.renderRiskApiKeyMngrTable = async function() {
 
             row.addEventListener('click', (e) => {
                 if (e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
-                if (e.target.tagName === 'INPUT' && e.target.type === 'checkbox') return;
+                if (e.target.tagName === 'INPUT' && e.target.type === 'checkbox' && !e.shiftKey) return;
 
                 if (e.shiftKey && window.ApiKeyMngrUI.lastClickedIndex.risk !== -1) {
                     const startIdx = Math.min(window.ApiKeyMngrUI.lastClickedIndex.risk, index);

@@ -446,9 +446,47 @@ window.ApiKeyMngrUI.showBatchEditModal = function() {
     cdsContainer.textContent = displayText;
 
     document.getElementById('batchEditApiKey').value = '';
-    document.getElementById('batchEditEmail').value = '';
-    document.getElementById('batchEditDue').value = '';
-    document.getElementById('batchEditStartDt').value = '';
+
+    // 기본값 설정: 등록일은 오늘, 기간은 1년
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('batchEditStartDt').value = today;
+    document.getElementById('batchEditDue').value = '1';
+
+    // 이메일 select 옵션 구성
+    const allData = ApiKeyMngrData.apiKeyMngrData || [];
+    const selectedEmails = [...new Set(
+        allData
+            .filter(item => selectedCds.includes(item.cd))
+            .map(item => item.api_ownr_email_addr)
+            .filter(email => email && email.trim())
+    )];
+
+    const emailSelect = document.getElementById('batchEditEmailSelect');
+    const emailInput = document.getElementById('batchEditEmailInput');
+    const emailNoData = document.getElementById('batchEditEmailNoData');
+
+    emailSelect.innerHTML = '<option value="">선택해주세요</option>';
+
+    if (selectedEmails.length === 0) {
+        // 이메일이 없는 경우: "새로 입력"만 추가하고 자동 선택
+        emailSelect.innerHTML += '<option value="__new__" selected>새로 입력</option>';
+        emailSelect.disabled = true;
+        emailInput.classList.remove('hidden');
+        emailInput.disabled = false;
+        emailInput.value = '';
+        emailNoData.classList.remove('hidden');
+    } else {
+        // 이메일이 있는 경우: 목록 추가 + "새로 입력" 옵션
+        selectedEmails.forEach(email => {
+            emailSelect.innerHTML += `<option value="${email}">${email}</option>`;
+        });
+        emailSelect.innerHTML += '<option value="__new__">새로 입력</option>';
+        emailSelect.disabled = false;
+        emailInput.classList.add('hidden');
+        emailInput.disabled = true;
+        emailInput.value = '';
+        emailNoData.classList.add('hidden');
+    }
 
     ['email', 'due', 'startDt'].forEach(field => {
         const checkbox = document.getElementById(`batchEditCheck${field.charAt(0).toUpperCase() + field.slice(1)}`);
@@ -476,21 +514,59 @@ window.ApiKeyMngrUI.toggleBatchField = function(field) {
         'due': 'batchEditCheckDue',
         'startDt': 'batchEditCheckStartDt'
     };
-    const inputMap = {
-        'email': 'batchEditEmail',
-        'due': 'batchEditDue',
-        'startDt': 'batchEditStartDt'
-    };
 
     const checkbox = document.getElementById(checkboxMap[field]);
-    const input = document.getElementById(inputMap[field]);
-    if (checkbox && input) {
-        input.disabled = !checkbox.checked;
-        if (checkbox.checked) {
-            input.classList.remove('bg-gray-100');
-        } else {
-            input.classList.add('bg-gray-100');
+    if (field === 'email') {
+        const emailSelect = document.getElementById('batchEditEmailSelect');
+        const emailInput = document.getElementById('batchEditEmailInput');
+        if (checkbox) {
+            const isChecked = checkbox.checked;
+            emailSelect.disabled = !isChecked;
+            if (isChecked) {
+                emailSelect.classList.remove('bg-gray-100');
+                // "새로 입력"이 선택된 경우 input도 활성화
+                if (emailSelect.value === '__new__') {
+                    emailInput.classList.remove('hidden');
+                    emailInput.disabled = false;
+                    emailInput.classList.remove('bg-gray-100');
+                }
+            } else {
+                emailSelect.classList.add('bg-gray-100');
+                emailInput.classList.add('hidden');
+                emailInput.disabled = true;
+                emailInput.classList.add('bg-gray-100');
+            }
         }
+    } else {
+        const inputMap = {
+            'due': 'batchEditDue',
+            'startDt': 'batchEditStartDt'
+        };
+        const input = document.getElementById(inputMap[field]);
+        if (checkbox && input) {
+            input.disabled = !checkbox.checked;
+            if (checkbox.checked) {
+                input.classList.remove('bg-gray-100');
+            } else {
+                input.classList.add('bg-gray-100');
+            }
+        }
+    }
+};
+
+window.ApiKeyMngrUI.handleBatchEmailChange = function() {
+    const emailSelect = document.getElementById('batchEditEmailSelect');
+    const emailInput = document.getElementById('batchEditEmailInput');
+    const isNew = emailSelect.value === '__new__';
+    if (isNew) {
+        emailInput.classList.remove('hidden');
+        emailInput.disabled = false;
+        emailInput.classList.remove('bg-gray-100');
+        emailInput.focus();
+    } else {
+        emailInput.classList.add('hidden');
+        emailInput.disabled = true;
+        emailInput.value = '';
     }
 };
 
@@ -513,7 +589,14 @@ window.ApiKeyMngrUI.handleBatchUpdate = async function() {
     };
 
     if (document.getElementById('batchEditCheckEmail').checked) {
-        fields.api_ownr_email_addr = document.getElementById('batchEditEmail').value;
+        const emailSelect = document.getElementById('batchEditEmailSelect');
+        let email = '';
+        if (emailSelect.value === '__new__') {
+            email = document.getElementById('batchEditEmailInput').value.trim();
+        } else {
+            email = emailSelect.value;
+        }
+        if (email) fields.api_ownr_email_addr = email;
     }
     if (document.getElementById('batchEditCheckDue').checked) {
         const due = parseInt(document.getElementById('batchEditDue').value);
