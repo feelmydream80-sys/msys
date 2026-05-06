@@ -560,3 +560,58 @@ def send_test_mail():
             'message': str(e)
         }), 500
 
+
+@api_key_mngr_api.route('/api_key_mngr/batch', methods=['PUT'])
+@login_required
+@check_password_change_required
+@api_key_mngr_required
+def batch_update_api_key_mngr():
+    """선택된 API 키 일괄 수정"""
+    try:
+        data = request.json
+        cds = data.get('cds', [])
+        api_key = data.get('api_key')
+        due = data.get('due')
+        start_dt = data.get('start_dt')
+        api_ownr_email_addr = data.get('api_ownr_email_addr')
+        
+        if not cds or not isinstance(cds, list):
+            return jsonify({
+                'success': False,
+                'message': 'CD 목록이 필요합니다.'
+            }), 400
+        
+        if not api_key:
+            return jsonify({
+                'success': False,
+                'message': 'API 값은 필수입니다.'
+            }), 400
+        
+        service = ApiKeyMngrService()
+        results = service.batch_update_api_key_mngr(
+            cds=cds,
+            api_key=api_key,
+            due=due,
+            start_dt=start_dt,
+            api_ownr_email_addr=api_ownr_email_addr
+        )
+        
+        success_count = len(results['success'])
+        failed_count = len(results['failed'])
+        
+        message = f'{success_count}개 수정 성공'
+        if failed_count > 0:
+            message += f', {failed_count}개 실패'
+        
+        return jsonify({
+            'success': True,
+            'message': message,
+            'results': results
+        }), 200
+    except Exception as e:
+        logger.error(f"[API키관리] 일괄 수정 예외: {type(e).__name__}: {e}", exc_info=True)
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+

@@ -430,6 +430,136 @@ window.ApiKeyMngrUI.setupSearchEvent = function() {
 };
 
 
+window.ApiKeyMngrUI.showBatchEditModal = function() {
+    const selectedCds = Array.from(window.ApiKeyMngrUI.selectedCds);
+    if (selectedCds.length === 0) {
+        alert('수정할 항목을 선택해주세요.');
+        return;
+    }
+
+    const modal = document.getElementById('batchEditModal');
+    const cdsContainer = document.getElementById('batchEditSelectedCds');
+
+    const displayText = selectedCds.length <= 10
+        ? selectedCds.join(', ')
+        : selectedCds.slice(0, 10).join(', ') + ` 외 ${selectedCds.length - 10}개 (총 ${selectedCds.length}개)`;
+    cdsContainer.textContent = displayText;
+
+    document.getElementById('batchEditApiKey').value = '';
+    document.getElementById('batchEditEmail').value = '';
+    document.getElementById('batchEditDue').value = '';
+    document.getElementById('batchEditStartDt').value = '';
+
+    ['email', 'due', 'startDt'].forEach(field => {
+        const checkbox = document.getElementById(`batchEditCheck${field.charAt(0).toUpperCase() + field.slice(1)}`);
+        if (checkbox) {
+            checkbox.checked = false;
+            window.ApiKeyMngrUI.toggleBatchField(field);
+        }
+    });
+
+    modal.classList.remove('hidden');
+};
+
+
+window.ApiKeyMngrUI.hideBatchEditModal = function() {
+    const modal = document.getElementById('batchEditModal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+};
+
+
+window.ApiKeyMngrUI.toggleBatchField = function(field) {
+    const checkboxMap = {
+        'email': 'batchEditCheckEmail',
+        'due': 'batchEditCheckDue',
+        'startDt': 'batchEditCheckStartDt'
+    };
+    const inputMap = {
+        'email': 'batchEditEmail',
+        'due': 'batchEditDue',
+        'startDt': 'batchEditStartDt'
+    };
+
+    const checkbox = document.getElementById(checkboxMap[field]);
+    const input = document.getElementById(inputMap[field]);
+    if (checkbox && input) {
+        input.disabled = !checkbox.checked;
+        if (checkbox.checked) {
+            input.classList.remove('bg-gray-100');
+        } else {
+            input.classList.add('bg-gray-100');
+        }
+    }
+};
+
+
+window.ApiKeyMngrUI.handleBatchUpdate = async function() {
+    const apiKey = document.getElementById('batchEditApiKey').value.trim();
+    if (!apiKey) {
+        alert('API 값은 필수 입력 항목입니다.');
+        return;
+    }
+
+    const selectedCds = Array.from(window.ApiKeyMngrUI.selectedCds);
+    if (selectedCds.length === 0) {
+        alert('선택된 항목이 없습니다.');
+        return;
+    }
+
+    const fields = {
+        api_key: apiKey
+    };
+
+    if (document.getElementById('batchEditCheckEmail').checked) {
+        fields.api_ownr_email_addr = document.getElementById('batchEditEmail').value;
+    }
+    if (document.getElementById('batchEditCheckDue').checked) {
+        const due = parseInt(document.getElementById('batchEditDue').value);
+        if (due && due > 0) fields.due = due;
+    }
+    if (document.getElementById('batchEditCheckStartDt').checked) {
+        const startDt = document.getElementById('batchEditStartDt').value;
+        if (startDt) fields.start_dt = startDt;
+    }
+
+    window.ApiKeyMngrUI.showLoading(true);
+    try {
+        const result = await ApiKeyMngrData.batchUpdateApiKeyMngr(selectedCds, fields);
+        if (result.success) {
+            window.ApiKeyMngrUI.hideBatchEditModal();
+
+            const successCount = result.results?.success?.length || 0;
+            const failedCount = result.results?.failed?.length || 0;
+            let msg = `일괄 수정 완료\n• 성공: ${successCount}개`;
+            if (failedCount > 0) {
+                msg += `\n• 실패: ${failedCount}개`;
+                result.results.failed.forEach(f => {
+                    msg += `\n  - ${f.cd}: ${f.reason}`;
+                });
+            }
+            alert(msg);
+
+            window.ApiKeyMngrUI.selectedCds.clear();
+            window.ApiKeyMngrUI.updateBatchEditButtons();
+
+            await ApiKeyMngrData.loadApiKeyMngrData();
+            window.ApiKeyMngrUI.renderApiKeyMngrTable();
+            window.ApiKeyMngrUI.renderAbnormalApiKeyMngrTable();
+            window.ApiKeyMngrUI.renderGanttChart();
+            window.ApiKeyMngrUI.renderRiskApiKeyMngrTable();
+        } else {
+            alert('일괄 수정에 실패했습니다: ' + (result.message || '알 수 없는 오류'));
+        }
+    } catch (error) {
+        alert('일괄 수정 중 오류가 발생했습니다.');
+    } finally {
+        window.ApiKeyMngrUI.hideLoading();
+    }
+};
+
+
 window.ApiKeyMngrUI.init = function() {
 
     window.ApiKeyMngrUI.handlePageLoad();

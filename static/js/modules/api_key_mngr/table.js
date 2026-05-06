@@ -11,6 +11,115 @@ window.ApiKeyMngrUI.sortState = {
 };
 
 
+window.ApiKeyMngrUI.selectedCds = new Set();
+window.ApiKeyMngrUI.lastClickedIndex = {
+    normal: -1,
+    abnormal: -1,
+    risk: -1
+};
+
+
+window.ApiKeyMngrUI.updateBatchEditButtons = function() {
+    const count = window.ApiKeyMngrUI.selectedCds.size;
+    ['normal', 'abnormal', 'risk'].forEach(type => {
+        const btn = document.getElementById(`batch-edit-btn-${type}`);
+        const countEl = document.getElementById(`batch-selection-count-${type}`);
+        if (btn) {
+            if (count > 0) {
+                btn.disabled = false;
+                btn.classList.remove('bg-gray-300', 'cursor-not-allowed');
+                btn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+            } else {
+                btn.disabled = true;
+                btn.classList.add('bg-gray-300', 'cursor-not-allowed');
+                btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+            }
+        }
+        if (countEl) {
+            if (count > 0) {
+                countEl.textContent = `${count}개 선택됨`;
+                countEl.classList.remove('hidden');
+            } else {
+                countEl.classList.add('hidden');
+            }
+        }
+    });
+};
+
+
+window.ApiKeyMngrUI.toggleCdSelection = function(cd, checked) {
+    if (checked) {
+        window.ApiKeyMngrUI.selectedCds.add(cd);
+    } else {
+        window.ApiKeyMngrUI.selectedCds.delete(cd);
+    }
+    window.ApiKeyMngrUI.updateBatchEditButtons();
+};
+
+
+window.ApiKeyMngrUI.toggleSelectAll = function(tableType) {
+    const checkboxId = `select-all-${tableType}`;
+    const checkbox = document.getElementById(checkboxId);
+    const isChecked = checkbox ? checkbox.checked : false;
+
+    let tableBodyId;
+    if (tableType === 'normal') tableBodyId = 'api-key-mngr-table-body';
+    else if (tableType === 'abnormal') tableBodyId = 'abnormal-api-key-mngr-table-body';
+    else if (tableType === 'risk') tableBodyId = 'risk-api-key-mngr-table-body';
+
+    const tableBody = document.getElementById(tableBodyId);
+    if (!tableBody) return;
+
+    const rowCheckboxes = tableBody.querySelectorAll('input[type="checkbox"][data-cd]');
+    rowCheckboxes.forEach(cb => {
+        cb.checked = isChecked;
+        const cd = cb.getAttribute('data-cd');
+        if (isChecked) {
+            window.ApiKeyMngrUI.selectedCds.add(cd);
+        } else {
+            window.ApiKeyMngrUI.selectedCds.delete(cd);
+        }
+    });
+
+    window.ApiKeyMngrUI.updateBatchEditButtons();
+};
+
+
+window.ApiKeyMngrUI.updateSelectAllCheckbox = function(tableType) {
+    let tableBodyId;
+    if (tableType === 'normal') tableBodyId = 'api-key-mngr-table-body';
+    else if (tableType === 'abnormal') tableBodyId = 'abnormal-api-key-mngr-table-body';
+    else if (tableType === 'risk') tableBodyId = 'risk-api-key-mngr-table-body';
+
+    const tableBody = document.getElementById(tableBodyId);
+    const selectAllCheckbox = document.getElementById(`select-all-${tableType}`);
+    if (!tableBody || !selectAllCheckbox) return;
+
+    const rowCheckboxes = tableBody.querySelectorAll('input[type="checkbox"][data-cd]');
+    if (rowCheckboxes.length === 0) {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = false;
+        return;
+    }
+
+    let checkedCount = 0;
+    rowCheckboxes.forEach(cb => {
+        if (cb.checked) checkedCount++;
+    });
+
+    if (checkedCount === 0) {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = false;
+    } else if (checkedCount === rowCheckboxes.length) {
+        selectAllCheckbox.checked = true;
+        selectAllCheckbox.indeterminate = false;
+    } else {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = true;
+    }
+};
+
+
 window.ApiKeyMngrUI.sortData = function(data, column, direction, tableType) {
     if (!column) return data;
     
@@ -152,6 +261,7 @@ window.ApiKeyMngrUI.renderApiKeyMngrTable = function(data) {
 
     if (tableHead) {
         tableHead.innerHTML = `
+            <th class="py-4 px-6 text-center font-medium text-gray-600 whitespace-nowrap" style="width: 5%;"><input type="checkbox" id="select-all-normal" onclick="ApiKeyMngrUI.toggleSelectAll('normal')"></th>
             ${window.ApiKeyMngrUI.createSortableHeader('cd', '코드명', 'normal')}
             ${window.ApiKeyMngrUI.createSortableHeader('cd_nm', '명칭', 'normal')}
             ${window.ApiKeyMngrUI.createSortableHeader('api_key', 'API값', 'normal')}
@@ -159,7 +269,7 @@ window.ApiKeyMngrUI.renderApiKeyMngrTable = function(data) {
             ${window.ApiKeyMngrUI.createSortableHeader('due', '기간', 'normal')}
             ${window.ApiKeyMngrUI.createSortableHeader('start_dt', '등록일', 'normal')}
             ${window.ApiKeyMngrUI.createSortableHeader('days_remaining', '남은 기간', 'normal')}
-            <th class="py-4 px-6 text-left font-medium text-gray-600 whitespace-nowrap" style="width: 10%;">알림 메일 전송</th>
+            <th class="py-4 px-6 text-left font-medium text-gray-600 whitespace-nowrap" style="width: 9%;">알림 메일 전송</th>
             <th class="py-4 px-6 text-left font-medium text-gray-600 whitespace-nowrap" style="width: 7%;">수정</th>
         `;
     }
@@ -185,11 +295,13 @@ window.ApiKeyMngrUI.renderApiKeyMngrTable = function(data) {
             </tr>
         `;
     } else {
-        paginatedData.forEach(item => {
+        paginatedData.forEach((item, index) => {
             const row = document.createElement('tr');
-            row.className = 'hover:bg-gray-50 transition';
-            
+            row.className = 'hover:bg-gray-50 transition cursor-pointer';
+            row.setAttribute('data-cd', item.cd);
+
             const remainingDays = item.days_remaining;
+            const isSelected = window.ApiKeyMngrUI.selectedCds.has(item.cd);
 
             let remainingDaysClass = 'text-gray-700';
             if (remainingDays <= 0) {
@@ -201,8 +313,9 @@ window.ApiKeyMngrUI.renderApiKeyMngrTable = function(data) {
             } else {
                 remainingDaysClass = 'text-green-600 font-medium';
             }
-            
+
             row.innerHTML = `
+                <td class="py-4 px-6 text-center" onclick="event.stopPropagation()"><input type="checkbox" data-cd="${item.cd}" ${isSelected ? 'checked' : ''} onclick="event.stopPropagation(); ApiKeyMngrUI.toggleCdSelection('${item.cd}', this.checked); ApiKeyMngrUI.updateSelectAllCheckbox('normal');"></td>
                 <td class="py-4 px-6 font-medium text-gray-800">${item.cd}</td>
                 <td class="py-4 px-6 text-gray-700">${item.cd_nm || '-'}</td>
                 <td class="py-4 px-6 font-mono text-gray-700">${item.api_key}</td>
@@ -211,23 +324,53 @@ window.ApiKeyMngrUI.renderApiKeyMngrTable = function(data) {
                 <td class="py-4 px-6 text-gray-700">${window.ApiKeyMngrUI.formatDate(item.start_dt)}</td>
                 <td class="py-4 px-6 ${remainingDaysClass}">${remainingDays}일</td>
                 <td class="py-4 px-6">
-                    <button class="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm" onclick="ApiKeyMngrUI.sendNotification('${item.cd}')">
-                        보내기
+                    <button class="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm" onclick="event.stopPropagation(); ApiKeyMngrUI.sendNotification('${item.cd}')">
+                        본내기
                     </button>
                 </td>
                 <td class="py-4 px-6">
-                    <button class="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600 text-sm">
+                    <button class="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600 text-sm edit-btn">
                         수정
                     </button>
                 </td>
             `;
-            
 
-            const editButton = row.querySelector('td:last-child button');
-            editButton.addEventListener('click', () => {
+            row.addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
+                if (e.target.tagName === 'INPUT' && e.target.type === 'checkbox') return;
+
+                if (e.shiftKey && window.ApiKeyMngrUI.lastClickedIndex.normal !== -1) {
+                    const startIdx = Math.min(window.ApiKeyMngrUI.lastClickedIndex.normal, index);
+                    const endIdx = Math.max(window.ApiKeyMngrUI.lastClickedIndex.normal, index);
+                    for (let i = startIdx; i <= endIdx; i++) {
+                        window.ApiKeyMngrUI.selectedCds.add(paginatedData[i].cd);
+                        const targetRow = tableBody.children[i];
+                        if (targetRow) {
+                            const cb = targetRow.querySelector('input[type="checkbox"]');
+                            if (cb) cb.checked = true;
+                        }
+                    }
+                    window.ApiKeyMngrUI.updateBatchEditButtons();
+                    window.ApiKeyMngrUI.updateSelectAllCheckbox('normal');
+                } else {
+                    if (!e.ctrlKey && !e.metaKey) {
+                        window.ApiKeyMngrUI.lastClickedIndex.normal = index;
+                    }
+                    const checkbox = row.querySelector('input[type="checkbox"]');
+                    if (checkbox) {
+                        checkbox.checked = !checkbox.checked;
+                        window.ApiKeyMngrUI.toggleCdSelection(item.cd, checkbox.checked);
+                        window.ApiKeyMngrUI.updateSelectAllCheckbox('normal');
+                    }
+                }
+            });
+
+            const editButton = row.querySelector('.edit-btn');
+            editButton.addEventListener('click', (e) => {
+                e.stopPropagation();
                 window.ApiKeyMngrUI.showEditModal(item);
             });
-            
+
             tableBody.appendChild(row);
         });
     }
@@ -258,6 +401,7 @@ window.ApiKeyMngrUI.renderAbnormalApiKeyMngrTable = function() {
 
     if (tableHead) {
         tableHead.innerHTML = `
+            <th class="py-4 px-6 text-center font-medium text-gray-600 whitespace-nowrap" style="width: 5%;"><input type="checkbox" id="select-all-abnormal" onclick="ApiKeyMngrUI.toggleSelectAll('abnormal')"></th>
             ${window.ApiKeyMngrUI.createSortableHeader('cd', '코드명', 'abnormal')}
             ${window.ApiKeyMngrUI.createSortableHeader('cd_nm', '명칭', 'abnormal')}
             ${window.ApiKeyMngrUI.createSortableHeader('api_key', 'API값', 'abnormal')}
@@ -265,7 +409,7 @@ window.ApiKeyMngrUI.renderAbnormalApiKeyMngrTable = function() {
             ${window.ApiKeyMngrUI.createSortableHeader('due', '기간', 'abnormal')}
             ${window.ApiKeyMngrUI.createSortableHeader('start_dt', '등록일', 'abnormal')}
             ${window.ApiKeyMngrUI.createSortableHeader('days_remaining', '남은 기간', 'abnormal')}
-            <th class="py-4 px-6 text-left font-medium text-gray-600 whitespace-nowrap" style="width: 10%;">알림 메일 전송</th>
+            <th class="py-4 px-6 text-left font-medium text-gray-600 whitespace-nowrap" style="width: 9%;">알림 메일 전송</th>
             <th class="py-4 px-6 text-left font-medium text-gray-600 whitespace-nowrap" style="width: 7%;">수정</th>
         `;
     }
@@ -289,11 +433,13 @@ window.ApiKeyMngrUI.renderAbnormalApiKeyMngrTable = function() {
             </tr>
         `;
     } else {
-        paginatedData.forEach(item => {
+        paginatedData.forEach((item, index) => {
             const row = document.createElement('tr');
-            row.className = 'hover:bg-gray-50 transition';
-            
+            row.className = 'hover:bg-gray-50 transition cursor-pointer';
+            row.setAttribute('data-cd', item.cd);
+
             const remainingDays = item.days_remaining;
+            const isSelected = window.ApiKeyMngrUI.selectedCds.has(item.cd);
 
             let remainingDaysClass = 'text-gray-700';
             if (remainingDays <= 0) {
@@ -305,8 +451,9 @@ window.ApiKeyMngrUI.renderAbnormalApiKeyMngrTable = function() {
             } else {
                 remainingDaysClass = 'text-green-600 font-medium';
             }
-            
+
             row.innerHTML = `
+                <td class="py-4 px-6 text-center" onclick="event.stopPropagation()"><input type="checkbox" data-cd="${item.cd}" ${isSelected ? 'checked' : ''} onclick="event.stopPropagation(); ApiKeyMngrUI.toggleCdSelection('${item.cd}', this.checked); ApiKeyMngrUI.updateSelectAllCheckbox('abnormal');"></td>
                 <td class="py-4 px-6 font-medium text-gray-800">${item.cd}</td>
                 <td class="py-4 px-6 text-gray-700">${item.cd_nm || '-'}</td>
                 <td class="py-4 px-6 font-mono text-gray-500">${item.api_key || '없음'}</td>
@@ -315,23 +462,53 @@ window.ApiKeyMngrUI.renderAbnormalApiKeyMngrTable = function() {
                 <td class="py-4 px-6 text-gray-700">${window.ApiKeyMngrUI.formatDate(item.start_dt)}</td>
                 <td class="py-4 px-6 ${remainingDaysClass}">${remainingDays}일</td>
                 <td class="py-4 px-6">
-                    <button class="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm" onclick="ApiKeyMngrUI.sendNotification('${item.cd}')">
-                        보내기
+                    <button class="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm" onclick="event.stopPropagation(); ApiKeyMngrUI.sendNotification('${item.cd}')">
+                        본내기
                     </button>
                 </td>
                 <td class="py-4 px-6">
-                    <button class="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600 text-sm">
+                    <button class="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600 text-sm edit-btn">
                         수정
                     </button>
                 </td>
             `;
-            
 
-            const editButton = row.querySelector('td:last-child button');
-            editButton.addEventListener('click', () => {
+            row.addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
+                if (e.target.tagName === 'INPUT' && e.target.type === 'checkbox') return;
+
+                if (e.shiftKey && window.ApiKeyMngrUI.lastClickedIndex.abnormal !== -1) {
+                    const startIdx = Math.min(window.ApiKeyMngrUI.lastClickedIndex.abnormal, index);
+                    const endIdx = Math.max(window.ApiKeyMngrUI.lastClickedIndex.abnormal, index);
+                    for (let i = startIdx; i <= endIdx; i++) {
+                        window.ApiKeyMngrUI.selectedCds.add(paginatedData[i].cd);
+                        const targetRow = tableBody.children[i];
+                        if (targetRow) {
+                            const cb = targetRow.querySelector('input[type="checkbox"]');
+                            if (cb) cb.checked = true;
+                        }
+                    }
+                    window.ApiKeyMngrUI.updateBatchEditButtons();
+                    window.ApiKeyMngrUI.updateSelectAllCheckbox('abnormal');
+                } else {
+                    if (!e.ctrlKey && !e.metaKey) {
+                        window.ApiKeyMngrUI.lastClickedIndex.abnormal = index;
+                    }
+                    const checkbox = row.querySelector('input[type="checkbox"]');
+                    if (checkbox) {
+                        checkbox.checked = !checkbox.checked;
+                        window.ApiKeyMngrUI.toggleCdSelection(item.cd, checkbox.checked);
+                        window.ApiKeyMngrUI.updateSelectAllCheckbox('abnormal');
+                    }
+                }
+            });
+
+            const editButton = row.querySelector('.edit-btn');
+            editButton.addEventListener('click', (e) => {
+                e.stopPropagation();
                 window.ApiKeyMngrUI.showEditModal(item);
             });
-            
+
             tableBody.appendChild(row);
         });
     }
@@ -407,14 +584,17 @@ window.ApiKeyMngrUI.renderRiskApiKeyMngrTable = async function() {
             </tr>
         `;
     } else {
-        paginatedData.forEach(item => {
+        paginatedData.forEach((item, index) => {
             const row = document.createElement('tr');
-            row.className = 'hover:bg-gray-50 transition';
-            
+            row.className = 'hover:bg-gray-50 transition cursor-pointer';
+            row.setAttribute('data-cd', item.cd);
+
             const remainingDays = item.days_remaining;
             const mailStatus = window.ApiKeyMngrUI.getMailStatusText(item, mailStatusMap, scheduleInfo);
-            
+            const isSelected = window.ApiKeyMngrUI.selectedCds.has(item.cd);
+
             row.innerHTML = `
+                <td class="py-4 px-4 text-center" onclick="event.stopPropagation()"><input type="checkbox" data-cd="${item.cd}" ${isSelected ? 'checked' : ''} onclick="event.stopPropagation(); ApiKeyMngrUI.toggleCdSelection('${item.cd}', this.checked); ApiKeyMngrUI.updateSelectAllCheckbox('risk');"></td>
                 <td class="py-4 px-4 font-medium text-gray-800 text-sm">${item.cd}</td>
                 <td class="py-4 px-4 text-gray-700 text-sm">${item.cd_nm || '-'}</td>
                 <td class="py-4 px-4 text-red-600 font-medium text-sm text-center">${remainingDays}일</td>
@@ -428,13 +608,43 @@ window.ApiKeyMngrUI.renderRiskApiKeyMngrTable = async function() {
                     </button>
                 </td>
             `;
-            
+
+            row.addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
+                if (e.target.tagName === 'INPUT' && e.target.type === 'checkbox') return;
+
+                if (e.shiftKey && window.ApiKeyMngrUI.lastClickedIndex.risk !== -1) {
+                    const startIdx = Math.min(window.ApiKeyMngrUI.lastClickedIndex.risk, index);
+                    const endIdx = Math.max(window.ApiKeyMngrUI.lastClickedIndex.risk, index);
+                    for (let i = startIdx; i <= endIdx; i++) {
+                        window.ApiKeyMngrUI.selectedCds.add(paginatedData[i].cd);
+                        const targetRow = tableBody.children[i];
+                        if (targetRow) {
+                            const cb = targetRow.querySelector('input[type="checkbox"]');
+                            if (cb) cb.checked = true;
+                        }
+                    }
+                    window.ApiKeyMngrUI.updateBatchEditButtons();
+                    window.ApiKeyMngrUI.updateSelectAllCheckbox('risk');
+                } else {
+                    if (!e.ctrlKey && !e.metaKey) {
+                        window.ApiKeyMngrUI.lastClickedIndex.risk = index;
+                    }
+                    const checkbox = row.querySelector('input[type="checkbox"]');
+                    if (checkbox) {
+                        checkbox.checked = !checkbox.checked;
+                        window.ApiKeyMngrUI.toggleCdSelection(item.cd, checkbox.checked);
+                        window.ApiKeyMngrUI.updateSelectAllCheckbox('risk');
+                    }
+                }
+            });
 
             const editButton = row.querySelector('.edit-btn');
-            editButton.addEventListener('click', () => {
+            editButton.addEventListener('click', (e) => {
+                e.stopPropagation();
                 window.ApiKeyMngrUI.showEditModal(item);
             });
-            
+
             tableBody.appendChild(row);
         });
     }

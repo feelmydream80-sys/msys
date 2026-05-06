@@ -402,3 +402,54 @@ class ApiKeyMngrService:
         except Exception as e:
             self.logger.error(f"Error in send_expiry_notification: {str(e)}")
             raise
+
+    def batch_update_api_key_mngr(self, cds, api_key, due=None, start_dt=None, api_ownr_email_addr=None):
+        """
+        선택된 CD들에 대해 API 키 정보를 일괄 수정
+        
+        :param cds: CD 목록 (list)
+        :param api_key: API 값 (필수)
+        :param due: 기간 (선택)
+        :param start_dt: 등록일 (선택)
+        :param api_ownr_email_addr: 책임자 이메일 (선택)
+        :return: dict with success/failure results
+        """
+        results = {
+            'success': [],
+            'failed': []
+        }
+        
+        for cd in cds:
+            try:
+                # 기존 데이터 조회하여 선택되지 않은 필드는 기존 값 유지
+                existing = self.dao.select_by_cd(cd)
+                if not existing:
+                    results['failed'].append({
+                        'cd': cd,
+                        'reason': '해당 CD를 찾을 수 없습니다.'
+                    })
+                    continue
+                
+                update_due = due if due is not None else existing.get('due', 1)
+                update_start_dt = start_dt if start_dt is not None else existing.get('start_dt')
+                update_email = api_ownr_email_addr if api_ownr_email_addr is not None else existing.get('api_ownr_email_addr', '')
+                
+                self.update_api_key_mngr_with_api_key(
+                    cd=cd,
+                    due=update_due,
+                    start_dt=update_start_dt,
+                    api_ownr_email_addr=update_email,
+                    api_key=api_key
+                )
+                
+                results['success'].append(cd)
+                self.logger.info(f"[API키관리-일괄수정] 성공: {cd}")
+                
+            except Exception as e:
+                self.logger.error(f"[API키관리-일괄수정] 실패: {cd} - {str(e)}")
+                results['failed'].append({
+                    'cd': cd,
+                    'reason': str(e)
+                })
+        
+        return results

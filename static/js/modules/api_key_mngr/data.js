@@ -447,5 +447,21 @@ window.ApiKeyMngrData = {
 
             return 0;
         }
+    },
+
+    
+    batchUpdateApiKeyMngr: async function(cds, fields) {
+        try {
+            const data = await apiFetch('/api/api_key_mngr/batch', {
+                method: 'PUT',
+                body: JSON.stringify({
+                    cds: cds,
+                    ...fields
+                })
+            });
+            return data;
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
     }
 };
