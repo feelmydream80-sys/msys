@@ -1,23 +1,15 @@
-// 파일명: static/js/modules/chartRenderers.js
-// 주요 역할: Chart.js를 사용하여 차트를 렌더링하고 업데이트하는 함수들을 정의합니다.
 
-// 전역 변수로 차트 인스턴스 저장 (모듈 내부에서 관리)
+
+
+
 let successRateChartInstance;
 let troublePieChartInstance;
 
-/**
- * Chart.js 차트 인스턴스를 생성하거나 업데이트합니다.
- * @param {string} chartId - 캔버스 요소의 ID
- * @param {string} type - 차트 타입 ('line', 'bar', 'doughnut', 'pie')
- * @param {Object} data - 차트 데이터 객체
- * @param {Object} options - 차트 옵션 객체
- * @param {Chart} [existingChart] - 기존 Chart 인스턴스 (업데이트 시)
- * @returns {Chart} 새로 생성되거나 업데이트된 Chart 인스턴스
- */
+
 export function createOrUpdateChart(chartId, type, data, options, existingChart) {
     const ctx = document.getElementById(chartId);
     if (!ctx) {
-        console.error(`ERROR: Canvas element with ID '${chartId}' not found.`);
+
         return null;
     }
 
@@ -31,24 +23,19 @@ export function createOrUpdateChart(chartId, type, data, options, existingChart)
             type: type,
             data: data,
             options: options
-            // Datalabels 플러그인 제거 - 사용자 요청에 따라 데이터 레이블 표시하지 않음
+
         });
         return newChart;
     }
 }
 
-/**
- * 기간별 수집 성공률 차트를 렌더링하거나 업데이트합니다.
- * @param {Array<Object>} data - 성공률 추이 데이터
- * @param {Object} allAdminSettings - 모든 Job ID에 대한 관리자 설정
- * @param {string} chartType - 'line' 또는 'bar'
- */
+
 export function renderSuccessRateChart(data, allAdminSettings, chartType) {
 
-    const labels = [...new Set(data.map(item => item.base_date))].sort(); // 날짜 레이블 추출 및 정렬
+    const labels = [...new Set(data.map(item => item.base_date))].sort();
 
     const datasets = Object.values(allAdminSettings)
-        .filter(setting => setting.display_yn) // display_yn이 true인 Job만 필터링
+        .filter(setting => setting.display_yn)
         .map(setting => {
             const jobData = data.filter(item => item.job_id === setting.cd);
             const successRates = labels.map(date => {
@@ -58,12 +45,12 @@ export function renderSuccessRateChart(data, allAdminSettings, chartType) {
 
             return {
                 label: setting.cd_nm || setting.cd,
-                borderColor: setting.chart_color || '#007bff', // 관리자 설정의 차트 색상 사용
-                backgroundColor: setting.chart_color ? `${setting.chart_color}80` : 'rgba(0, 123, 255, 0.5)', // 투명도 추가
+                borderColor: setting.chart_color || '#007bff',
+                backgroundColor: setting.chart_color ? `${setting.chart_color}80` : 'rgba(0, 123, 255, 0.5)',
                 data: successRates,
                 tension: 0.3,
                 fill: false,
-                hidden: false, // 기본적으로 모두 표시
+                hidden: false,
             };
         });
 
@@ -99,7 +86,7 @@ export function renderSuccessRateChart(data, allAdminSettings, chartType) {
                 }
             },
             datalabels: {
-                display: false // 기본적으로 데이터 레이블 비활성화
+                display: false
             },
             legend: {
                 display: true,
@@ -140,7 +127,7 @@ export function renderSuccessRateChart(data, allAdminSettings, chartType) {
                 min: 0,
                 max: 100,
                 ticks: {
-                    // % 표시 제거 - 사용자 요청
+
                 },
                 grid: {
                     color: '#e0e0e0'
@@ -148,19 +135,15 @@ export function renderSuccessRateChart(data, allAdminSettings, chartType) {
             }
         },
         animation: {
-    duration: 800, // 부드러운 페이드
-    easing: 'linear' // 선형 페이드 (바운스 없음)
+    duration: 800,
+    easing: 'linear'
 },
     };
 
     successRateChartInstance = createOrUpdateChart('successRateChart', chartType, chartData, chartOptions, successRateChartInstance);
 }
 
-/**
- * 장애 코드별 비율 차트를 렌더링하거나 업데이트합니다.
- * @param {Array<Object>} data - 장애 통계 데이터
- * @param {string} chartType - 'doughnut' 또는 'bar'
- */
+
 export function renderTroubleChart(data, chartType) {
 
     let chartData;
@@ -177,13 +160,13 @@ export function renderTroubleChart(data, chartType) {
 
         const backgroundColors = labels.map(label => {
             switch (label) {
-                case '장애': return '#dc3545'; // Red
-                case '경고': return '#ffc107'; // Orange
-                case '주의': return '#ffc107'; // Yellow (경고와 동일 색상 유지)
-                case '정상': return '#28a745'; // Green
-                case '미수집': return '#6c757d'; // Gray
-                case '확인필요': return '#343a40'; // Dark Gray
-                default: return '#cccccc'; // Default
+                case '장애': return '#dc3545';
+                case '경고': return '#ffc107';
+                case '주의': return '#ffc107';
+                case '정상': return '#28a745';
+                case '미수집': return '#6c757d';
+                case '확인필요': return '#343a40';
+                default: return '#cccccc';
             }
         });
 
@@ -223,7 +206,7 @@ export function renderTroubleChart(data, chartType) {
                     }
                 },
                 datalabels: {
-                    display: false // 완전 비활성화 - 차트 위 데이터 값 표시하지 않음
+                    display: false
                 }
                 legend: {
                     display: true,
@@ -237,12 +220,12 @@ export function renderTroubleChart(data, chartType) {
                 }
             },
             animation: {
-    duration: 800, // 부드러운 페이드
-    easing: 'linear' // 선형 페이드 (바운스 없음)
+    duration: 800,
+    easing: 'linear'
 },
         };
     } else if (chartType === 'bar') {
-        const hourlyData = {}; // { hour: { status: count } }
+        const hourlyData = {};
         data.forEach(item => {
             if (!hourlyData[item.hour]) {
                 hourlyData[item.hour] = {};
@@ -250,21 +233,21 @@ export function renderTroubleChart(data, chartType) {
             hourlyData[item.hour][item.status] = item.count;
         });
 
-        const hours = Array.from({ length: 24 }, (_, i) => i); // 0부터 23시까지
-        const statuses = [...new Set(data.map(item => item.status))].sort(); // 모든 상태 코드
+        const hours = Array.from({ length: 24 }, (_, i) => i);
+        const statuses = [...new Set(data.map(item => item.status))].sort();
 
         const backgroundColorsMap = {
-            'CD902': '#dc3545', // 장애 (Red)
-            'CD903': '#ffc107', // 경고 (Orange)
-            'CD901': '#28a745', // 정상 (Green)
-            'CD904': '#17a2b8', // 수집중 (Blue)
-            'CD905': '#343a40', // 확인필요 (Dark Gray)
-            // 필요한 경우 다른 상태 코드에 대한 색상 추가
+            'CD902': '#dc3545',
+            'CD903': '#ffc107',
+            'CD901': '#28a745',
+            'CD904': '#17a2b8',
+            'CD905': '#343a40',
+
         };
 
         const datasets = statuses.map(status => {
             return {
-                label: status, // 실제 상태 이름으로 변경 필요 (예: '장애', '경고')
+                label: status,
                 data: hours.map(hour => (hourlyData[hour] && hourlyData[hour][status]) ? hourlyData[hour][status] : 0),
                 backgroundColor: backgroundColorsMap[status] || '#cccccc',
                 borderColor: backgroundColorsMap[status] || '#cccccc',
@@ -302,7 +285,7 @@ export function renderTroubleChart(data, chartType) {
                     }
                 },
                 datalabels: {
-                    display: false, // 바 차트에서는 기본적으로 데이터 레이블 비활성화
+                    display: false,
                 },
                 legend: {
                     display: true,
@@ -325,7 +308,7 @@ export function renderTroubleChart(data, chartType) {
                     grid: {
                         display: false
                     },
-                    stacked: true // 스택 바 차트
+                    stacked: true
                 },
                 y: {
                     title: {
@@ -337,12 +320,12 @@ export function renderTroubleChart(data, chartType) {
                     grid: {
                         color: '#e0e0e0'
                     },
-                    stacked: true // 스택 바 차트
+                    stacked: true
                 }
             },
             animation: {
-    duration: 800, // 부드러운 페이드
-    easing: 'linear' // 선형 페이드 (바운스 없음)
+    duration: 800,
+    easing: 'linear'
 },
         };
     }

@@ -8,7 +8,7 @@ class ColumnMapper:
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(ColumnMapper, cls).__new__(cls)
-            # DB 연결이 필요한 load_mapping_from_db()는 외부에서 명시적으로 호출
+                                                              
             cls._instance.load_mapping_from_json()
             cls._instance.create_forward_mapping()
         return cls._instance
@@ -50,7 +50,7 @@ class ColumnMapper:
                     bf_col = m['bf_col_nm'].strip().lower()
                     new_col = m['new_col_nm'].strip().lower()
                     
-                    # JSON에 이미 키가 존재하지 않을 경우에만 DB 정보로 추가 (JSON 우선)
+                                                                  
                     if bf_col not in self._reverse_mapping_data[new_table]:
                         self._reverse_mapping_data[new_table][bf_col] = new_col
         except Exception as e:
@@ -65,7 +65,7 @@ class ColumnMapper:
     def reload(self):
         """매핑 정보를 다시 로드합니다."""
         self.load_mapping_from_json()
-        # self.init_db_mappings() # DB 매핑 비활성화
+                                              
         self.create_forward_mapping()
 
     def get_mapping(self, table_name):
@@ -102,7 +102,7 @@ class ColumnMapper:
 
         return {reverse_mapping.get(legacy_col.strip().lower(), legacy_col.strip().lower()): value for legacy_col, value in data.items()} if isinstance(data, dict) else data
 
-# Singleton instance
+                    
 column_mapper = ColumnMapper()
 
 def convert_to_legacy_columns(table_name, data):

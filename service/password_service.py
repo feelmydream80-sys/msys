@@ -1,4 +1,4 @@
-# service/password_service.py
+                             
 import hashlib
 import os
 import base64
@@ -40,7 +40,7 @@ class PasswordService:
                 salt,
                 PasswordService.ITERATIONS
             )
-            # Store salt and key as a single string
+                                                   
             stored_password = f"{base64.b64encode(salt).decode('utf-8')}${base64.b64encode(key).decode('utf-8')}"
             return stored_password
         except Exception as e:
@@ -98,7 +98,7 @@ class PasswordService:
             'message': "비밀번호가 유효합니다."
         }
 
-        # Check for consecutive numbers (3 or more)
+                                                   
         for i in range(len(password) - 2):
             if password[i].isdigit() and password[i+1].isdigit() and password[i+2].isdigit():
                 if int(password[i+1]) == int(password[i]) + 1 and int(password[i+2]) == int(password[i+1]) + 1:
@@ -107,7 +107,7 @@ class PasswordService:
                     results['message'] = "연속된 숫자 (예: 123, 456)는 사용할 수 없습니다."
                     break
 
-        # Check for repeating numbers (3 or more)
+                                                 
         for i in range(len(password) - 2):
             if password[i].isdigit() and password[i] == password[i+1] and password[i] == password[i+2]:
                 results['no_repeating'] = False
@@ -115,12 +115,12 @@ class PasswordService:
                 results['message'] = "동일한 숫자를 3번 이상 반복 (예: 111, 888)할 수 없습니다."
                 break
 
-        # Check length
+                      
         if not results['length']:
             results['is_valid'] = False
             results['message'] = "비밀번호는 8자 이상이어야 합니다."
 
-        # Check special characters
+                                  
         if not results['special_char']:
             results['is_valid'] = False
             results['message'] = "최소 1개 이상의 특수문자를 포함해야 합니다."

@@ -20,10 +20,10 @@ class DashboardSQL:
 
     @staticmethod
     def get_dashboard_summary(start_date, end_date, all_data, job_ids=None):
-        # Get status codes dynamically
+                                      
         status_codes = get_status_codes()
 
-        # Ensure we have at least basic status codes as fallback
+                                                                
         if not status_codes:
             status_codes = {
                 'CD901': 'SUCCESS',
@@ -31,7 +31,7 @@ class DashboardSQL:
                 'CD903': 'NO_DATA'
             }
 
-        # Create dynamic CASE WHEN clauses for each status code
+                                                               
         def create_count_case(status_code, period_condition=""):
             condition = f"h.status = '{status_code}'"
             if period_condition:
@@ -40,16 +40,16 @@ class DashboardSQL:
 
         kst_date_expr = "(h.start_dt::timestamp AT TIME ZONE 'Asia/Seoul')::date"
 
-        # Helper function to create safe column names
+                                                     
         def safe_column_name(prefix, desc):
-            # Replace spaces and special characters with underscores, keep only alphanumeric and underscore
+                                                                                                           
             safe_desc = ''.join(c if c.isalnum() or c == '_' else '_' for c in desc.lower().replace(' ', '_'))
-            # Ensure it's not empty
+                                   
             if not safe_desc:
                 safe_desc = 'unknown'
             return f"{prefix}_{safe_desc}"
 
-        # Define fixed column mappings based on status codes
+                                                            
         column_mappings = {
             'CD901': 'success',
             'CD902': 'fail',
@@ -57,14 +57,14 @@ class DashboardSQL:
             'CD904': 'ing'
         }
 
-        # Overall counts - use fixed column names
+                                                 
         overall_counts = []
         for code, col_suffix in column_mappings.items():
             if code in status_codes:
                 col_name = f"overall_{col_suffix}_count"
                 overall_counts.append(f"{create_count_case(code)} as {col_name}")
 
-        # Daily counts
+                      
         daily_counts = []
         for code, col_suffix in column_mappings.items():
             if code in status_codes:
@@ -76,7 +76,7 @@ class DashboardSQL:
                 period_condition = f"{kst_date_expr} = CURRENT_DATE"
                 daily_counts.append(f"{create_count_case(code, period_condition)} as {col_name}")
 
-        # Weekly counts
+                       
         weekly_counts = []
         for code, col_suffix in column_mappings.items():
             if code in status_codes:
@@ -88,7 +88,7 @@ class DashboardSQL:
                 period_condition = f"{kst_date_expr} >= date_trunc('week', CURRENT_DATE)"
                 weekly_counts.append(f"{create_count_case(code, period_condition)} as {col_name}")
 
-        # Monthly counts
+                        
         monthly_counts = []
         for code, col_suffix in column_mappings.items():
             if code in status_codes:
@@ -100,7 +100,7 @@ class DashboardSQL:
                 period_condition = f"{kst_date_expr} >= date_trunc('month', CURRENT_DATE)"
                 monthly_counts.append(f"{create_count_case(code, period_condition)} as {col_name}")
 
-        # Half-year counts
+                          
         half_counts = []
         for code, col_suffix in column_mappings.items():
             if code in status_codes:
@@ -112,7 +112,7 @@ class DashboardSQL:
                 period_condition = f"{kst_date_expr} >= date_trunc('month', CURRENT_DATE) - INTERVAL '5 months'"
                 half_counts.append(f"{create_count_case(code, period_condition)} as {col_name}")
 
-        # Yearly counts
+                       
         yearly_counts = []
         for code, col_suffix in column_mappings.items():
             if code in status_codes:
@@ -124,13 +124,13 @@ class DashboardSQL:
                 period_condition = f"{kst_date_expr} >= date_trunc('year', CURRENT_DATE)"
                 yearly_counts.append(f"{create_count_case(code, period_condition)} as {col_name}")
 
-        # Get fail codes for fail_streak calculation
+                                                    
         from service.status_code_service import status_code_service
         fail_codes = status_code_service.get_fail_codes() if status_code_service else ['CD902', 'CD903']
         fail_codes_str = "', '".join(fail_codes)
         fail_condition = f"recent_runs.status IN ('{fail_codes_str}')"
 
-        # Ensure we have at least some columns
+                                              
         if not overall_counts:
             overall_counts = ["COUNT(CASE WHEN h.status = 'CD901' THEN 1 END) as overall_success_count"]
         if not daily_counts:
@@ -190,7 +190,7 @@ class DashboardSQL:
         params = []
         conditions = []
 
-        # Ensure job_id is not NULL to prevent invalid groups
+                                                             
         conditions.append("h.job_id IS NOT NULL")
 
         if not all_data:
@@ -297,7 +297,7 @@ class DashboardSQL:
         
     @staticmethod
     def get_distinct_error_codes(start_date=None, end_date=None, all_data=False, job_ids=None):
-        # Get success codes to exclude from error codes
+                                                       
         from service.status_code_service import status_code_service
         success_codes = status_code_service.get_success_codes() if status_code_service else ['CD901']
 
@@ -305,12 +305,12 @@ class DashboardSQL:
         params = []
         conditions = ["status IS NOT NULL"]
 
-        # Exclude success codes
+                               
         if success_codes:
             exclude_conditions = [f"status <> '{code}'" for code in success_codes]
             conditions.extend(exclude_conditions)
 
-        # KST 기준 날짜로 변환하여 비교 (다른 메서드들과 일관성 유지)
+                                              
         kst_date_expr = "(start_dt::timestamp AT TIME ZONE 'Asia/Seoul')::date"
 
         if not all_data:

@@ -1,4 +1,4 @@
-# service/spec_scraper_service.py
+                                 
 import logging
 import time
 from typing import Union
@@ -28,7 +28,7 @@ class SpecScraperService:
         """
         logging.info(f"Starting to scrape data from URL: {url}")
         try:
-            time.sleep(1)  # Add a 1-second delay to prevent rate limiting
+            time.sleep(1)                                                 
             response = requests.get(url, headers=self.headers, timeout=10, verify=False)
             response.raise_for_status()
             soup = BeautifulSoup(response.content, 'html.parser')

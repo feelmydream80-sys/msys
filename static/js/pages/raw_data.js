@@ -1,7 +1,4 @@
-/**
- * @file raw_data.js
- * @description Raw Data 페이지의 메인 스크립트 파일
- */
+
 
 import { fetchJobIds, fetchAllData, fetchErrorCodeMap } from '../modules/rawData/api.js';
 import { RawDataUI } from '../modules/rawData/ui.js';
@@ -14,9 +11,7 @@ import { setDataFlowStatus } from '../modules/common/api/client.js';
 import { showMessage } from '../modules/common/utils.js';
 import { downloadExcelTemplate } from '../utils/excelDownload.js';
 
-/**
- * 애플리케이션 상태를 관리하는 객체
- */
+
 const state = {
     allData: [],
     errorCodeMap: {},
@@ -24,20 +19,16 @@ const state = {
 };
 
 let ui;
-let userAllowedJobIds = []; // 사용자의 허용된 Job IDs 캐시
+let userAllowedJobIds = [];
 
-/**
- * UI를 다시 렌더링하는 함수
- */
+
 async function rerender() {
     const filtered = filterData(state);
-    ui.filteredData = filtered; // 필터링된 전체 데이터를 UI 객체에 할당
+    ui.filteredData = filtered;
     ui.initializePagination(state, filtered);
 }
 
-/**
- * 페이지 초기화 및 데이터 로드 함수
- */
+
 export async function init() {
     setDataFlowStatus({
         minMaxDatesFetch_rawData: { apiCallAttempted: false, apiCallSuccess: false, apiResponseCount: 0, error: null },
@@ -49,7 +40,7 @@ export async function init() {
 
     ui = new RawDataUI();
 
-    // 1. 실제 데이터 기간을 가져와서 화면과 날짜 입력 필드에 설정
+
     const dateRange = await fetchMinMaxDates('rawData');
     if (dateRange && dateRange.min_date && dateRange.max_date) {
         const maxDate = new Date(dateRange.max_date);
@@ -72,11 +63,11 @@ export async function init() {
     ]);
 
     state.errorCodeMap = errorCodeMap;
-    // 사용자의 허용된 Job IDs 캐시 (job_id 필드만 추출)
+
     userAllowedJobIds = jobList.map(item => item.job_id);
     ui.populateJobIdSelect(jobList);
     
-    // 이벤트 리스너 설정
+
     const reloadData = async () => {
         const startDate = document.getElementById('start-date').value;
         const endDate = document.getElementById('end-date').value;
@@ -86,7 +77,7 @@ export async function init() {
         let jobIds = null;
         if (selectedJobId && selectedJobId !== '') {
             if (selectedJobId === 'all') {
-                // "전체" 선택 시 사용자의 모든 허용된 Job IDs 전달
+
                 jobIds = userAllowedJobIds.length > 0 ? userAllowedJobIds : null;
             } else {
                 jobIds = [selectedJobId];
@@ -98,17 +89,17 @@ export async function init() {
     };
     setupEventListeners(state, rerender, reloadData);
     
-    // 2. 설정된 날짜 기준으로 초기 데이터 로드 (전체 허용 데이터)
+
     const startDate = document.getElementById('start-date').value;
     const endDate = document.getElementById('end-date').value;
-    // 초기 로드 시 사용자의 모든 허용된 Job 데이터 로드
+
     const initialJobIds = userAllowedJobIds.length > 0 ? userAllowedJobIds : null;
     state.allData = await fetchAllData(startDate, endDate, initialJobIds);
     
-    // 초기 렌더링
+
     rerender();
 
-    // 엑셀 템플릿 다운로드 버튼 이벤트 리스너
+
     const downloadExcelTemplateBtn = document.getElementById('downloadExcelTemplateBtn');
     if (downloadExcelTemplateBtn) {
         downloadExcelTemplateBtn.addEventListener('click', async () => {
@@ -121,26 +112,26 @@ export async function init() {
         });
     }
 
-    // 원천 데이터 엑셀 다운로드 버튼 이벤트 리스너
+
     const downloadRawDataBtn = document.getElementById('downloadRawDataBtn');
     if (downloadRawDataBtn) {
         downloadRawDataBtn.addEventListener('click', () => {
             try {
-                // 테이블 데이터 가져오기
+
                 const table = document.getElementById('detail-table-body');
                 if (!table || !window.XLSX) {
                     showMessage('엑셀 다운로드 기능을 사용할 수 없습니다.', 'error');
                     return;
                 }
 
-                // 테이블 데이터를 배열로 변환
+
                 const rows = table.querySelectorAll('tr');
                 const data = [];
 
-                // 헤더 추가
+
                 data.push(['수집일자', '코드명', '성공/총수량 (%)', '성공여부']);
 
-                // 데이터 행 추가
+
                 rows.forEach(row => {
                     const cells = row.querySelectorAll('td');
                     if (cells.length >= 4) {
@@ -159,21 +150,21 @@ export async function init() {
                     return;
                 }
 
-                // 워크시트 생성
+
                 const ws = window.XLSX.utils.aoa_to_sheet(data);
 
-                // 워크북 생성
+
                 const wb = window.XLSX.utils.book_new();
                 window.XLSX.utils.book_append_sheet(wb, ws, '원천데이터');
 
-                // 파일 다운로드
+
                 const fileName = `원천데이터_${new Date().toISOString().split('T')[0]}.xlsx`;
                 window.XLSX.writeFile(wb, fileName);
 
                 showMessage('원천 데이터 엑셀 다운로드가 시작되었습니다.', 'success');
 
             } catch (error) {
-                console.error('엑셀 다운로드 중 오류:', error);
+
                 showMessage('엑셀 다운로드 중 오류가 발생했습니다.', 'error');
             }
         });
@@ -181,17 +172,14 @@ export async function init() {
 
 }
 
-/**
- * SheetJS 라이브러리를 동적으로 로드합니다.
- * (폐쇄망 환경을 위해 비활성화)
- */
+
 function loadSheetJS() {
-    // if (!window.XLSX) {
-    //     const script = document.createElement('script');
-    //     script.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
-    //     document.head.appendChild(script);
-    // }
+
+
+
+
+
 }
 
-// DOMContentLoaded 이벤트가 발생하면 초기화 함수를 실행합니다.
+
 document.addEventListener('DOMContentLoaded', init);

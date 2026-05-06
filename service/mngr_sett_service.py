@@ -1,4 +1,4 @@
-# service/admin_settings_service.py
+                                   
 """
 Handles all business logic related to administrator settings.
 """
@@ -12,7 +12,7 @@ from mapper.user_mapper import UserMapper
 from msys.column_mapper import convert_to_new_columns, convert_to_legacy_columns
 from utils.job_utils import should_exclude_job
 
-# Default settings are defined once as a constant for consistency.
+                                                                  
 DEFAULT_ADMIN_SETTINGS = {
     'CNN_FAILR_THRS_VAL': 5,
     'CNN_WARN_THRS_VAL': 3,
@@ -47,7 +47,7 @@ class MngrSettService:
     and ensuring data consistency.
     """
     def __init__(self, db_connection):
-        # --- Local Import for avoiding circular dependencies ---
+                                                                 
         from service.dashboard_service import DashboardService
         from service.icon_service import IconService
         
@@ -69,12 +69,12 @@ class MngrSettService:
             self.logger.info(f"Service: 데이터 접근 권한과 함께 사용자 목록 조회 (검색어: '{search_term}').")
             users = self.user_mapper.find_all_users_with_data_permissions(search_term)
             
-            # JOB_IDS가 null인 경우 빈 리스트로 변환
+                                         
             for user in users:
                 if user['job_ids'] is None:
                     user['job_ids'] = []
                 else:
-                    # JSON 문자열을 실제 리스트로 파싱
+                                          
                     import json
                     user['job_ids'] = json.loads(user['job_ids'])
             
@@ -89,9 +89,9 @@ class MngrSettService:
         """
         try:
             self.logger.info(f"Service: '{user_id}' 사용자의 Job ID 권한 설정 데이터 조회.")
-            all_jobs = self.mst_mapper.get_all_job_ids() # 이제 dict의 list를 반환합니다.
+            all_jobs = self.mst_mapper.get_all_job_ids()                        
             permitted_job_ids = self.user_mapper.find_data_permissions_by_user_id(user_id)
-            # Job ID를 오름차순으로 정렬
+                               
             permitted_job_ids = sorted(permitted_job_ids) if permitted_job_ids else []
             
             return {
@@ -111,11 +111,11 @@ class MngrSettService:
             self.logger.info(f"Service: '{user_id}' 사용자의 데이터 접근 권한 저장 시작.")
             self.logger.info(f"--- Service: 전달받은 user_id: {user_id}")
             self.logger.info(f"--- Service: 전달받은 job_ids: {job_ids}")
-            # 1. 기존 권한 삭제
+                         
             self.user_mapper.delete_data_permissions_by_user_id(user_id)
             self.logger.info(f"Service: '{user_id}' 사용자의 기존 데이터 접근 권한 삭제 완료.")
 
-            # 2. 새로운 권한 추가
+                          
             if job_ids:
                 for job_id in job_ids:
                     self.user_mapper.insert_data_permission(user_id, job_id)
@@ -133,7 +133,7 @@ class MngrSettService:
         Applies default values for new settings.
         """
         try:
-            # CD900~CD999 및 100의 배수는 저장하지 않음 (상태코드, 그룹코드 제외)
+                                                            
             job_cd = settings_data.get('cd') or settings_data.get('sett_id') or settings_data.get('job_id')
             if should_exclude_job(job_cd):
                 self.logger.warning(f"Service: CD900~CD999 및 100의 배수는 tb_mngr_sett에 저장할 수 없습니다: {job_cd}")
@@ -172,7 +172,7 @@ class MngrSettService:
         """
         self.logger.info("=== Service: get_all_settings() 시작 ===")
         try:
-            # Use existing connection instead of creating new ones
+                                                                  
             mapper = self.mngr_sett_mapper
             self.logger.info("Service: dashboard_service.get_summary(all_data=True) 호출")
             con_hist_summary = self.dashboard_service.get_summary(all_data=True)
@@ -205,7 +205,7 @@ class MngrSettService:
         self.logger.info("=== Service: _ensure_settings_for_all_jobs_with_history() 시작 ===")
         mapper = MngrSettMapper(conn)
 
-        # 1. Get all unique job IDs from the execution history (TB_CON_HIST), excluding NULL/empty values.
+                                                                                                          
         all_hist_job_ids = {item['job_id'] for item in con_hist_summary
                            if item.get('job_id') is not None and str(item.get('job_id', '')).strip()}
         null_job_count = len([item for item in con_hist_summary
@@ -214,23 +214,23 @@ class MngrSettService:
         if null_job_count > 0:
             self.logger.warning(f"Service: Filtered out {null_job_count} items with NULL/empty job_id from history summary.")
 
-        # 2. Get all existing job IDs from the admin settings (TB_MNGR_SETT).
+                                                                             
         existing_admin_settings = mapper.get_all_settings()
         existing_admin_job_ids = {setting['cd'] for setting in existing_admin_settings}
         self.logger.info(f"Service: existing_admin_job_ids: {existing_admin_job_ids}")
 
-        # 3. Get all valid job IDs from the master job list (TB_CON_MST).
+                                                                         
         all_mst_job_ids = {job['cd'] for job in self.mst_mapper.get_all_job_ids()}
         self.logger.info(f"Service: all_mst_job_ids: {all_mst_job_ids}")
 
-        # Determine which jobs from history are missing settings.
+                                                                 
         hist_jobs_missing_settings = all_hist_job_ids - existing_admin_job_ids
         self.logger.info(f"Service: hist_jobs_missing_settings: {hist_jobs_missing_settings}")
 
-        # Filter this list to include only jobs that are also in the master list.
+                                                                                 
         jobs_to_create_settings_for = hist_jobs_missing_settings.intersection(all_mst_job_ids)
         
-        # CD900~CD999 및 100의 배수 제외 (상태코드, 그룹코드는 tb_mngr_sett에 저장하지 않음)
+                                                                      
         jobs_to_create_settings_for = {
             job_id for job_id in jobs_to_create_settings_for
             if not should_exclude_job(job_id)
@@ -244,14 +244,14 @@ class MngrSettService:
             existing_colors = {setting['chrt_colr'] for setting in existing_admin_settings if setting.get('chrt_colr')}
 
             for job_id in jobs_to_create_settings_for:
-                # Final validation: ensure job_id is not null/empty before creating settings
+                                                                                            
                 if not job_id or not str(job_id).strip():
                     self.logger.warning(f"Service: Skipping settings creation for invalid job_id: {job_id}")
                     continue
 
                 new_setting_data = {'job_id': job_id, **DEFAULT_ADMIN_SETTINGS}
 
-                # Assign a unique random color for the chart.
+                                                             
                 new_color = get_random_hex_color()
                 while new_color in existing_colors:
                     new_color = get_random_hex_color()
@@ -315,7 +315,7 @@ class MngrSettService:
             self.logger.info(f"Service: Importing {len(settings_list)} settings.")
             skipped_count = 0
             for settings_data in settings_list:
-                # CD900~CD999 및 100의 배수는 import하지 않음
+                                                    
                 job_id = settings_data.get('cd') or settings_data.get('sett_id') or settings_data.get('job_id')
                 if should_exclude_job(job_id):
                     self.logger.warning(f"Service: Import skipped for excluded job: {job_id}")
@@ -335,34 +335,34 @@ class MngrSettService:
         """
         self.logger.info("=== Service: sync_settings_with_mst() 시작 ===")
         try:
-            # 1. tb_con_mst에서 모든 job_id 가져오기
+                                            
             all_mst_job_ids = {job['cd'] for job in self.mst_mapper.get_all_job_ids()}
             self.logger.info(f"Service: tb_con_mst에 있는 모든 Job ID: {all_mst_job_ids}")
 
-            # 2. tb_mngr_sett에서 기존 job_id 가져오기
+                                              
             existing_settings = self.mngr_sett_mapper.get_all_settings()
             existing_job_ids = {setting['cd'] for setting in existing_settings}
             self.logger.info(f"Service: tb_mngr_sett에 있는 기존 Job ID: {existing_job_ids}")
 
-            # 3. tb_mngr_sett에 없는 job_id 찾기
+                                           
             missing_job_ids = all_mst_job_ids - existing_job_ids
             self.logger.info(f"Service: tb_mngr_sett에 없는 Job ID: {missing_job_ids}")
 
-            # 4. 제외할 job_id 필터링 (CD900~CD999, CD100, CD200 등)
+                                                             
             jobs_to_create = []
             for job_id in missing_job_ids:
                 if not self._should_exclude_job(job_id):
                     jobs_to_create.append(job_id)
             self.logger.info(f"Service: 생성할 Job ID: {jobs_to_create}")
 
-            # 5. 새로운 job에 기본 설정 생성
+                                  
             created_count = 0
             existing_colors = {setting['chrt_colr'] for setting in existing_settings if setting.get('chrt_colr')}
             
             for job_id in jobs_to_create:
                 new_setting = {'cd': job_id, **DEFAULT_ADMIN_SETTINGS}
                 
-                # 고유한 차트 색상 할당
+                              
                 new_color = get_random_hex_color()
                 while new_color in existing_colors:
                     new_color = get_random_hex_color()
@@ -374,16 +374,16 @@ class MngrSettService:
                 created_count += 1
                 self.logger.info(f"Service: Job ID {job_id}의 설정 생성 완료")
 
-            # 6. TB_API_KEY_MNGR에 CD 값 추가 (API 키 관리 테이블에 없는 CD만 추가)
+                                                                   
             from service.api_key_mngr_service import ApiKeyMngrService
             api_key_service = ApiKeyMngrService()
             api_update_result = api_key_service.update_cd_from_mngr_sett()
             
-            # 7. 이벤트 로그에 기록
+                           
             from service.dashboard_service import DashboardService
             dashboard_service = DashboardService(self.conn)
             
-            # 기본 설정 생성 이벤트 로그
+                             
             for job_id in jobs_to_create:
                 dashboard_service.save_event(
                     con_id=None,
@@ -392,7 +392,7 @@ class MngrSettService:
                     rqs_info=f'관리자 설정>기본 설정 {job_id} 추가'
                 )
             
-            # API 키 관리 업데이트 이벤트 로그
+                                  
             for cd in api_update_result['added_cds']:
                 dashboard_service.save_event(
                     con_id=None,
@@ -451,13 +451,13 @@ class MngrSettService:
         self.logger.info("=== SERVICE: get_schedule_settings_service() 시작 ===")
 
         try:
-            # DAO 호출 전 상태 로깅
+                            
             self.logger.info("SERVICE: DAO 호출 준비")
             if not hasattr(self, 'schedule_settings_dao') or self.schedule_settings_dao is None:
                 self.logger.error("SERVICE: schedule_settings_dao가 초기화되지 않음")
                 raise ValueError("ScheduleSettingsDAO not initialized")
 
-            # DAO 호출
+                    
             self.logger.info("SERVICE: DAO.get_schedule_settings() 호출")
             settings = self.schedule_settings_dao.get_schedule_settings()
             self.logger.info(f"SERVICE: DAO 호출 완료. 반환 타입: {type(settings)}")
@@ -473,10 +473,10 @@ class MngrSettService:
             self.logger.info(f"SERVICE: DAO에서 {len(settings)}개의 필드 데이터 수신")
             self.logger.debug(f"SERVICE: 수신된 데이터 키들: {list(settings.keys())}")
 
-            # 데이터 변환 전 검증
+                         
             self.logger.info("SERVICE: 데이터 변환 시작 (snake_case -> camelCase)")
 
-            # 변환할 필드 매핑
+                       
             field_mapping = {
                 'sett_id': 'settId',
                 'grp_min_cnt': 'grpMinCnt',
@@ -491,12 +491,12 @@ class MngrSettService:
                 'memo_txt_colr': 'memoTxtColr'
             }
 
-            # 데이터 변환
+                    
             converted_settings = {}
             for db_field, frontend_field in field_mapping.items():
                 value = settings.get(db_field)
 
-                # Decimal 타입을 float로 변환 (JSON 직렬화 문제 해결)
+                                                        
                 if hasattr(value, '__class__') and 'Decimal' in str(type(value)):
                     from decimal import Decimal
                     if isinstance(value, Decimal):
@@ -505,13 +505,13 @@ class MngrSettService:
 
                 converted_settings[frontend_field] = value
 
-                # 타입별로 특별한 처리
+                             
                 if value is None:
                     self.logger.debug(f"SERVICE: 필드 {db_field} -> {frontend_field}: None")
                 elif isinstance(value, (int, float)):
                     self.logger.debug(f"SERVICE: 필드 {db_field} -> {frontend_field}: {value} ({type(value).__name__})")
                 elif isinstance(value, str):
-                    # 민감한 정보는 길이만 로깅
+                                    
                     if len(value) > 50:
                         self.logger.debug(f"SERVICE: 필드 {db_field} -> {frontend_field}: [길이 {len(value)}자 문자열]")
                     else:
@@ -526,7 +526,7 @@ class MngrSettService:
 
         except Exception as e:
             self.logger.error(f"SERVICE: 스케줄 설정 조회 중 예외 발생: {e}", exc_info=True)
-            # 추가 디버깅 정보
+                       
             try:
                 import traceback
                 self.logger.error(f"SERVICE: 스택 트레이스:\n{traceback.format_exc()}")
@@ -552,7 +552,7 @@ class MngrSettService:
                 리스트: [{...}, {...}, ...]
         """
         try:
-            # 리스트인 경우 각 항목을 개별적으로 처리
+                                    
             if isinstance(status_data, list):
                 self.logger.info(f"Service: 상태코드 배치 저장 시작 - 총 {len(status_data)}개")
                 for item in status_data:
@@ -575,14 +575,14 @@ class MngrSettService:
             cd = status_data.get('cd', 'UNKNOWN')
             self.logger.info(f"Service: 상태코드 UI 설정 저장 시작 - CD: {cd}")
 
-            # 저장할 데이터 준비 (UI 설정값만)
+                                  
             processed_data = {
                 'cd': cd,
                 'bg_colr': status_data.get('bg_colr', '#F3F4F6'),
                 'txt_colr': status_data.get('txt_colr', '#374151')
             }
 
-            # icon_id가 있으면 icon_cd로 변환
+                                      
             if 'icon_id' in status_data and status_data['icon_id']:
                 icon_id = status_data['icon_id']
                 icon_code = self.icon_service.get_icon_code_by_id(icon_id)
@@ -618,12 +618,12 @@ class MngrSettService:
             self.logger.info("=== SERVICE: get_status_codes_service() 동기화 모드 시작 ===")
             from dao.sts_cd_dao import StsCdDAO
 
-            # 1. tb_con_mst에만 있고 tb_sts_cd_mst에 없는 코드 자동 삽입
+                                                           
             inserted_count = StsCdDAO.sync_missing_codes_from_con_mst()
             if inserted_count > 0:
                 self.logger.info(f"SERVICE: 새로운 상태코드 {inserted_count}개 자동 삽입됨")
 
-            # 2. tb_con_mst 기준으로 tb_sts_cd_mst와 join하여 조회
+                                                         
             status_codes = StsCdDAO.get_synced_status_codes()
             self.logger.info(f"SERVICE: 동기화된 상태코드 {len(status_codes)}개 조회 완료")
             return status_codes
@@ -678,7 +678,7 @@ class MngrSettService:
             sett_id = settings_data.get('sett_id')
             self.logger.info(f"Service: Saving schedule settings. sett_id: {sett_id}, user_id: {user_id}")
 
-            # Add user_id for tracking who made the changes
+                                                           
             settings_data['updr_id'] = user_id
             
             if sett_id:
@@ -705,11 +705,11 @@ class MngrSettService:
             mapper = self.mngr_sett_mapper
             result = mapper.get_all_settings_paged(page, per_page, search_term)
             
-            # 아이콘 데이터 추가 (기존 _combine_settings_details 로직 활용)
+                                                             
             all_icons = self.icon_service.get_all_icons_data()
             icon_code_map = {icon['icon_id']: icon['icon_cd'] for icon in all_icons}
             
-            # 데이터에 아이콘 코드 추가
+                            
             for setting in result['data']:
                 icon_fields = [
                     'CNN_FAILR_ICON_ID', 'CNN_WARN_ICON_ID', 'CNN_SUCS_ICON_ID',

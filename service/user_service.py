@@ -36,14 +36,14 @@ class UserService:
                 user['permissions'] = user_permissions
                 user['is_admin'] = 'mngr_sett' in user_permissions
             
-            # 1. 검색어로 필터링 (user_id 기준)
+                                      
             if search_term:
                 users = [
                     user for user in users
                     if search_term.lower() in user['user_id'].lower()
                 ]
 
-            # 2. 정렬: 1순위 관리자, 2순위 최신 가입자
+                                        
             users.sort(
                 key=lambda u: (u['is_admin'], u.get('acc_cre_dt') or '1900-01-01'),
                 reverse=True
@@ -57,11 +57,11 @@ class UserService:
     def approve_user(self, user_id):
         """사용자를 승인합니다. (비밀번호는 변경하지 않습니다.)"""
         try:
-            # 1. 상태를 'APPROVED'로 변경
+                                   
             self.user_mapper.update_status(user_id, 'APPROVED')
-            # 2. 비밀번호를 user_id로 해싱하여 업데이트 (기능 제거)
-            # hashed_password = PasswordService.hash_password(user_id)
-            # self.user_mapper.update_password(user_id, hashed_password)
+                                                 
+                                                                      
+                                                                        
             
             self._log_user_event(user_id, 'AUTH_APPROVE', f"User '{user_id}' approved by admin")
             
@@ -106,34 +106,34 @@ class UserService:
         try:
             self.user_mapper.update_user_permissions(user_id, menu_ids)
             
-            # 이벤트 로그 기록
+                       
             log_message = f"Permissions for user '{user_id}' updated by admin. New permissions: {menu_ids}"
             self._log_user_event(user_id, 'AUTH_UPDATE_PERM', log_message)
             
             logging.info(f"✅ Service: 사용자 '{user_id}'의 권한이 업데이트되었습니다.")
         except Exception as e:
-            # 데이터베이스 오류 메시지를 확인하여 원인을 더 구체적으로 파악합니다.
+                                                    
             error_msg = str(e).lower()
-            # 외래 키 제약 조건 위반을 나타내는 일반적인 문자열을 확인합니다.
+                                                  
             if 'foreign key constraint' in error_msg or 'violates foreign key' in error_msg or 'foreign key violation' in error_msg:
                 logging.error(f"❌ Service: 사용자 권한 업데이트 실패 (잘못된 menu_id): {e}", exc_info=True)
-                # 클라이언트에게 원인을 명확히 알려주기 위해 ValueError를 발생시킵니다.
+                                                             
                 raise ValueError("존재하지 않는 메뉴 ID가 포함되어 있어 권한을 업데이트할 수 없습니다.")
             
             logging.error(f"❌ Service: 사용자 권한 업데이트 실패: {e}", exc_info=True)
-            # 그 외 다른 예외는 그대로 다시 발생시킵니다.
+                                       
             raise
 
     def _log_user_event(self, user_id, status, message):
         """사용자 관련 이벤트를 로그에 기록합니다."""
         try:
-            # g.user 대신 session에서 직접 사용자 정보를 가져옵니다.
+                                                   
             admin_user_id = session.get('user', {}).get('user_id', 'UNKNOWN_ADMIN')
             rqs_info = f"{message} by '{admin_user_id}'"
             self.dashboard_service.save_event(con_id=None, job_id=user_id, status=status, rqs_info=rqs_info)
             logging.info(f"Event '{status}' saved for user: {user_id}")
         except Exception as log_e:
             logging.error(f"Failed to save event log for user {user_id}: {log_e}", exc_info=True)
-            # 로깅 실패가 전체 트랜잭션을 롤백시키지 않도록 수정합니다.
-            # raise 대신 경고 로그만 남깁니다.
+                                              
+                                   
             logging.warning(f"Could not log event for user {user_id} due to: {log_e}")

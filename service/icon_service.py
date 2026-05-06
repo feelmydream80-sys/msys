@@ -36,7 +36,7 @@ class IconService:
 
     def insert_or_update_icon(self, icon_data: dict):
         try:
-            # ICON_DSP_YN 값을 'Y' 또는 'N'으로 정규화
+                                             
             dsp_yn = icon_data.get('ICON_DSP_YN')
             normalized_dsp_yn = 'Y'
             if isinstance(dsp_yn, str):
@@ -47,21 +47,21 @@ class IconService:
                     normalized_dsp_yn = 'N'
             icon_data['ICON_DSP_YN'] = normalized_dsp_yn
 
-            # ICON_ID가 있으면 업데이트
+                               
             if icon_data.get('ICON_ID'):
                 self.icon_mapper.update_icon(icon_data)
                 return
 
-            # ICON_ID가 없으면 ICON_CD로 기존 아이콘 확인
+                                             
             icon_code = icon_data.get('ICON_CD')
             existing_icon = self.icon_mapper.get_icon_by_code(icon_code)
 
             if existing_icon:
-                # 기존 아이콘이 있으면 업데이트
+                                  
                 icon_data['ICON_ID'] = existing_icon['icon_id']
                 self.icon_mapper.update_icon(icon_data)
             else:
-                # 기존 아이콘이 없으면 삽입
+                                
                 self.icon_mapper.insert_icon(icon_data)
         except Exception as e:
             logging.error(f"❌ 아이콘 삽입/업데이트 실패 (데이터: {icon_data}): {e}", exc_info=True)
@@ -98,13 +98,13 @@ class IconService:
         CSV 파일 스트림에서 아이콘 데이터를 읽어 데이터베이스에 추가/업데이트합니다.
         """
         try:
-            # 전체 파일 내용을 읽고 utf-8-sig로 디코딩하여 BOM(Byte Order Mark)을 처리합니다.
+                                                                        
             content = file_stream.read().decode('utf-8-sig')
             csv_file = io.StringIO(content)
             reader = csv.DictReader(csv_file)
             
-            # CSV 헤더의 키를 데이터베이스 컬럼명과 일치시키기 위해 대문자로 변환합니다.
-            # 이렇게 하면 'icon_cd'와 같은 소문자 헤더도 정상적으로 처리할 수 있습니다.
+                                                         
+                                                            
             if reader.fieldnames:
                 reader.fieldnames = [field.upper().strip() for field in reader.fieldnames]
             
@@ -112,10 +112,10 @@ class IconService:
             logging.info("--- 아이콘 CSV 파일 데이터 로드 시작 ---")
             for row in reader:
                 logging.info(f"CSV에서 읽은 데이터: {row}")
-                # ICON_CD 값이 없거나 비어있는 행(파일 끝의 빈 줄 등)은 건너뜁니다.
+                                                            
                 if row.get('ICON_CD') and row['ICON_CD'].strip():
-                    # CSV 파일의 헤더가 데이터베이스 컬럼명과 일치해야 합니다.
-                    # 예: ICON_CD, ICON_NM, ICON_DESC, ICON_DSP_YN
+                                                       
+                                                                 
                     icons_to_process.append(row)
                 else:
                     logging.warning(f"ICON_CD가 없거나 비어있어 해당 행을 건너뜁니다: {row}")
@@ -124,15 +124,15 @@ class IconService:
             if not icons_to_process:
                 raise ValueError("CSV 파일에 처리할 데이터가 없습니다.")
 
-            # 1. 기존의 모든 아이콘 데이터를 삭제합니다.
+                                       
             logging.info("--- 기존 아이콘 데이터 삭제 시작 ---")
             self.icon_mapper.delete_all_icons()
             logging.info("--- 기존 아이콘 데이터 삭제 완료 ---")
 
-            # 2. CSV 파일의 새로운 데이터로 삽입합니다.
+                                        
             logging.info("--- 새로운 아이콘 데이터 삽입 시작 ---")
             for icon_data in icons_to_process:
-                # ICON_ID가 빈 문자열인 경우, 키 자체를 삭제하여 insert 로직을 타도록 유도
+                                                                  
                 if 'ICON_ID' in icon_data and not icon_data['ICON_ID']:
                     del icon_data['ICON_ID']
                 self.icon_mapper.insert_icon(icon_data)
@@ -142,5 +142,5 @@ class IconService:
             
         except Exception as e:
             logging.error(f"❌ 아이콘 CSV 가져오기 서비스 실패: {e}", exc_info=True)
-            # 예외를 다시 발생시켜 라우트에서 트랜잭션 롤백을 처리하도록 합니다.
+                                                   
             raise

@@ -10,8 +10,8 @@ def get_daily_job_counts(job_id, start_date, end_date, all_data, job_ids=None):
     params = []
     conditions = []
 
-    # 잔디 히트맵에는 성공한 실행만 기록되도록 status 조건 추가
-    # CD901: 성공, CD902: 진행 중(카운트하지 않음)
+                                         
+                                      
     conditions.append("status = %s")
     params.append('CD901')
 

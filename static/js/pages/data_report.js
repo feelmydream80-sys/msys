@@ -3,11 +3,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const tableBody = document.getElementById('report-table-body');
     const loadingIndicator = document.getElementById('loading-indicator');
 
-    let currentView = 'weekly'; // Default view
+    let currentView = 'weekly';
 
     function fetchData(view) {
         loadingIndicator.style.display = 'block';
-        tableBody.innerHTML = ''; // Clear previous data
+        tableBody.innerHTML = '';
 
         fetch(`/api/data-report?view=${view}`)
             .then(response => {
@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 renderTable(data);
             })
             .catch(error => {
-                console.error('Error fetching data report:', error);
+
                 tableBody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">데이터를 불러오는 데 실패했습니다.</td></tr>`;
             })
             .finally(() => {
@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // 데이터를 날짜와 Job ID 순으로 정렬
+
         data.sort((a, b) => {
             if (a.date < b.date) return -1;
             if (a.date > b.date) return 1;
@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     viewTypeRadios.forEach(radio => {
         radio.addEventListener('change', function() {
-            // Bootstrap 토글 버튼의 active 클래스 수동 관리
+
             document.querySelectorAll('.btn-group-toggle .btn').forEach(label => {
                 label.classList.remove('active');
             });
@@ -91,6 +91,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Initial data load
+
     fetchData(currentView);
 });

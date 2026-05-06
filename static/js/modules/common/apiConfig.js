@@ -100,32 +100,32 @@ const apiGroups = {
             method: "GET",
             defaultData: {}
         },
-        // {
-        //     title: "아이콘 저장",
-        //     endpoint: "/api/admin/icons/save",
-        //     method: "POST",
-        //     defaultData: {
-        //         "ICON_ID": 1,
-        //         "ICON_CD": "🟢",
-        //         "ICON_NM": "성공",
-        //         "ICON_DSP_YN": "Y"
-        //     }
-        // },
-        // {
-        //     title: "아이콘 삭제",
-        //     endpoint: "/api/admin/icons/delete/1",
-        //     method: "DELETE",
-        //     defaultData: {}
-        // },
-        // {
-        //     title: "아이콘 표시 여부 토글",
-        //     endpoint: "/api/admin/icons/toggle-display",
-        //     method: "POST",
-        //     defaultData: {
-        //         "ICON_ID": 1,
-        //         "ICON_DSP_YN": "N"
-        //     }
-        // }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     ],
     "사용자 관리": [
         {
@@ -158,15 +158,15 @@ const apiGroups = {
             method: "POST",
             defaultData: { "user_id": "testuser" }
         },
-        // {
-        //     title: "사용자 권한 업데이트",
-        //     endpoint: "/api/admin/users/permissions",
-        //     method: "POST",
-        //     defaultData: {
-        //         "user_id": "testuser",
-        //         "menu_ids": [1, 2, 3]
-        //     }
-        // }
+
+
+
+
+
+
+
+
+
     ],
     "분석": [
         {
@@ -357,12 +357,12 @@ const apiGroups = {
                 "confirm_password": "newpassword123!"
             }
         },
-        // {
-        //     title: "비밀번호 초기화 요청",
-        //     endpoint: "/request-reset-password",
-        //     method: "POST",
-        //     defaultData: { "user_id": "testuser" }
-        // }
+
+
+
+
+
+
     ],
     "대시보드": [
         {
@@ -393,80 +393,80 @@ const apiGroups = {
         }
     ],
     "데이터 명세서": [
-        // {
-        //     title: "모든 명세서 조회",
-        //     endpoint: "/api/data-spec",
-        //     method: "GET",
-        //     defaultData: {}
-        // },
-        // {
-        //     title: "새 명세서 생성",
-        //     endpoint: "/api/data-spec",
-        //     method: "POST",
-        //     defaultData: {
-        //         "spec": { "data_name": "테스트 명세서", "password": "1234" },
-        //         "params": [{ "param_name": "id", "is_required": "Y" }]
-        //     }
-        // },
-        // {
-        //     title: "URL에서 명세서 스크래핑",
-        //     endpoint: "/api/scrape-spec",
-        //     method: "POST",
-        //     defaultData: { "url": "https://example.com" }
-        // },
-        // {
-        //     title: "명세서 이름 중복 확인",
-        //     endpoint: "/api/data-spec/check-name",
-        //     method: "GET",
-        //     defaultData: { "data_name": "테스트 명세서" }
-        // },
-        // {
-        //     title: "특정 명세서 조회",
-        //     endpoint: "/api/data-spec/1",
-        //     method: "GET",
-        //     defaultData: {}
-        // },
-        // {
-        //     title: "특정 명세서 수정",
-        //     endpoint: "/api/data-spec/1",
-        //     method: "PUT",
-        //     defaultData: {
-        //         "spec": { "data_name": "수정된 명세서" }
-        //     }
-        // },
-        // {
-        //     title: "특정 명세서 삭제",
-        //     endpoint: "/api/data-spec/1",
-        //     method: "DELETE",
-        //     defaultData: { "password": "1234" }
-        // }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     ],
     "Jandi 연동": [
-        // {
-        //     title: "Job 목록 조회 (페이징)",
-        //     endpoint: "/api/job-list",
-        //     method: "GET",
-        //     defaultData: {
-        //         "draw": 1,
-        //         "start": 0,
-        //         "length": 10,
-        //         "search[value]": "",
-        //         "start_date": "2024-01-01",
-        //         "end_date": "2024-01-31",
-        //         "allData": "false"
-        //     }
-        // },
-        // {
-        //     title: "Jandi 히트맵 데이터",
-        //     endpoint: "/api/jandi-data",
-        //     method: "GET",
-        //     defaultData: {
-        //         "job_id": "JOB1",
-        //         "start_date": "2024-01-01",
-        //         "end_date": "2024-01-31",
-        //         "allData": "false"
-        //     }
-        // }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     ],
     "매핑 관리": [
         {
@@ -502,12 +502,12 @@ const apiGroups = {
                 "new_col_nm": "UPDATED_COLUMN"
             }
         },
-        // {
-        //     title: "매핑 삭제",
-        //     endpoint: "/mapping/api/delete/1",
-        //     method: "DELETE",
-        //     defaultData: {}
-        // }
+
+
+
+
+
+
     ]
 };
 

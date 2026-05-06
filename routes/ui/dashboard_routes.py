@@ -24,12 +24,12 @@ def log_menu_access(f):
             endpoint = request.endpoint
             
             if user_id and endpoint:
-                menu_to_log = endpoint  # 기본값으로 엔드포인트 이름 사용
+                menu_to_log = endpoint                     
                 
-                # 엔드포인트에서 메뉴 ID 추출 (예: 'dashboard.dashboard' -> 'dashboard')
+                                                                            
                 menu_id = endpoint.split('.')[0]
 
-                # 앱 컨텍스트에 캐시된 메뉴 데이터에서 메뉴 이름 찾기
+                                               
                 menu_items = getattr(current_app, 'menu_items', [])
                 menu_item = next((item for item in menu_items if item.get('menu_id') == menu_id), None)
                 
@@ -38,7 +38,7 @@ def log_menu_access(f):
                 else:
                     current_app.logger.warning(f"캐시에서 menu_id '{menu_id}'에 해당하는 메뉴 이름을 찾을 수 없습니다. 엔드포인트 '{endpoint}'를 기본값으로 사용합니다.")
 
-                # 로그 삽입
+                       
                 with get_db_connection() as conn:
                     analytics_dao = AnalyticsDAO(conn)
                     analytics_dao.insert_user_access_log(user_id, menu_to_log)

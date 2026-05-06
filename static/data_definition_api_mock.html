@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>데이터 정의 - API Mock 연동</title>
     <style>
-        /* 카드 요약 CSS 스타일 재사용 */
+        
         :root {
             --space-1: 16px;
             --space-2: 24px;
@@ -24,7 +24,7 @@
             margin: 0 auto;
         }
 
-        /* 카드 그리드 레이아웃 */
+        
         .card-grid-legacy {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -91,7 +91,7 @@
             color: #c53030;
         }
 
-        /* 상세 패널 스타일 */
+        
         .detail-panel {
             background: white;
             border-radius: 12px;
@@ -154,7 +154,7 @@
             background-color: #dc2626;
         }
 
-        /* 테이블 스타일 */
+        
         table {
             width: 100%;
             border-collapse: collapse;
@@ -176,7 +176,7 @@
             background-color: #f1f5f9;
         }
 
-        /* 비활성 상태 스타일 */
+        
         .inactive-row {
             opacity: 0.5;
             text-decoration: line-through;
@@ -187,7 +187,7 @@
             font-style: italic;
         }
 
-        /* 로딩 및 에러 상태 */
+        
         .loading {
             text-align: center;
             padding: 40px;
@@ -202,7 +202,7 @@
             margin: 10px 0;
         }
 
-        /* 반응형 디자인 */
+        
         @media (max-width: 768px) {
             .card-grid-legacy {
                 grid-template-columns: 1fr;
@@ -225,12 +225,12 @@
     <div class="container">
         <h1 style="color: #1a3c6b; margin-bottom: 20px;">데이터 정의 - API Mock 연동</h1>
         
-        <!-- 100번대 그룹 카드 영역 -->
+        
         <div class="card-grid-legacy" id="definitionCardContainer">
             <div class="loading">로딩 중...</div>
         </div>
 
-        <!-- 선택된 그룹의 상세 정보 영역 -->
+        
         <div class="detail-panel" id="detailPanel">
             <div class="detail-header">
                 <div class="detail-title" id="selectedGroupTitle">선택된 그룹</div>
@@ -249,32 +249,32 @@
                     </tr>
                 </thead>
                 <tbody id="detailTableBody">
-                    <!-- 상세 데이터 동적 생성 -->
+                    
                 </tbody>
             </table>
         </div>
     </div>
 
     <script>
-        // 전역 상태
+
         let selectedGroup = null;
         let selectedRow = null;
         let groupsData = [];
         let detailsData = {};
 
-        // 초기화 함수
+
         function init() {
             loadGroups();
             setupEventListeners();
         }
 
-        // 1. 그룹 목록 로드 (API Mock)
+
         async function loadGroups() {
             const container = document.getElementById('definitionCardContainer');
             container.innerHTML = '<div class="loading">그룹 목록을 불러오는 중...</div>';
 
             try {
-                // Mock API 호출
+
                 const response = await fetch('/api/data_definition/groups');
                 if (!response.ok) {
                     throw new Error('그룹 목록 로드 실패');
@@ -283,7 +283,7 @@
                 groupsData = await response.json();
                 renderGroupCards();
             } catch (error) {
-                console.error('Error loading groups:', error);
+                
                 container.innerHTML = `
                     <div class="error">
                         그룹 목록을 불러오는 중 오류가 발생했습니다.<br>
@@ -294,7 +294,7 @@
             }
         }
 
-        // 2. 그룹 카드 렌더링
+
         function renderGroupCards() {
             const container = document.getElementById('definitionCardContainer');
             container.innerHTML = '';
@@ -328,35 +328,35 @@
             });
         }
 
-        // 3. 그룹 선택 처리
+
         async function selectGroup(group) {
-            // 기존 선택된 카드 스타일 초기화
+
             document.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
             
-            // 선택된 카드 하이라이트
+
             const selectedCard = event.currentTarget;
             selectedCard.classList.add('selected');
             
             selectedGroup = group;
             
-            // 상세 정보 패널 표시 및 데이터 로드
+
             await loadGroupDetails(group.cd);
         }
 
-        // 4. 그룹 상세 정보 로드 (API Mock)
+
         async function loadGroupDetails(groupCd) {
             const detailPanel = document.getElementById('detailPanel');
             const selectedGroupTitle = document.getElementById('selectedGroupTitle');
             const detailTableBody = document.getElementById('detailTableBody');
 
-            // 타이틀 업데이트
+
             selectedGroupTitle.textContent = `${selectedGroup.cd_nm} (${selectedGroup.cd})`;
 
-            // 테이블 내용 초기화
+
             detailTableBody.innerHTML = '<tr><td colspan="4" class="loading">상세 정보를 불러오는 중...</td></tr>';
 
             try {
-                // Mock API 호출
+
                 const response = await fetch(`/api/data_definition/group/${groupCd}`);
                 if (!response.ok) {
                     throw new Error('상세 정보 로드 실패');
@@ -368,10 +368,10 @@
                 renderDetailTable(details);
                 detailPanel.style.display = 'block';
                 
-                // 버튼 상태 초기화
+
                 updateActionButtons();
             } catch (error) {
-                console.error('Error loading group details:', error);
+                
                 detailTableBody.innerHTML = `
                     <tr>
                         <td colspan="4" class="error">
@@ -383,7 +383,7 @@
             }
         }
 
-        // 5. 상세 테이블 렌더링
+
         function renderDetailTable(details) {
             const detailTableBody = document.getElementById('detailTableBody');
             detailTableBody.innerHTML = '';
@@ -400,16 +400,16 @@
             }
         }
 
-        // 6. 상세 행 렌더링 (use_yn에 따른 시각적 구분 포함)
+
         function renderDetailRow(item) {
             const row = document.createElement('tr');
             
-            // use_yn이 'N'인 경우 시각적 구분 적용
+
             if (item.use_yn !== 'Y') {
                 row.className = 'inactive-row';
             }
             
-            // 행 클릭 이벤트 추가
+
             row.addEventListener('click', () => selectDetailRow(row, item));
             
             row.innerHTML = `
@@ -426,21 +426,21 @@
             return row;
         }
 
-        // 7. 상세 행 선택 처리
+
         function selectDetailRow(row, item) {
-            // 기존 선택된 행 스타일 초기화
+
             document.querySelectorAll('#detailTableBody tr').forEach(r => r.style.backgroundColor = '');
             
-            // 선택된 행 하이라이트
+
             row.style.backgroundColor = '#e6f7ee';
             
             selectedRow = { row, item };
             
-            // 액션 버튼 활성화
+
             updateActionButtons();
         }
 
-        // 8. 액션 버튼 상태 업데이트
+
         function updateActionButtons() {
             const editBtn = document.getElementById('editBtn');
             const deleteBtn = document.getElementById('deleteBtn');
@@ -454,19 +454,19 @@
             }
         }
 
-        // 9. 이벤트 리스너 설정
+
         function setupEventListeners() {
             const editBtn = document.getElementById('editBtn');
             const deleteBtn = document.getElementById('deleteBtn');
 
-            // 수정 버튼 클릭
+
             editBtn.addEventListener('click', () => {
                 if (selectedRow) {
                     showEditModal(selectedRow.item);
                 }
             });
 
-            // 삭제 버튼 클릭
+
             deleteBtn.addEventListener('click', () => {
                 if (selectedRow) {
                     showDeleteConfirm(selectedRow.item);
@@ -474,9 +474,9 @@
             });
         }
 
-        // 10. 수정 모달 표시
+
         function showEditModal(item) {
-            // CD_CL과 CD를 제외한 열 정보들 추출 (null 제외)
+
             const editableFields = [];
             const fieldLabels = {
                 'cd_desc': '활용목적',
@@ -490,7 +490,7 @@
                 'item8': 'API_KEY'
             };
 
-            // null이 아닌 필드만 추출
+
             Object.keys(fieldLabels).forEach(key => {
                 if (item[key] && item[key].trim() !== '') {
                     editableFields.push({
@@ -506,7 +506,7 @@
                 return;
             }
 
-            // 모달 폼 생성
+
             let formHTML = `
                 <div style="max-height: 400px; overflow-y: auto;">
                     <h4 style="margin-bottom: 15px; color: #333;">${item.cd} - ${item.cd_nm} 수정</h4>
@@ -528,7 +528,7 @@
                 </div>
             `;
 
-            // 커스텀 모달 생성
+
             const modal = document.createElement('div');
             modal.style.cssText = `
                 position: fixed;
@@ -574,13 +574,13 @@
             modal.appendChild(modalContent);
             document.body.appendChild(modal);
 
-            // 이벤트 핸들러
+
             cancelBtn.addEventListener('click', () => {
                 document.body.removeChild(modal);
             });
 
             saveBtn.addEventListener('click', async () => {
-                // 입력값 검증
+
                 let hasChanges = false;
                 const updates = {};
 
@@ -600,7 +600,7 @@
                 }
 
                 try {
-                    // API 호출 시도
+
                     const response = await fetch(`/api/data_definition/update/${item.cd_cl}/${item.cd}`, {
                         method: 'POST',
                         headers: {
@@ -613,21 +613,21 @@
                         throw new Error('수정 실패');
                     }
 
-                    // 모달 닫기
+
                     document.body.removeChild(modal);
 
-                    // 화면 업데이트
+
                     await loadGroupDetails(selectedGroup.cd);
                     
                     alert('수정이 완료되었습니다.');
                 } catch (error) {
-                    console.error('Error updating data:', error);
+                    
                     alert('수정 중 오류가 발생했습니다. 실제 서버와 연동되지 않았습니다.');
                 }
             });
         }
 
-        // 11. 삭제 확인 표시
+
         async function showDeleteConfirm(item) {
             const confirmDelete = confirm(
                 `코드: ${item.cd}\n명칭: ${item.cd_nm}\n\n이 항목을 삭제하시겠습니까?\n(사용여부가 'N'으로 변경됩니다)`
@@ -635,7 +635,7 @@
             
             if (confirmDelete) {
                 try {
-                    // API 호출 시도
+
                     const response = await fetch(`/api/data_definition/delete/${item.cd_cl}/${item.cd}`, {
                         method: 'DELETE'
                     });
@@ -644,18 +644,18 @@
                         throw new Error('삭제 실패');
                     }
 
-                    // 화면 업데이트
+
                     await loadGroupDetails(selectedGroup.cd);
                     
                     alert('삭제 처리가 완료되었습니다.');
                 } catch (error) {
-                    console.error('Error deleting data:', error);
+                    
                     alert('삭제 중 오류가 발생했습니다. 실제 서버와 연동되지 않았습니다.');
                 }
             }
         }
 
-        // 페이지 로드 시 초기화
+
         document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>

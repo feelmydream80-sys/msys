@@ -1,9 +1,6 @@
-/**
- * urlMapper.js: A module for analyzing a generic URL, allowing the user to
- * map the scraped data to the application's data structure within a modal.
- */
 
-// The fields that the user can map data to.
+
+
 const MAPPABLE_FIELDS = {
     spec: [
         { value: 'data_name', text: '데이터 명칭' },
@@ -21,12 +18,7 @@ const MAPPABLE_FIELDS = {
     ]
 };
 
-/**
- * Creates a dropdown (select element) for mapping.
- * @param {string} id - A unique identifier for the select element.
- * @param {Array<Object>} options - The options for the dropdown.
- * @returns {HTMLSelectElement} The created select element.
- */
+
 function createMappingDropdown(id, options) {
     const select = document.createElement('select');
     select.id = id;
@@ -46,23 +38,18 @@ function createMappingDropdown(id, options) {
     return select;
 }
 
-/**
- * Renders the analysis result and mapping UI inside the modal.
- * @param {Object} data - The analysis data from the backend.
- * @param {HTMLElement} container - The container to render the UI in.
- * @returns {boolean} - True if data was rendered, false if no data was found.
- */
+
 function renderAnalysisResult(data, container) {
-    container.innerHTML = ''; // Clear previous results
+    container.innerHTML = '';
 
     const hasHeadings = data.headings && data.headings.length > 0;
     const hasTables = data.tables && data.tables.length > 0;
 
     if (!hasHeadings && !hasTables) {
-        return false; // Indicate that no data was found to render
+        return false;
     }
 
-    // Render Headings/Text Candidates
+
     if (hasHeadings) {
         const section = document.createElement('div');
         section.className = 'mb-4 p-4 border rounded bg-gray-50';
@@ -80,14 +67,14 @@ function renderAnalysisResult(data, container) {
         container.appendChild(section);
     }
 
-    // Render Tables
+
     if (hasTables) {
         data.tables.forEach((table, i) => {
             const section = document.createElement('div');
             section.className = 'mb-4 p-4 border rounded bg-gray-50';
-            section.dataset.tableIndex = i; // Add index for later reference
+            section.dataset.tableIndex = i;
 
-            // Add Radio buttons for param_type selection
+
             const radioContainer = document.createElement('div');
             radioContainer.className = 'mb-2';
             radioContainer.innerHTML = `
@@ -103,7 +90,7 @@ function renderAnalysisResult(data, container) {
             const htmlTable = document.createElement('table');
             htmlTable.className = 'min-w-full bg-white border text-sm';
             
-            // Headers
+
             const thead = document.createElement('thead');
             thead.className = 'bg-gray-100';
             let tr = document.createElement('tr');
@@ -118,7 +105,7 @@ function renderAnalysisResult(data, container) {
             thead.appendChild(tr);
             htmlTable.appendChild(thead);
 
-            // Body
+
             const tbody = document.createElement('tbody');
             table.rows.forEach(row => {
                 tr = document.createElement('tr');
@@ -141,16 +128,12 @@ function renderAnalysisResult(data, container) {
     return true;
 }
 
-/**
- * Gathers the data mapped by the user from the UI.
- * @param {HTMLElement} container - The container holding the mapping UI.
- * @returns {Object|null} The structured mapped data, or null if validation fails.
- */
+
 function gatherMappedData(container) {
     const spec = {};
     const params = [];
 
-    // Gather from headings
+
     const concatenatableFields = ['description', 'keywords'];
 
     container.querySelectorAll('.flex.items-center').forEach(div => {
@@ -159,23 +142,23 @@ function gatherMappedData(container) {
         if (value) {
             const text = div.querySelector('span').textContent;
             
-            // If the field is concatenatable and already has a value, append.
+
             if (concatenatableFields.includes(value) && spec[value]) {
                 spec[value] += '\n' + text;
             } else {
-                // Otherwise, just assign (or overwrite).
+
                 spec[value] = text;
             }
         }
     });
 
-    // Gather from tables
+
     container.querySelectorAll('div[data-table-index]').forEach(section => {
         const tableIndex = section.dataset.tableIndex;
         const table = section.querySelector('table');
         if (!table) return;
 
-        // Get the selected param_type for this table
+
         const paramType = section.querySelector(`input[name="param-type-${tableIndex}"]:checked`).value || 'request';
 
         const headerSelects = table.querySelectorAll('thead th select');
@@ -214,24 +197,21 @@ function gatherMappedData(container) {
 }
 
 
-/**
- * Initializes the URL Mapper functionality.
- * @param {Function} onSave - A callback function to execute when the user saves the mapped data.
- */
+
 export function initUrlMapper(onSave) {
-    // Main page elements
+
     const contentInput = document.getElementById('paste-content-input');
     const analyzeBtn = document.getElementById('analyze-btn');
     const statusEl = document.getElementById('analyze-status');
     
-    // Modal elements
+
     const modal = document.getElementById('url-analysis-modal');
     const modalContent = document.getElementById('analysis-modal-content');
     const closeModalBtn = document.getElementById('close-analysis-modal-btn');
     const saveMappedBtn = document.getElementById('save-mapped-data-btn');
 
     if (!modal || !analyzeBtn || !contentInput) {
-        console.error("URL Mapper could not initialize. Required elements not found.");
+
         return;
     }
 
@@ -275,7 +255,7 @@ export function initUrlMapper(onSave) {
             }
 
         } catch (error) {
-            console.error('Analysis error:', error);
+
             statusEl.textContent = `분석 실패: ${error.message}`;
             statusEl.className = 'text-red-500 text-sm';
             alert(`분석에 실패했습니다: ${error.message}`);
@@ -284,7 +264,7 @@ export function initUrlMapper(onSave) {
         }
     });
 
-    // Event listener for the save button in the modal
+
     saveMappedBtn.addEventListener('click', () => {
         const mappedData = gatherMappedData(modalContent);
         if (mappedData) {
@@ -295,6 +275,6 @@ export function initUrlMapper(onSave) {
         }
     });
 
-    // Event listener for the close button in the modal
+
     closeModalBtn.addEventListener('click', closeModal);
 }

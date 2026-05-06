@@ -1,14 +1,14 @@
 import { TOAST_TYPES } from './constants.js';
 
-// Toast 알림 함수
+
 export function showToast(message, type = TOAST_TYPES.INFO) {
-    // 기존 toast가 있으면 제거
+
     const existingToast = document.querySelector('.toast-notification');
     if (existingToast) {
         existingToast.remove();
     }
 
-    // Toast 요소 생성
+
     const toast = document.createElement('div');
     toast.className = 'toast-notification';
     toast.style.cssText = `
@@ -26,7 +26,7 @@ export function showToast(message, type = TOAST_TYPES.INFO) {
         max-width: 300px;
     `;
 
-    // 타입에 따라 색상 변경
+
     switch(type) {
         case TOAST_TYPES.SUCCESS:
             toast.style.borderLeftColor = '#10b981';
@@ -41,13 +41,13 @@ export function showToast(message, type = TOAST_TYPES.INFO) {
             toast.style.borderLeftColor = '#3b82f6';
     }
 
-    // 메시지 내용
+
     toast.innerHTML = `
         <div style="font-weight: 600; margin-bottom: 4px;">알림</div>
         <div style="font-size: 0.9rem; color: #374151;">${message}</div>
     `;
 
-    // 슬라이드 인 애니메이션 스타일 추가
+
     if (!document.querySelector('#toast-styles')) {
         const style = document.createElement('style');
         style.id = 'toast-styles';
@@ -64,10 +64,10 @@ export function showToast(message, type = TOAST_TYPES.INFO) {
         document.head.appendChild(style);
     }
 
-    // DOM에 추가
+
     document.body.appendChild(toast);
 
-    // 3초 후 자동 제거
+
     setTimeout(() => {
         toast.style.animation = 'slideOut 0.3s ease-out forwards';
         setTimeout(() => {
@@ -78,11 +78,11 @@ export function showToast(message, type = TOAST_TYPES.INFO) {
     }, 3000);
 }
 
-// 모달 생성 함수
+
 export function createModal(contentHTML, options = {}) {
     const { title, onSave, onCancel, saveText = '저장', cancelText = '취소' } = options;
     
-    // 커스텀 모달 생성
+
     const modal = document.createElement('div');
     modal.style.cssText = `
         position: fixed;
@@ -141,9 +141,9 @@ export function createModal(contentHTML, options = {}) {
     modal.appendChild(modalContent);
     document.body.appendChild(modal);
 
-    // 이벤트 핸들러
+
     cancelBtn.addEventListener('click', () => {
-        console.log('취소 버튼 클릭');
+
         if (onCancel) {
             onCancel();
         }
@@ -159,19 +159,19 @@ export function createModal(contentHTML, options = {}) {
         }
     });
 
-    // 모달 외부 클릭으로 닫기
+
     modal.addEventListener('click', (e) => {
         if (e.target === modal) {
-            console.log('모달 외부 클릭');
+
             window.isModalOpen = false;
             document.body.removeChild(modal);
         }
     });
 
-    // body에 전역 ESC 키 이벤트 리스너 추가 (포커스 문제 해결)
+
     const handleEscKey = (e) => {
         if (e.key === 'Escape') {
-            console.log('ESC 키 클릭');
+
             if (onCancel) {
                 onCancel();
             }
@@ -182,7 +182,7 @@ export function createModal(contentHTML, options = {}) {
     };
     document.addEventListener('keydown', handleEscKey);
 
-    // 모달이 닫힐 때 이벤트 리스너 제거 (메모리 누수 방지)
+
     const removeListeners = () => {
         document.removeEventListener('keydown', handleEscKey);
     };
@@ -190,7 +190,7 @@ export function createModal(contentHTML, options = {}) {
     saveBtn.addEventListener('click', removeListeners);
     modal.addEventListener('click', (e) => {
         if (e.target === modal) {
-            console.log('모달 외부 클릭');
+
             removeListeners();
             window.isModalOpen = false;
             document.body.removeChild(modal);
@@ -205,7 +205,7 @@ export function createModal(contentHTML, options = {}) {
     };
 }
 
-// 그룹 추가 모달 HTML
+
 export function getAddGroupModalHTML() {
     return `
         <div style="max-height: 600px; overflow-y: auto;">
@@ -311,12 +311,12 @@ export function getAddGroupModalHTML() {
     `;
 }
 
-// 그룹 수정 모달 HTML
+
 export function getEditGroupModalHTML(group, groupHeader) {
-    // groupHeader가 undefined 또는 null일 경우 빈 객체로 대체
+
     const safeGroupHeader = groupHeader || {};
     
-    // null 또는 'NULL' 값을 공백으로 변환하는 함수
+
     const formatValue = (value) => {
         if (value === null || value === undefined || value === 'NULL' || value === 'null') {
             return '';
@@ -409,13 +409,13 @@ export function getEditGroupModalHTML(group, groupHeader) {
     `;
 }
 
-// 상세 항목 추가/수정 모달 HTML
+
 export function getDetailModalHTML(title, item = null, groupItemFields = [], isAllCodesUsed = false, groupNum = null, nextAvailableCode = null) {
     let html = `
         <div style="max-height: 600px; overflow-y: auto;">
     `;
 
-    // 모든 코드가 사용 중일 때 안내 메시지
+
     if (isAllCodesUsed && !item) {
         html += `
             <div style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 20px; margin-bottom: 20px; text-align: center;">
@@ -481,7 +481,7 @@ export function getDetailModalHTML(title, item = null, groupItemFields = [], isA
                 </div>
     `;
     
-    // 그룹 설정된 필드만 표시
+
     groupItemFields.forEach(field => {
         html += `
             <div style="margin-bottom: 10px;">

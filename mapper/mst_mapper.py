@@ -1,4 +1,4 @@
-# mapper/mst_mapper.py
+                      
 import logging
 from typing import Optional
 from sql.mst.mst_sql import MstSQL
@@ -88,7 +88,7 @@ class MstMapper:
             params = []
             all_jobs_subquery = "SELECT DISTINCT job_id FROM tb_con_hist"
             
-            # Base query for total records respects job_ids if provided
+                                                                       
             total_query = "SELECT COUNT(DISTINCT job_id) FROM tb_con_hist"
             if job_ids:
                 total_query += " WHERE job_id = ANY(%s)"

@@ -1,15 +1,15 @@
-// @DOC_FILE: ui.js (chart_analysis)
-// @DOC_DESC: 이 파일은 분석 페이지의 UI 렌더링, 초기화, 및 차트 생성을 담당합니다.
-// Job ID 체크박스 생성, 날짜 선택기 초기화, 차트 렌더링 로직을 포함합니다.
+
+
+
 
 import { allJobMstList, allMngrSettings } from './data.js';
 import { loadAnalyticsPageData } from './events.js';
 
-// @DOC: 차트 인스턴스를 저장하여 이전 차트를 파괴하고 새로 그릴 수 있도록 합니다.
+
 export let successRateChart = null;
 export let troublePieChart = null;
 
-// @DOC: 관리자 설정에 색상이 지정되지 않았을 경우 사용할 기본 차트 색상 팔레트입니다.
+
 const DEFAULT_CHART_COLORS = [
     'rgb(255, 99, 132)', 'rgb(54, 162, 235)', 'rgb(255, 206, 86)',
     'rgb(75, 192, 192)', 'rgb(153, 102, 255)', 'rgb(255, 159, 64)',
@@ -18,10 +18,7 @@ const DEFAULT_CHART_COLORS = [
 ];
 
 
-/**
- * @DOC: Job ID 목록을 받아 동적으로 체크박스를 생성하고 컨테이너에 추가합니다.
- * @param {string} labelDisplayType - 'name' 또는 'code'
- */
+
 export function renderJobCheckboxes(labelDisplayType = 'name', dataPermissions = []) {
     const jobCheckboxesContainer = document.getElementById('jobCheckboxes');
     if (!jobCheckboxesContainer) {
@@ -29,26 +26,26 @@ export function renderJobCheckboxes(labelDisplayType = 'name', dataPermissions =
         return;
     }
 
-    // 현재 체크된 Job ID들을 저장합니다.
+
     const currentlyCheckedIds = new Set(
         Array.from(jobCheckboxesContainer.querySelectorAll('.job-checkbox:checked')).map(cb => cb.value)
     );
     
-    // 처음 렌더링될 때(체크박스가 하나도 없을 때)는 모든 항목을 선택 상태로 초기화합니다.
+
     const isFirstRender = jobCheckboxesContainer.querySelectorAll('.job-checkbox').length === 0;
 
     jobCheckboxesContainer.innerHTML = '';
 
-    // 관리자 설정(allMngrSettings)이 비어있으면 체크박스가 렌더링되지 않는 문제를 해결하기 위해,
-    // 모든 Job 마스터 목록(allJobMstList)을 기준으로 체크박스를 생성하도록 수정합니다.
-    // 사용자의 데이터 접근 권한(dataPermissions)에 따라 Job 목록을 필터링합니다.
-    // dataPermissions가 비어 있지 않은 경우에만 필터링을 적용합니다.
-    // 1. Job ID 필터링 규칙 적용: 100의 배수 제외, 900-910 범위 제외
+
+
+
+
+
     const baseFilteredList = allJobMstList.filter(job => {
-        // "CD101"과 같은 문자열에서 숫자 부분만 추출합니다.
+
         const numericString = job.job_id.replace(/[^0-9]/g, '');
         if (!numericString) {
-            return false; // 숫자 부분이 없으면 제외
+            return false;
         }
         
         const jobIdNum = parseInt(numericString, 10);
@@ -59,11 +56,11 @@ export function renderJobCheckboxes(labelDisplayType = 'name', dataPermissions =
         const isMultipleOf100 = jobIdNum > 0 && jobIdNum % 100 === 0;
         const isIn900Range = jobIdNum >= 900 && jobIdNum <= 910;
 
-        // 두 조건에 해당하지 않는 경우에만 목록에 포함
+
         return !isMultipleOf100 && !isIn900Range;
     });
 
-    // 2. 사용자 데이터 권한에 따라 추가 필터링을 적용합니다.
+
     const filteredJobList = dataPermissions && dataPermissions.length > 0
         ? baseFilteredList.filter(job => dataPermissions.includes(job.job_id))
         : baseFilteredList;
@@ -79,7 +76,7 @@ export function renderJobCheckboxes(labelDisplayType = 'name', dataPermissions =
         const jobName = job.cd_nm || jobId;
         const displayLabel = labelDisplayType === 'code' ? jobId : jobName;
         
-        // 첫 렌더링 시에는 모두 체크, 그 외에는 이전 상태를 복원합니다.
+
         const isChecked = isFirstRender || currentlyCheckedIds.has(jobId);
 
         const label = document.createElement('label');
@@ -96,9 +93,7 @@ export function renderJobCheckboxes(labelDisplayType = 'name', dataPermissions =
     });
 }
 
-/**
- * @DOC: Luxon 라이브러리를 사용하여 시작일과 종료일 날짜 선택기를 초기화하고 이벤트 리스너를 설정합니다.
- */
+
 export function initializeDatePickers() {
     const startDatePicker = document.getElementById('startDate');
     const endDatePicker = document.getElementById('endDate');
@@ -114,9 +109,7 @@ export function initializeDatePickers() {
     if (endDatePicker) endDatePicker.addEventListener('change', loadAnalyticsPageData);
 }
 
-/**
- * @DOC: 차트 타입(라인/바, 도넛/바)을 선택하는 라디오 버튼에 이벤트 리스너를 설정합니다.
- */
+
 export function initializeChartTypeRadios() {
     document.querySelectorAll('input[name="successChartType"]').forEach(radio => {
         radio.addEventListener('change', loadAnalyticsPageData);
@@ -126,28 +119,20 @@ export function initializeChartTypeRadios() {
     });
 }
 
-/**
- * @DOC: 라벨 표시 유형(코드/명칭)을 선택하는 라디오 버튼에 이벤트 리스너를 설정합니다.
- */
+
 export function initializeLabelDisplayRadios(dataPermissions = []) {
     document.querySelectorAll('input[name="labelDisplayType"]').forEach(radio => {
         radio.addEventListener('change', (event) => {
             const displayType = event.target.value;
-            // 사용자의 선택을 localStorage에 저장합니다.
+
             localStorage.setItem('chartLabelDisplayType', displayType);
-            renderJobCheckboxes(displayType, dataPermissions); // dataPermissions를 전달하여 체크박스를 다시 렌더링
-            loadAnalyticsPageData(); // 차트 데이터 로드
+            renderJobCheckboxes(displayType, dataPermissions);
+            loadAnalyticsPageData();
         });
     });
 }
 
-/**
- * @DOC: Chart.js를 사용하여 기간별 수집 성공률 차트를 렌더링합니다.
- * @param {Array<Object>} data - API로부터 받은 원본 차트 데이터.
- * @param {string} chartType - 'line' 또는 'bar'.
- * @param {Object} mngrSettings - 관리자 설정.
- * @param {string} labelDisplayType - 'name' 또는 'code'.
- */
+
 export function renderSuccessRateChart(data, chartType, mngrSettings, labelDisplayType = 'name') {
     const ctx = document.getElementById('successRateChart')?.getContext('2d');
     if (!ctx) {
@@ -194,7 +179,7 @@ export function renderSuccessRateChart(data, chartType, mngrSettings, labelDispl
             tension: 0.1,
             fill: false,
             spanGaps: chartType === 'line'
-            // datalabels: { display: false } // @deprecated: 개별 데이터셋 설정 대신 차트 전체 옵션으로 제어
+
         };
     });
 
@@ -209,20 +194,20 @@ export function renderSuccessRateChart(data, chartType, mngrSettings, labelDispl
         const maxValue = Math.max(...allDataPoints);
         const dataRange = maxValue - minValue;
 
-        // 데이터의 변동폭이 20% 미만이고, 최소값이 70% 이상일 때 Y축 범위를 조정합니다.
-        // 이는 데이터가 높은 구간에 밀집되어 있을 때 가독성을 높이기 위함입니다.
+
+
         if (dataRange < 20 && minValue > 70) {
-            // Y축의 최소값을 데이터의 최소값보다 10% 정도 낮게 설정하되, 5의 배수로 맞춥니다.
-            // 예: minValue가 98이면 suggestedMin은 85가 됩니다.
-            // 예: minValue가 81이면 suggestedMin은 70이 됩니다.
+
+
+
             const suggestedMin = Math.floor((minValue - 10) / 5) * 5;
-            yAxisOptions.suggestedMin = Math.max(0, suggestedMin); // 최소값은 0 이하로 내려가지 않도록 보정
+            yAxisOptions.suggestedMin = Math.max(0, suggestedMin);
         } else {
-            // 그 외의 경우에는 0부터 시작하여 전체적인 추이를 보여줍니다.
+
             yAxisOptions.beginAtZero = true;
         }
     } else {
-        // 데이터가 없는 경우, 0부터 시작합니다.
+
         yAxisOptions.beginAtZero = true;
     }
 
@@ -244,7 +229,7 @@ export function renderSuccessRateChart(data, chartType, mngrSettings, labelDispl
                     }
                 },
                 datalabels: {
-                    display: false // 완전 비활성화 - 차트 위 데이터 값 표시하지 않음
+                    display: false
                 },
                 legend: {
                     display: false
@@ -253,9 +238,9 @@ export function renderSuccessRateChart(data, chartType, mngrSettings, labelDispl
             },
             elements: { point: { radius: 0, hitRadius: 0 } },
             animation: {
-                duration: 500, // 빠른 페이드
-                easing: 'linear', // 선형 페이드
-                delay: 0, // 동시 시작
+                duration: 500,
+                easing: 'linear',
+                delay: 0,
                 animateScale: false,
                 animateRotate: false,
                 mode: 'default'
@@ -263,13 +248,13 @@ export function renderSuccessRateChart(data, chartType, mngrSettings, labelDispl
         }
     });
 
-    // SPA 렌더링 타이밍 이슈 해결을 위해 ResizeObserver 사용
+
     const chartContainer = ctx.canvas.parentElement;
-    chartContainer.style.minHeight = '300px'; // JS로 최소 높이 강제
+    chartContainer.style.minHeight = '300px';
     const observer = new ResizeObserver(entries => {
         for (const entry of entries) {
-            // 컨테이너가 실제로 렌더링되어 높이를 가졌을 때 차트 크기 조정
-            if (entry.contentRect.height > 150) { // 150px 이상일 때만 리사이즈
+
+            if (entry.contentRect.height > 150) {
                 successRateChart.resize();
             }
         }
@@ -301,15 +286,7 @@ export function renderSuccessRateChart(data, chartType, mngrSettings, labelDispl
     }
 }
 
-/**
- * @DOC: Chart.js를 사용하여 장애 코드별 비율 차트를 렌더링합니다.
- * @param {Array<Object>} troubleCodeData - API로부터 받은 장애 코드 데이터.
- * @param {string} chartType - 'doughnut' 또는 'bar'.
- * @param {string} startDate - 조회 시작일.
- * @param {string} endDate - 조회 종료일.
- * @param {Object} mngrSettings - 관리자 설정.
- * @param {string} labelDisplayType - 'name' 또는 'code'.
- */
+
 export function renderTroublePieChart(troubleCodeData, chartType, startDate, endDate, mngrSettings, labelDisplayType = 'name') {
     const ctx = document.getElementById('troublePieChart').getContext('2d');
     const chartContainer = ctx.canvas.parentElement;
@@ -331,7 +308,7 @@ export function renderTroublePieChart(troubleCodeData, chartType, startDate, end
     const noDataMsg = document.getElementById('troublePieNoDataMsg');
     if (noDataMsg) noDataMsg.remove();
 
-    // @DOC: 레이블 생성 - API에서 제공하는 TB_STS_CD_MST 기준 정보 사용
+
     const labels = troubleCodeData.map((item) => {
         const errorCode = item.error_code || '';
         const errorName = item.error_name || '';
@@ -339,7 +316,7 @@ export function renderTroublePieChart(troubleCodeData, chartType, startDate, end
         if (labelDisplayType === 'code') {
             return errorCode;
         } else {
-            // 명칭 표시: 코드와 명칭이 다른 경우 "코드 (명칭)" 형식
+
             if (errorCode && errorName && errorName !== errorCode) {
                 return `${errorCode} (${errorName})`;
             }
@@ -348,9 +325,9 @@ export function renderTroublePieChart(troubleCodeData, chartType, startDate, end
     });
     const dataValues = troubleCodeData.map(item => item.count || 0);
     
-    // @DOC: 색상 생성 - API에서 제공하는 TB_STS_CD_MST 기준 색상 사용
+
     const backgroundColors = troubleCodeData.map(item => {
-        // API에서 제공하는 색상 사용 (TB_STS_CD_MST 기준)
+
         return item.bg_color || '#a3a3a3';
     });
     const txtColors = troubleCodeData.map(item => item.txt_color || '#374151');
@@ -372,7 +349,7 @@ export function renderTroublePieChart(troubleCodeData, chartType, startDate, end
                 tooltip: {
                     callbacks: {
                         label: context => {
-                            // 바 차트와 도넛 차트 모두 지원하도록 안전하게 label 가져오기
+
                             const label = context.label || context.chart.data.labels[context.dataIndex] || '알 수 없음';
                             return `${label}: ${context.raw}건`;
                         }
@@ -417,7 +394,7 @@ export function renderTroublePieChart(troubleCodeData, chartType, startDate, end
                 x: {
                     ticks: {
                         callback: function(value, index) {
-                            // x축 레이블이 undefined인 경우 안전하게 처리
+
                             const label = this.getLabelForValue(value);
                             return label || labels[index] || '알 수 없음';
                         }
@@ -428,20 +405,20 @@ export function renderTroublePieChart(troubleCodeData, chartType, startDate, end
                 }
             } : {},
             animation: {
-                duration: 500, // 페이드 효과
+                duration: 500,
                 easing: 'linear'
             }
         }
     });
 
-    // SPA 렌더링 타이밍 이슈 해결을 위해 ResizeObserver 사용
+
     const observer = new ResizeObserver(entries => {
         for (const entry of entries) {
-            if (entry.contentRect.height > 150) { // 150px 이상일 때만 리사이즈
+            if (entry.contentRect.height > 150) {
                 troublePieChart.resize();
             }
         }
     });
-    chartContainer.style.minHeight = '300px'; // JS로 최소 높이 강제
+    chartContainer.style.minHeight = '300px';
     observer.observe(chartContainer);
 }

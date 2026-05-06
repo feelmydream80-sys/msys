@@ -27,7 +27,7 @@
             overflow-x: auto; font-family: 'Consolas', 'Courier New', monospace; font-size: 0.875rem;
             border: 1px solid #374151;
         }
-        /* --- FIX: 스크롤 기능 추가 --- */
+        
         .output-section .code-block {
             max-height: 300px;
             overflow-y: auto;
@@ -48,7 +48,7 @@
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        /* Tab Styles */
+        
         .tab-button {
             padding: 10px 20px; cursor: pointer; border-bottom: 3px solid transparent;
             font-weight: 500; color: #4b5563; transition: all 0.2s;
@@ -75,6 +75,6 @@
 {% endblock %}
 
 {% block scripts %}
-    <!-- Custom JavaScript -->
+    
     <script type="module" src="{{ url_for('static', filename='js/pages/api_test.js') }}"></script>
 {% endblock %}

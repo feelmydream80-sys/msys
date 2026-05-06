@@ -533,4 +533,3 @@ mapp_id, new_tbl_nm, new_col_nm, bf_tbl_nm, bf_col_nm, expl, cre_dt, upd_dt
 
 COMMIT;
 
--- tb_col_mapp table data update completed

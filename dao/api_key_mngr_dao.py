@@ -38,7 +38,7 @@ class ApiKeyMngrDao:
             rows = cursor.fetchall()
             self.logger.info(f"[API키키관리-DAO] fetch 결과 - 행 수: {len(rows)}")
             
-            # Convert to list of dictionaries
+                                             
             data = []
             for row in rows:
                 data.append({
@@ -202,13 +202,13 @@ class ApiKeyMngrDao:
             conn = get_db_connection()
             cursor = conn.cursor()
             
-            # 기존 활성 설정 비활성화
+                           
             cursor.execute(
                 "UPDATE TB_API_KEY_MNGR_MAIL_SETT SET is_active = FALSE WHERE mail_tp = %s",
                 (mail_tp,)
             )
             
-            # 새 설정 삽입
+                     
             cursor.execute(
                 """INSERT INTO TB_API_KEY_MNGR_MAIL_SETT (mail_tp, subject, from_email, body, is_active)
                    VALUES (%s, %s, %s, %s, TRUE)""",
@@ -255,7 +255,7 @@ class ApiKeyMngrDao:
                     'sent_at': row['evnt_occr_time'].strftime('%Y-%m-%d %H:%M:%S') if row['evnt_occr_time'] else '-',
                 }
                 
-                # Parse JSONB data
+                                  
                 if row['evnt_chg_row']:
                     import json
                     try:
@@ -317,9 +317,9 @@ class ApiKeyMngrDao:
             self.logger.error(f"Error inserting event log: {e}")
             raise
 
-    # ==========================================
-    # 메일 전송 이력 관련 메서드 (신규 추가)
-    # ==========================================
+                                                
+                             
+                                                
 
     def get_mail_send_log(self, cd: str, mail_tp: str, sent_dt) -> Dict[str, Any]:
         """특정 CD의 특정 날짜 메일 발송 이력 조회"""
@@ -444,9 +444,9 @@ class ApiKeyMngrDao:
             self.logger.error(f"Error counting mail send logs: {e}")
             raise
 
-    # ==========================================
-    # 스케줄 설정 관련 메서드 (신규 추가)
-    # ==========================================
+                                                
+                           
+                                                
 
     def select_schedule_settings(self) -> List[Dict[str, Any]]:
         """스케줄 설정 조회 (3개 스케줄: 30일전, 7일전, 당일)"""
@@ -555,11 +555,11 @@ class ApiKeyMngrDao:
 
     def select_cds_not_in_api_key_mngr(self, conn=None) -> List[Dict[str, Any]]:
         """Select all CD values from TB_MNGR_SETT that are not in TB_API_KEY_MNGR"""
-        # Create a completely new method that handles connection properly
+                                                                         
         data = []
         
         try:
-            # Always create new connection
+                                          
             if conn is None:
                 local_conn = get_db_connection()
             else:
@@ -576,7 +576,7 @@ class ApiKeyMngrDao:
             cursor.execute(query)
             rows = cursor.fetchall()
             
-            # Convert to list of dictionaries
+                                             
             for row in rows:
                 data.append({'cd': row[0]})
             
@@ -601,7 +601,7 @@ class ApiKeyMngrDao:
             conn = get_db_connection()
             cursor = conn.cursor(cursor_factory=RealDictCursor)
             
-            # 최신 순으로 정렬하여 version에 해당하는 레코드 조회
+                                              
             query = """
                 SELECT mail_tp, subject, from_email, body, reg_dt
                 FROM TB_API_KEY_MNGR_MAIL_SETT
@@ -655,7 +655,7 @@ class ApiKeyMngrDao:
             cursor.execute(query, (page_size, offset))
             rows = cursor.fetchall()
             
-            # Convert to list of dictionaries
+                                             
             data = []
             for row in rows:
                 data.append({
@@ -786,9 +786,9 @@ class ApiKeyMngrDao:
             self.logger.error(f"Error counting mail setting history for {mail_tp}: {e}")
             raise
 
-    # ==========================================
-    # 시간 제공 메서드 (Dao-centric Time)
-    # ==========================================
+                                                
+                                  
+                                                
 
     def get_today_date(self):
         """현재 KST 기준 날짜 반환 (만료일 계산용)"""

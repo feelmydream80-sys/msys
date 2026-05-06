@@ -1,6 +1,6 @@
--- Table: public.tb_menu
 
--- DROP TABLE IF EXISTS public.tb_menu;
+
+
 
 CREATE TABLE IF NOT EXISTS public.tb_menu
 (

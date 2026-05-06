@@ -4,16 +4,16 @@ import { filterActiveMstData } from '../modules/common/utils.js';
 import { scheduleSettingsApi } from '../services/api.js';
 import { getKSTNow, formatDateTime, formatDBDateTime } from '../modules/common/dateUtils.js';
 
-// 전역 변수
-let mstData = {}; // For mapping job_id to name
-let monthOffset = 0; // 월 오프셋: 0=현재월, -1=지난달, 1=다음달
-let weekOffset = 0; // 주 오프셋: 0=이번 주, -1=지난 주, 1=다음 주
-let subGroupsByParent = {}; // 상위 그룹별 하위 jobs (스케줄 데이터 기반)
+
+let mstData = {};
+let monthOffset = 0;
+let weekOffset = 0;
+let subGroupsByParent = {};
 let memoColors = { iconId: null, bgColr: '#fef08b', txtColr: '#a16207' };
-let isAdminUser = false; // 사용자 권한 (관리자: true, 게스트: false)
+let isAdminUser = false;
 
 export function init() {
-    // Get user info from body data attribute
+
     isAdminUser = false;
     const body = document.body;
     if (body && body.dataset.user) {
@@ -21,11 +21,11 @@ export function init() {
             const userData = JSON.parse(body.dataset.user);
             isAdminUser = userData.permissions && userData.permissions.includes('mngr_sett');
         } catch (e) {
-            console.error('Failed to parse user data:', e);
+
         }
     }
 
-    // DOM Elements
+
     const weeklyBtn = document.getElementById('weekly-btn');
     const monthlyBtn = document.getElementById('monthly-btn');
     const calendarGrid = document.getElementById('calendar-grid');
@@ -40,11 +40,11 @@ export function init() {
     const settingsContainer = document.getElementById('settings-container');
     const toggleIcon = document.getElementById('toggle-icon');
     
-    // monthOffset와 weekOffset은 전역 변수를 재사용
+
     let monthOffset = 0;
     let weekOffset = 0;
 
-    // --- Guide Popup ---
+
     const guideToggleBtn = document.getElementById('guide-toggle-btn');
     const guidePopup = document.getElementById('guide-popup');
 
@@ -55,7 +55,7 @@ export function init() {
         guideToggleBtn.addEventListener('mouseleave', () => {
             guidePopup.classList.add('hidden');
         });
-         // Persist showing popup on hover over the popup itself
+
         guidePopup.addEventListener('mouseenter', () => {
             guidePopup.classList.remove('hidden');
         });
@@ -64,7 +64,7 @@ export function init() {
         });
     }
 
-    // --- Collapsible Settings ---
+
     const settingsCollapseManager = {
         _storageKey: 'heatmapSettingsCollapsed',
         _isCollapsed: false,
@@ -95,7 +95,7 @@ export function init() {
     };
     settingsCollapseManager.init();
 
-    // --- Settings Manager ---
+
     const settingsManager = {
         _settings: {},
         _icons: {},
@@ -208,8 +208,6 @@ export function init() {
             const popup = document.getElementById('guide-popup');
             if (!popup) return;
 
-            console.log('[updateGuidePopup] this._statusCodes:', this._statusCodes);
-
             const statusList = this._statusCodes.map(code => {
                 return {
                     key: code.cd,
@@ -221,8 +219,6 @@ export function init() {
                     txt_colr: code.txt_colr
                 };
             });
-
-            console.log('[updateGuidePopup] statusList:', statusList);
 
             const getStatusName = (cd) => {
                 const status = statusList.find(s => s.key === cd);
@@ -357,7 +353,7 @@ export function init() {
         }
     };
     
-    // --- End Settings Manager ---
+
 
     function getStatusInfoByCd(statusCd) {
         return settingsManager.getStatusInfoByCd(statusCd) || { key: statusCd, class: `status-${statusCd}`, icon_cd: null, bg_colr: null, txt_colr: null };
@@ -412,10 +408,10 @@ export function init() {
         } else {
             calendarGrid.classList.remove('name-mode');
         }
-        // today는 매개변수로 받음 (서버에서 온 KST 기준 날짜)
+
 
         const groupedData = data.reduce((acc, item) => {
-            const date = item.date.split(' ')[0]; // Use only the date part for grouping
+            const date = item.date.split(' ')[0];
             if (!acc[date]) acc[date] = [];
             acc[date].push(item);
             return acc;
@@ -443,12 +439,12 @@ export function init() {
             dayHeader.className = 'day-header';
             const dateStr = `${String(currentDate.getMonth() + 1).padStart(2, '0')}/${String(currentDate.getDate()).padStart(2, '0')} (${['일', '월', '화', '수', '목', '금', '토'][currentDate.getDay()]})`;
             
-            // 날짜별 상태 카운트 계산 (CD 코드 기반)
+
             const statusCounts = {
-                'CD901': 0,  // 성공
-                'CD902': 0,  // 실패
-                'CD908': 0,  // 미수집 (CD904, CD905 포함)
-                'CD907': 0   // 예정
+                'CD901': 0,
+                'CD902': 0,
+                'CD908': 0,
+                'CD907': 0
             };
             
             dayData.filter(isStatusDisplayed).forEach(job => {
@@ -458,10 +454,10 @@ export function init() {
                 else if (['CD908', 'CD904', 'CD905'].includes(job.status)) statusCounts['CD908']++;
             });
             
-            // 날짜별 Jobs 수 (하위 그룹 수, 고유 job_id 수 - Cron 반복 미포함)
+
             const jobsCount = new Set(dayData.filter(isStatusDisplayed).map(j => j.job_id)).size;
 
-            // 날짜 헤더에 카운트 표시 (작은 글씨)
+
             dayHeader.innerHTML = `
                 <div>${dateStr}</div>
                 <div style="font-size: 10px; margin-top: 2px;">
@@ -476,18 +472,18 @@ export function init() {
             const jobsContainer = document.createElement('div');
             jobsContainer.className = 'jobs-container';
 
-            // 2단계 그룹핑: 상위 그룹(CD100) → 하위 그룹(CD101, CD102, CD103)
+
             const jobsBySubGroup = dayData.reduce((acc, job) => {
                 const jobIdNum = parseInt(job.job_id.replace('CD', ''), 10);
                 if (isNaN(jobIdNum)) return acc;
-                // 하위 그룹은 개별 job_id (CD101, CD102, CD103)
+
                 const subGroupId = job.job_id;
                 if (!acc[subGroupId]) acc[subGroupId] = [];
                 acc[subGroupId].push(job);
                 return acc;
             }, {});
 
-            // 상위 그룹으로 묶기 (CD100, CD200, CD300)
+
             const jobsByParentGroup = {};
             Object.keys(jobsBySubGroup).forEach(subGroupId => {
                 const subIdNum = parseInt(subGroupId.replace('CD', ''), 10);
@@ -503,7 +499,7 @@ export function init() {
             }).forEach(parentGroupName => {
                 const subGroups = jobsByParentGroup[parentGroupName];
                 
-                // 스케줄 데이터 기반 하위 그룹 저장 (스케줄에 있는 그룹만)
+
                 subGroupsByParent[parentGroupName] = Object.keys(subGroups).map(subId => ({
                     cd: subId,
                     cd_nm: mstData[subId]?.cd_nm || subId
@@ -511,13 +507,13 @@ export function init() {
                 
                 const groupingThreshold = settingsManager.get('grpMinCnt');
                 
-                // 전체 job 수 계산
+
                 const totalJobs = Object.values(subGroups).flat().filter(isStatusDisplayed).length;
                 
                 if (totalJobs >= groupingThreshold) {
-                    // 상위 그룹 렌더링 (CD100)
+
                     const allSubGroupJobs = Object.values(subGroups).flat().filter(isStatusDisplayed);
-                    // CD904, CD905는 "없는 것"으로 취급
+
                     const validJobs = allSubGroupJobs.filter(j => ['CD901', 'CD902', 'CD907', 'CD908'].includes(j.status));
                     const allScheduled = validJobs.length > 0 && validJobs.every(j => j.status === 'CD907');
 
@@ -566,7 +562,7 @@ export function init() {
                     const redThreshold = settingsManager.get('prgsRtRedThrsval') || 30;
                     const orangeThreshold = settingsManager.get('prgsRtOrgThrsval') || 100;
                     
-                    // 버튼 HTML 분기 생성 (게스트는 숨김 상태로 생성)
+
                     const memoBtnHtml = isAdminUser 
                         ? `<span class="memo-btn" data-grp-id="${parentGroupName}" data-date="${currentDateStr}" data-depth="1" style="cursor: pointer; font-size: 0.65rem; padding: 1px 3px; border-radius: 4px;">+</span>`
                         : `<span class="memo-btn" data-grp-id="${parentGroupName}" data-date="${currentDateStr}" data-depth="1" style="cursor: pointer; font-size: 0.65rem; padding: 1px 3px; border-radius: 4px; display: none;">+</span>`;
@@ -588,7 +584,7 @@ export function init() {
                     `;
                     groupPill.title = parentDisplayName;
 
-                    // 상위 그룹 팝업 - 하위 그룹들을 팝업으로 표시 (5x4 페이징)
+
                     const parentPopup = document.createElement('div');
                     parentPopup.className = 'popup';
                     parentPopup.style.maxWidth = '900px';
@@ -600,18 +596,18 @@ export function init() {
                     parentPopupContent.style.gridTemplateColumns = 'repeat(5, 1fr)';
                     parentPopupContent.style.gap = '0.75rem';
 
-                    // 하위 그룹 정렬
+
                     const sortedSubGroupIds = Object.keys(subGroups).sort((a, b) => {
                         const numA = parseInt(a.replace('CD', ''), 10);
                         const numB = parseInt(b.replace('CD', ''), 10);
                         return numA - numB;
                     });
 
-                    // 하위 그룹들을 팝업 내용에 추가
+
                     sortedSubGroupIds.forEach(subGroupId => {
                         const subGroupJobs = subGroups[subGroupId];
                         const filteredSubJobs = subGroupJobs.filter(isStatusDisplayed);
-                        // CD904, CD905는 "없는 것"으로 취급
+
                         const validSubJobs = filteredSubJobs.filter(j => ['CD901', 'CD902', 'CD907', 'CD908'].includes(j.status));
                         const subTotal = validSubJobs.length;
                         const subSuccess = validSubJobs.filter(j => j.status === 'CD901').length;
@@ -669,7 +665,7 @@ export function init() {
                         `;
                         subGroupPill.title = subDisplayName;
 
-                        // 하위 그룹의 상세 팝업
+
                         const subPopup = document.createElement('div');
                         subPopup.className = 'popup';
                         subPopup.style.zIndex = '100000';
@@ -772,7 +768,7 @@ export function init() {
                         updateSubPopupContent();
 
                         const toggleSubPopup = (event) => {
-                            // memo-btn 클릭 시에는 메모 팝업만 열림
+
                             if (event.target.classList.contains('memo-btn')) {
                                 event.stopPropagation();
                                 return;
@@ -798,7 +794,7 @@ export function init() {
                                 const popupRect = subPopup.getBoundingClientRect();
                                 subPopup.style.visibility = 'visible';
 
-                                // fixed 포지션이므로 viewport 기준 좌표 사용
+
                                 const pillBottom = pillRect.bottom;
                                 const pillTop = pillRect.top;
                                 const pillLeft = pillRect.left;
@@ -833,10 +829,10 @@ export function init() {
                         parentPopupContent.appendChild(subGroupContainer);
                     });
 
-                    // 상위 그룹 팝업 페이징 (5x4 = 20개씩)
+
                     const parentPagination = document.createElement('div');
                     parentPagination.className = 'pagination';
-                    const parentItemsPerPage = 20; // 5열 x 4행
+                    const parentItemsPerPage = 20;
                     const parentTotalPages = Math.ceil(sortedSubGroupIds.length / parentItemsPerPage);
                     let parentCurrentPage = 1;
 
@@ -890,9 +886,9 @@ export function init() {
                     document.body.appendChild(parentPopup);
                     updateParentPopupContent();
 
-                    // 상위 그룹 클릭 시 하위 그룹 팝업 표시
+
                     groupPill.addEventListener('click', (event) => {
-                        // memo-btn 클릭 시 parentPopup 열지 않고 종료 (이벤트는 document까지 전파)
+
                         if (event.target.classList.contains('memo-btn')) {
                             return;
                         }
@@ -910,7 +906,7 @@ export function init() {
                             parentPopup.style.display = 'none';
                             parentPopup.classList.remove('active');
                         } else {
-                            // 팝업을 열 때 페이지 초기화
+
                             parentCurrentPage = 1;
                             updateParentPopupContent();
                             const pillRect = groupPill.getBoundingClientRect();
@@ -920,7 +916,7 @@ export function init() {
                             const popupRect = parentPopup.getBoundingClientRect();
                             parentPopup.style.visibility = 'visible';
 
-                            // fixed 포지션이므로 viewport 기준 좌표 사용
+
                             const pillBottom = pillRect.bottom;
                             const pillLeft = pillRect.left;
                             const pillTop = pillRect.top;
@@ -953,7 +949,7 @@ export function init() {
                     groupContainer.appendChild(groupPill);
                     jobsContainer.appendChild(groupContainer);
                 } else {
-                    // 임계값 미달 - 개별 job pills로 렌더링
+
                     const allSubGroupJobs = Object.values(subGroups).flat().filter(isStatusDisplayed);
                     allSubGroupJobs.sort((a, b) => {
                         const numA = parseInt(a.job_id.replace('CD', ''), 10);
@@ -1010,7 +1006,7 @@ export function init() {
         nodataCountEl.textContent = nodata;
     }
 
-    // 오늘 날짜를 서버에서 가져오는 독립적인 함수
+
     async function fetchTodayDate() {
         try {
             const response = await fetch('/api/today_date');
@@ -1020,20 +1016,20 @@ export function init() {
             const data = await response.json();
             return data.today_date;
         } catch (e) {
-            console.error("Failed to fetch today date, using client time", e);
-            // 실패 시 클라이언트 시간 사용 (fallback)
+
+
             return new Date().toISOString().split('T')[0];
         }
     }
 
     async function fetchData(viewType) {
-        // Fetch MST data for mapping if not already fetched
+
         if (Object.keys(mstData).length === 0) {
             try {
                 const mstResponse = await fetch('/api/mst_list');
                 const mstResult = await mstResponse.json();
                 if (mstResult) {
-                    // use_yn 필터 적용
+
                     const activeMstResult = filterActiveMstData(mstResult);
                     mstData = activeMstResult.reduce((acc, item) => {
                         acc[item.job_id] = {
@@ -1044,8 +1040,8 @@ export function init() {
                     }, {});
                 }
             } catch (e) {
-                console.error("Failed to fetch MST data", e);
-                // Continue without mapping
+
+
             }
         }
 
@@ -1073,7 +1069,7 @@ export function init() {
                 return;
             }
 
-            // Load memo colors from schedule settings (모든 인증된 사용자)
+
             try {
                 const schedRes = await scheduleSettingsApi.getSettings();
 
@@ -1085,15 +1081,15 @@ export function init() {
                     };
                 }
             } catch (e) {
-                console.warn('[memo colors] 로드 실패:', e);
+
             }
 
-            // Update settings manager with the new settings from the API
+
             if (data.display_settings) {
                 settingsManager.updateSettings(data.display_settings);
             }
 
-            // Fetch status codes from settings API (모든 인증된 사용자)
+
             try {
                 const statusCodesRes = await fetch('/api/mngr_sett/status_codes');
                 if (statusCodesRes.ok) {
@@ -1103,15 +1099,15 @@ export function init() {
                     settingsManager.applyToUI();
                 }
             } catch (e) {
-                console.warn('[status codes] 로드 실패:', e);
+
             }
 
             cardTitle.textContent = viewType === 'weekly' ? '주간 수집 현황 히트맵' : '월간 수집 현황 히트맵';
 
-            // 오늘 날짜를 가져와서 renderCalendar에 전달
+
             const today = await fetchTodayDate();
 
-            // Render calendar and summary with the schedule data
+
             if(data.schedule_data) {
                 renderCalendar(data.schedule_data, today, viewType);
                 updateSummary(data.schedule_data);
@@ -1121,7 +1117,7 @@ export function init() {
             showToast(viewType === 'weekly' ? '주간 데이터를 불러왔습니다.' : '월간 데이터를 불러왔습니다.', 'success');
 
         } catch (error) {
-            console.error('Error fetching data:', error);
+
             showToast('데이터를 불러오는 데 실패했습니다.', 'error');
         }
     }
@@ -1131,7 +1127,7 @@ export function init() {
             if (!weeklyBtn.classList.contains('active')) {
                 weeklyBtn.classList.add('active');
                 monthlyBtn.classList.remove('active');
-                // 탭 전환 시에는 항상 "이번 주"로 리셋
+
                 weekOffset = 0;
                 updateNavigationVisibility();
                 fetchData('weekly');
@@ -1143,7 +1139,7 @@ export function init() {
         if (!monthlyBtn.classList.contains('active')) {
             monthlyBtn.classList.add('active');
             if (weeklyBtn) weeklyBtn.classList.remove('active');
-            // 탭 전환 시에는 항상 "이번 달"로 리셋
+
             monthOffset = 0;
             updateNavigationVisibility();
             fetchData('monthly');
@@ -1157,9 +1153,9 @@ export function init() {
         });
     });
  
-    // --- Global click handler to close popups when clicking outside ---
+
     document.addEventListener('click', (event) => {
-        // Check if the click is outside any group container
+
         const groupContainers = document.querySelectorAll('.group-container');
         let clickedOutside = true;
 
@@ -1170,7 +1166,7 @@ export function init() {
         });
 
         if (clickedOutside) {
-            // Close all popups
+
             document.querySelectorAll('.popup').forEach(popup => {
                 popup.style.display = 'none';
                 popup.classList.remove('active');
@@ -1178,7 +1174,7 @@ export function init() {
         }
     });
 
-    // 지난달/다음달 / 지난주/다음주 버튼 이벤트 리스너
+
     const prevMonthBtn = document.getElementById('prev-month-btn');
     const nextMonthBtn = document.getElementById('next-month-btn');
     const monthNavigation = document.getElementById('month-navigation');
@@ -1186,7 +1182,7 @@ export function init() {
     const nextWeekBtn = document.getElementById('next-week-btn');
     const weekNavigation = document.getElementById('week-navigation');
     
-    // 주간/월간 뷰에 따라 네비게이션 표시 제어
+
     function updateNavigationVisibility() {
         const isMonthlyView = monthlyBtn.classList.contains('active');
         const isWeeklyView = weeklyBtn && weeklyBtn.classList.contains('active');
@@ -1217,7 +1213,7 @@ export function init() {
         prevWeekBtn.addEventListener('click', () => {
             weekOffset--;
             if (weeklyBtn && !weeklyBtn.classList.contains('active')) {
-                // 탭 상태가 꼬이지 않도록 보정
+
                 weeklyBtn.classList.add('active');
                 monthlyBtn.classList.remove('active');
             }
@@ -1236,34 +1232,34 @@ export function init() {
         });
     }
     
-    // 초기 로드 시 버튼 visibility 설정
+
     updateNavigationVisibility();
     
-    // 엑셀 템플릿 다운로드 버튼 이벤트 리스너
+
     const downloadExcelTemplateBtn = document.getElementById('downloadExcelTemplateBtn');
     if (downloadExcelTemplateBtn) {
         downloadExcelTemplateBtn.addEventListener('click', downloadExcelTemplate);
     }
 
-    // Initial load - 게스트는 월간으로 고정
-    // 세션의 is_guest 정보를 확인 (body data-user attribute에서 파싱)
-    // body 변수는 init() 함수 시작 부분에서 이미 선언됨 (Line 18)
+
+
+
     let isGuest = false;
     if (body && body.dataset.user) {
         try {
             const userData = JSON.parse(body.dataset.user);
             isGuest = userData.is_guest === true;
         } catch (e) {
-            console.error('Failed to parse user data for guest check:', e);
+
         }
     }
     const initialView = isGuest ? 'monthly' : 'weekly';
-    // 초기 뷰에 따라 오프셋 초기화
+
     monthOffset = 0;
     weekOffset = 0;
     fetchData(initialView);
 
-    // 메모 팝업 이벤트 처리
+
     const memoPopup = document.getElementById('memo-popup');
     const memoForm = document.getElementById('memo-form');
     const memoCloseBtn = document.getElementById('memo-close-btn');
@@ -1307,7 +1303,7 @@ export function init() {
                     await updateMemoButtons();
                 }
             } catch (err) {
-                console.error('메모 저장 오류:', err);
+
                 alert('메모 저장 중 오류가 발생했습니다.');
             }
         });
@@ -1325,7 +1321,7 @@ export function init() {
                 });
                 const result = await response.json();
                 if (result.success) {
-                    // 삭제 후 popup 닫기 전에 현재 그룹의 메모 버튼 색상 즉시 초기화
+
                     const currentMemoBtn = document.querySelector(`.memo-btn[data-grp-id='${grpId}'][data-date='${date}']`);
                     if (currentMemoBtn) {
                         const groupContainer = currentMemoBtn.closest('.group-container');
@@ -1341,13 +1337,13 @@ export function init() {
                     alert(result.error || '메모 삭제에 실패했습니다.');
                 }
             } catch (err) {
-                console.error('메모 삭제 오류:', err);
+
                 alert('메모 삭제 중 오류가 발생했습니다.');
             }
         });
     }
 
-    // 메모 버튼 클릭 이벤트 - 동적으로 생성된 요소 위임
+
     document.addEventListener('click', async (e) => {
         if (e.target.classList.contains('memo-btn')) {
             e.stopPropagation();
@@ -1355,27 +1351,25 @@ export function init() {
             const date = e.target.dataset.date;
             const depth = parseInt(e.target.dataset.depth);
 
-            console.log('[DEBUG] 메모 팝업 열림 - grpId:', grpId, 'date:', date, 'depth:', depth);
-
             memoGrpId.value = grpId;
             memoDate.value = date;
             memoDepth.value = depth;
 
             let loadedMemo = null;
             
-            // 기존 메모 로드
+
             try {
                 const response = await fetch(`/api/group-memo?grp_id=${grpId}&depth=${depth}&memo_date=${date}`);
                 const result = await response.json();
                 loadedMemo = result.memo;
-                console.log('[DEBUG] 메모 로드 완료 - loadedMemo:', loadedMemo);
+
             } catch (err) {
-                console.error('메모 로드 오류:', err);
+
             }
 
             const isAdmin = typeof isAdminUser !== 'undefined' && isAdminUser;
             
-            // 관리자이고 상위 그룹(depth=1)일 때 하위 그룹 정보 자동 입력
+
             if (isAdmin && depth === 1) {
                 const subGroups = getSubGroupsByParent(grpId);
                 const subGroupList = subGroups.length > 0 ? subGroups.map(sg => {
@@ -1390,7 +1384,7 @@ export function init() {
                     memoContent.value = subGroupList;
                 }
             } else {
-                // 일반적인 경우
+
                 if (loadedMemo) {
                     memoContent.value = loadedMemo.content;
                 } else {
@@ -1398,21 +1392,21 @@ export function init() {
                 }
             }
 
-            // 관리자가 아니면 읽기 전용
+
             if (memoContent) {
                 memoContent.readOnly = !isAdmin;
             }
 
-            // 작성자/일시 정보 표시
+
             const memoInfo = document.getElementById('memo-info');
             const memoWriter = document.getElementById('memo-writer');
             const memoDateInfo = document.getElementById('memo-date-info');
-            console.log('[DEBUG] 메모 정보 표시:', { loadedMemo, memoInfo, memoWriter, memoDateInfo });
+
             if (memoInfo && memoWriter && memoDateInfo) {
                 if (loadedMemo && loadedMemo.writer_id) {
                     memoWriter.textContent = loadedMemo.writer_id;
                     const createdAt = loadedMemo.created_at || loadedMemo.createdAt;
-                    console.log('[DEBUG] createdAt:', createdAt, 'formatDBDateTime 결과:', formatDBDateTime(createdAt));
+
                     memoDateInfo.textContent = formatDBDateTime(createdAt);
                 } else {
                     memoWriter.textContent = '';
@@ -1420,7 +1414,7 @@ export function init() {
                 }
             }
 
-            // 저장/삭제 버튼 표시 여부
+
             if (memoForm && memoForm.querySelector) {
                 memoForm.querySelector('button[type="submit"]').style.display = isAdmin ? 'inline-block' : 'none';
             }
@@ -1431,27 +1425,26 @@ export function init() {
             if (memoPopup) {
                 memoPopup.classList.remove('hidden');
                 
-                // 디버그: 팝업 크기 로그
+
                 const container = memoPopup.querySelector('div[class*="bg-white"]');
                 if (container) {
                     const rect = container.getBoundingClientRect();
-                    console.log('[DEBUG] 메모 팝업 크기 - 너비:', rect.width, 'px, 높이:', rect.height, 'px');
-                    console.log('[DEBUG] 윈도우 크기 - 너비:', window.innerWidth, 'px, 높이:', window.innerHeight, 'px');
-                    
-                    // textarea 크기 로그
+
+
+
                     const textarea = document.getElementById('memo-content');
                     if (textarea) {
                         const taRect = textarea.getBoundingClientRect();
-                        console.log('[DEBUG] Textarea 크기 - 너비:', taRect.width, 'px, 높이:', taRect.height, 'px');
-                        console.log('[DEBUG] Textarea class:', textarea.className);
-                        console.log('[DEBUG] Textarea style.height:', textarea.style.height || '(없음 - CSS 적용)');
+
+
+
                     }
                 }
             }
         }
     });
 
-    // ESC 키로 메모 팝업 닫기
+
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && memoPopup && !memoPopup.classList.contains('hidden')) {
             memoPopup.classList.add('hidden');
@@ -1479,9 +1472,9 @@ async function updateMemoButtons() {
                     btn.textContent = '+';
                     btn.style.color = '';
                     btn.style.backgroundColor = '';
-                    btn.style.display = '';  // 관리자는 + 표시
+                    btn.style.display = '';
                 } else {
-                    btn.style.display = 'none';  // 게스트는 숨김
+                    btn.style.display = 'none';
                 }
             });
             return;
@@ -1501,9 +1494,9 @@ async function updateMemoButtons() {
                 btn.textContent = '✓';
                 btn.style.color = memoColors.txtColr;
                 btn.style.backgroundColor = memoColors.bgColr;
-                btn.style.display = '';  // 메모 있으면 모두 표시
+                btn.style.display = '';
                 
-                // 그룹 전체에 메모 색상 적용 (최우선 순위)
+
                 const groupContainer = btn.closest('.group-container');
                 const groupPill = groupContainer?.querySelector('.group-pill-summary');
                 if (groupPill) {
@@ -1515,12 +1508,12 @@ async function updateMemoButtons() {
                     btn.textContent = '+';
                     btn.style.color = '';
                     btn.style.backgroundColor = '';
-                    btn.style.display = '';  // 관리자는 + 표시
+                    btn.style.display = '';
                 } else {
-                    btn.style.display = 'none';  // 게스트는 숨김
+                    btn.style.display = 'none';
                 }
                 
-                // 메모가 없는 그룹은 색상 초기화 (삭제된 경우)
+
                 const groupContainer = btn.closest('.group-container');
                 const groupPill = groupContainer?.querySelector('.group-pill-summary');
                 if (groupPill) {
@@ -1530,11 +1523,11 @@ async function updateMemoButtons() {
             }
         });
     } catch (err) {
-        console.error('[updateMemoButtons] 오류:', err);
+
     }
 }
 
-// 상위 그룹의 하위 그룹 목록 조회 (스케줄 데이터 기반)
+
 function getSubGroupsByParent(parentGrpId) {
     return subGroupsByParent[parentGrpId] || [];
 }

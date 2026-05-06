@@ -1,31 +1,16 @@
-// static/js/modules/data_analysis/ui.js
 
-/**
- * @module ui
- * @description 데이터 분석 페이지의 UI 렌더링 및 DOM 조작을 담당합니다.
- * - 요약 카드, 추이 차트, 원천 데이터 테이블, Job 상세 정보 테이블 등을 렌더링합니다.
- * - 페이징 UI를 생성하고 업데이트합니다.
- * - AI 분석 결과를 화면에 표시합니다.
- * 
- * @example
- * import { renderAllComponents, initializeUIPgination } from './ui.js';
- * 
- * // 데이터 로드 후 모든 UI 컴포넌트 렌더링
- * renderAllComponents({ summary, trend, raw, jobInfo });
- * 
- * // 페이지 초기화 시 페이징 UI 설정
- * initializeUIPgination(onPageChangeCallback);
- */
+
+
 
 import { getErrorCodeMap, getJobMstInfoMap, getChartColorMap, setRawData, getRawData, setJobInfoData, getJobInfoData } from './data.js';
 import { parseCronExpression, numberWithCommas, getKoreanDay, formatNumberWithUnits } from './utils.js';
 import { initPagination } from '../ui_components/pagination.js';
 
-// 전역 상태 변수 (UI 모듈 내에서만 사용)
+
 let trendChart = null;
 let chronologicalRawData = [];
 
-// 페이징 상태
+
 let rawCurrentPage = 1;
 let jobInfoCurrentPage = 1;
 let jobInfoPageSize = 5;
@@ -33,11 +18,7 @@ let rawDataPageSize = 10;
 let rawDataSearchTerm = '';
 let jobInfoSearchTerm = '';
 
-/**
- * @description 날짜 선택기의 기본값을 설정합니다.
- * @param {HTMLElement} startDate - 시작일 input
- * @param {HTMLElement} endDate - 종료일 input
- */
+
 export function setDefaultDates(startDate, endDate) {
     const today = luxon.DateTime.local();
     const startOfYear = today.startOf('year');
@@ -45,13 +26,10 @@ export function setDefaultDates(startDate, endDate) {
     if (endDate) endDate.value = today.toISODate();
 }
 
-/**
- * @description 요약 카드를 렌더링합니다.
- * @param {Array} rawData - 원천 데이터 배열
- */
+
 export function renderSummaryCards(rawData) {
     const errorCodeMap = getErrorCodeMap();
-    // ... (기존 renderSummaryCards 로직)
+
     const durations = rawData
         .filter(r => r.start_dt && r.end_dt)
         .map(r => ({
@@ -80,7 +58,7 @@ export function renderSummaryCards(rawData) {
             const t = parseInt(match[2]);
             const f = parseInt(match[4]);
             total += t;
-            // status가 'CD902'일 경우에만 실패 건수를 합산
+
             if (r.status === 'CD902') {
                 fail += f;
                 if (f > 0) {
@@ -121,10 +99,7 @@ export function renderSummaryCards(rawData) {
     `;
 }
 
-/**
- * @description 추이/경향 차트를 렌더링합니다.
- * @param {Object} data - 차트 데이터
- */
+
 export function renderTrendChart(data) {
     const trendChartElem = document.getElementById('trendChart');
     const trendChartCtx = trendChartElem ? trendChartElem.getContext('2d') : null;
@@ -150,28 +125,22 @@ export function renderTrendChart(data) {
     });
 }
 
-/**
- * @description 인사이트 텍스트를 렌더링합니다.
- * @param {string} text - 표시할 텍스트
- */
+
 export function renderInsight(text) {
     const insightBox = document.getElementById('insightBox');
     if (insightBox) insightBox.textContent = text;
 }
 
-/**
- * @description AI 답변 텍스트를 렌더링합니다.
- * @param {string} text - 표시할 텍스트
- */
+
 export function renderAiAnswer(text) {
     const aiAnswer = document.getElementById('aiAnswer');
     if (aiAnswer) aiAnswer.textContent = text;
 }
 
-// --- 원천 데이터 테이블 관련 함수들 ---
+
 
 function calcDailyStats(rawData) {
-    // ... (기존 calcDailyStats 로직)
+
     const dayMap = {};
     rawData.forEach(row => {
         let day = '';
@@ -231,12 +200,12 @@ function filterRawData(data, searchTerm) {
 }
 
 function renderRawTableContent(pageData) {
-    // ... (기존 renderRawTableContent 로직)
+
     const rawDataTable = document.getElementById('rawDataTable').getElementsByTagName('tbody')[0];
     if (!rawDataTable) return;
     
     rawDataTable.innerHTML = '';
-    const dailyStats = calcDailyStats(getRawData()); // success_rate_change 계산을 위해 유지
+    const dailyStats = calcDailyStats(getRawData());
     const errorCodeMap = getErrorCodeMap();
 
     pageData.forEach(row => {
@@ -249,7 +218,7 @@ function renderRawTableContent(pageData) {
         let collectHour = '';
         if (kstStartString) {
             if (kstEndString) {
-                // new Date()를 여기서만 계산용으로 사용
+
                 collectHour = ((new Date(kstEndString) - new Date(kstStartString)) / (1000 * 60 * 60)).toFixed(2) + 'hr';
             } else {
                 collectHour = '수집 중';
@@ -292,10 +261,10 @@ function renderRawTableContent(pageData) {
                 if (failCount > 0) {
                     failStreak++;
                 } else {
-                    break; // 실패가 없으면 연속이 끊김
+                    break;
                 }
             } else {
-                // rqs_info가 없는 경우, status 기반으로 판단 (기존 로직 유지)
+
                 if (currentRow.status !== 'CD901' && currentRow.status !== 'CD904') {
                     failStreak++;
                 } else {
@@ -328,19 +297,19 @@ function renderRawTableContent(pageData) {
         if (parseFloat(prevComp) > 0) prevCompColor = 'text-red-600 font-bold';
         else if (parseFloat(prevComp) < 0) prevCompColor = 'text-blue-600 font-bold';
         
-        // 예측 수집시간 계산 (샘플 값: 평균 수집시간에 ±15% 변동 적용)
+
         let predictedCollectHour = '';
         if (kstStart && kstEnd && stat.avgDuration && parseFloat(stat.avgDuration) > 0) {
             const actualDuration = (kstEnd - kstStart) / (1000 * 60 * 60);
             const avgDuration = parseFloat(stat.avgDuration);
-            // 실제 수집시간과 평균의 차이를 기반으로 예측값 생성
-            const variation = (actualDuration - avgDuration) * 0.1; // 10% 변동 적용
+
+            const variation = (actualDuration - avgDuration) * 0.1;
             const predictedDuration = avgDuration + variation;
             predictedCollectHour = predictedDuration > 0 ? predictedDuration.toFixed(2) + 'hr' : 'N/A';
         } else if (stat.avgDuration && parseFloat(stat.avgDuration) > 0) {
-            // 과거 데이터 기반 예측
+
             const avgDuration = parseFloat(stat.avgDuration);
-            const randomVariation = (Math.random() - 0.5) * 0.3; // ±15% 랜덤 변동
+            const randomVariation = (Math.random() - 0.5) * 0.3;
             const predictedDuration = avgDuration * (1 + randomVariation);
             predictedCollectHour = predictedDuration > 0 ? predictedDuration.toFixed(2) + 'hr' : 'N/A';
         } else {
@@ -373,10 +342,7 @@ function renderRawTablePage(pageData) {
     renderRawTableContent(pageData);
 }
 
-/**
- * @description 원천 데이터 테이블을 초기 렌더링합니다.
- * @param {Array} data - 원천 데이터 배열
- */
+
 export function renderRawTable(data) {
     chronologicalRawData = [...data].sort((a, b) => new Date(a.start_dt) - new Date(b.start_dt));
     const sortedData = [...data].sort((a, b) => new Date(b.start_dt) - new Date(a.start_dt));
@@ -393,7 +359,7 @@ export function renderRawTable(data) {
     });
 }
 
-// --- Job 상세 정보 테이블 관련 함수들 ---
+
 
 function filterJobInfoData(data, searchTerm) {
     if (!searchTerm) return data;
@@ -430,9 +396,7 @@ function renderJobInfoTablePage(pageData) {
     renderJobInfoTableContent(pageData);
 }
 
-/**
- * @description Job ID 상세정보 테이블을 렌더링합니다.
- */
+
 export function renderJobInfoTable() {
     const jobMstInfoMap = getJobMstInfoMap();
     const jobInfoData = Object.keys(jobMstInfoMap).sort((a, b) => {
@@ -457,19 +421,15 @@ export function renderJobInfoTable() {
     });
 }
 
-// --- 페이징 UI 초기화 ---
 
-/**
- * @description 원천 데이터 테이블의 페이징 UI를 초기화합니다.
- */
+
+
 export function initRawDataPaging() {
-    // 이 함수는 이제 initPagination으로 대체되었으므로 비워둡니다.
-    // 페이지 크기 및 검색 이벤트는 pagination.js 모듈에서 직접 처리합니다.
+
+
 }
 
-/**
- * @description Job ID 상세 정보 테이블의 페이징 UI를 초기화합니다.
- */
+
 export function initJobInfoPaging() {
-    // 이 함수는 이제 initPagination으로 대체되었으므로 비워둡니다.
+
 }

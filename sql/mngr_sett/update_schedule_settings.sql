@@ -1,4 +1,4 @@
--- sql/mngr_sett/update_schedule_settings.sql
+
 UPDATE
     tb_data_clt_schd_sett
 SET

@@ -1,4 +1,4 @@
-# routes/api/data_definition_api.py
+                                   
 from flask import Blueprint, request, jsonify, session
 import logging
 from service.data_definition_service import DataDefinitionService
@@ -33,9 +33,9 @@ def get_data_groups():
             service = DataDefinitionService(conn)
             groups = service.get_data_groups()
             
-            # 로그 추가
+                   
             logging.info(f"🔍 get_data_groups API 결과 개수: {len(groups)}")
-            for i, row in enumerate(groups[:10]):  # 상위 10개만 로그
+            for i, row in enumerate(groups[:10]):              
                 logging.info(f"🔍 get_data_groups API 결과 {i+1}: {row}")
             
             return jsonify(groups), 200
@@ -53,12 +53,12 @@ def get_group_details(cd):
             service = DataDefinitionService(conn)
             details = service.get_group_details(cd)
             
-            # KST 시간대 변환
+                        
             convert_datetime_fields_to_kst_str(details)
             
-            # 로그 추가
+                   
             logging.info(f"🔍 get_group_details API 결과 개수: {len(details)}")
-            for i, row in enumerate(details[:5]):  # 상위 5개만 로그
+            for i, row in enumerate(details[:5]):             
                 logging.info(f"🔍 get_group_details API 결과 {i+1}: {row}")
             
             return jsonify(details), 200
@@ -75,7 +75,7 @@ def create_data():
         data = request.json
         cd = data.get('cd')
         
-        # Job ID 형식 및 범위 검증 (10만 단위 이상 방지)
+                                          
         is_valid, error_message = validate_job_id_format(cd)
         if not is_valid:
             return jsonify({"message": error_message}), 400
@@ -104,7 +104,7 @@ def create_mngr_sett():
         if not cd:
             return jsonify({"message": "CD is required."}), 400
 
-        # CD900-CD999 범위와 100의 배수는 제외
+                                     
         if should_exclude_job(cd):
             return jsonify({"message": "CD900-CD999 범위와 100의 배수는 제외됩니다."}), 400
         
@@ -194,7 +194,7 @@ def delete_group(cd):
     try:
         with get_db_connection() as conn:
             service = DataDefinitionService(conn)
-            service.delete_data(cd, cd)  # cd_cl과 cd가 동일
+            service.delete_data(cd, cd)                 
             conn.commit()
             return jsonify({"message": "Group deleted successfully."}), 200
     except Exception as e:

@@ -1,6 +1,6 @@
--- Table: public.tb_con_hist
 
--- DROP TABLE IF EXISTS public.tb_con_hist;
+
+
 
 CREATE TABLE IF NOT EXISTS public.tb_con_hist
 (
@@ -20,9 +20,9 @@ TABLESPACE pg_default;
 ALTER TABLE IF EXISTS public.tb_con_hist
     OWNER to airflow_user;
 
--- Trigger: trg_log_con_hist_changes
 
--- DROP TRIGGER IF EXISTS trg_log_con_hist_changes ON public.tb_con_hist;
+
+
 
 CREATE OR REPLACE TRIGGER trg_log_con_hist_changes
     AFTER INSERT OR UPDATE 

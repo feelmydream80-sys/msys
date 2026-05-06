@@ -1,13 +1,13 @@
--- 컬럼 매핑 정보 관리 테이블
+
 CREATE TABLE TB_COLUMN_MAPPING (
-    mapp_id SERIAL PRIMARY KEY, -- 매핑 고유 ID
-    bf_tbl_nm VARCHAR(255), -- 이전 테이블명 (예: tb_admin_settings)
-    bf_col_nm VARCHAR(255), -- 이전 컬럼명 (예: job_id)
-    new_tbl_nm VARCHAR(255) NOT NULL, -- 새 테이블명 (예: TB_MNGR_SETT)
-    new_col_nm VARCHAR(255) NOT NULL, -- 새 컬럼명 (예: CD)
-    expl TEXT, -- 매핑에 대한 설명 (관리자용)
-    cre_dt TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP, -- 생성일시
-    upd_dt TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP -- 수정일시
+    mapp_id SERIAL PRIMARY KEY,
+    bf_tbl_nm VARCHAR(255),
+    bf_col_nm VARCHAR(255),
+    new_tbl_nm VARCHAR(255) NOT NULL,
+    new_col_nm VARCHAR(255) NOT NULL,
+    expl TEXT,
+    cre_dt TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    upd_dt TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE TB_COLUMN_MAPPING IS '시스템의 테이블 및 컬럼명 변경 이력을 관리하고, 레거시 코드와의 호환성을 유지하기 위한 매핑 정보를 저장하는 테이블';

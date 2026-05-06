@@ -19,13 +19,13 @@ def get_auth_status():
         expiry_time_str = session.get('expiry_time')
         if expiry_time_str:
             try:
-                # The isoformat string might have microseconds, which fromisoformat handles.
+                                                                                            
                 expiry_dt = datetime.fromisoformat(expiry_time_str)
                 now_utc = datetime.utcnow()
                 time_diff = expiry_dt - now_utc
                 seconds_remaining = max(0, time_diff.total_seconds())
             except ValueError:
-                # Handle cases where the string might not be a valid ISO format
+                                                                               
                 seconds_remaining = 0
 
         response_data = {

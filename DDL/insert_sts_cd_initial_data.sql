@@ -1,8 +1,8 @@
--- ==============================================
--- TB_STS_CD_MST 초기 데이터 삽입
--- CD900 계열 기본 상태코드
--- ICON_CD 실제 아이콘 코드 기준 적용
--- ==============================================
+
+
+
+
+
 
 INSERT OR REPLACE INTO TB_STS_CD_MST (CD, NM, DESCR, COLR, ICON_CD, ORD, USE_YN) VALUES
 ('CD901', '성공', '수집 완료 정상', '#28a745', '✅', 1, 'Y'),
@@ -16,5 +16,5 @@ INSERT OR REPLACE INTO TB_STS_CD_MST (CD, NM, DESCR, COLR, ICON_CD, ORD, USE_YN)
 ('CD909', '인증오류', 'API 인증 실패', '#dc3545', '🔒', 9, 'Y'),
 ('CD910', '파싱오류', '데이터 파싱 실패', '#e83e8c', '⚠️', 10, 'Y');
 
--- 인덱스 최적화
+
 ANALYZE TB_STS_CD_MST;

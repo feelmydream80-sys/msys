@@ -27,7 +27,7 @@ export function init() {
 
     let jobMstInfoMap = {};
     let allJandiData = {};
-    let allJobInfoData = []; // Job Info 테이블의 전체 데이터를 저장할 변수
+    let allJobInfoData = [];
     let adminSettingsMap = {};
     let currentPage = 1;
     let pageSize = parseInt(jandiPageSizeSelect.value, 10);
@@ -49,7 +49,7 @@ export function init() {
         heatmapContainer.innerHTML = '';
 
         try {
-            // 관리자 설정 데이터 먼저 가져오기
+
             if (isAdmin) {
                 const adminSettingsResponse = await fetch('/api/mngr_sett/settings/all');
                 if (!adminSettingsResponse.ok) throw new Error('관리자 설정 조회 실패');
@@ -60,15 +60,15 @@ export function init() {
                 }, {});
             }
 
-            // Fetch all jobs from tb_con_mst
+
             const mstResponse = await fetch('/api/mst_list');
             if (!mstResponse.ok) throw new Error('마스터 목록 조회 실패');
             const mstResult = await mstResponse.json();
             
-            // use_yn 필터 적용 후 100배수 데이터 필터링
+
             const activeJobs = filterValidJobs(filterActiveMstData(mstResult));
 
-            // 데이터 분석 페이지의 방법을 참조: job_id 배열로 API 호출
+
             const jobIds = activeJobs.map(job => job.job_id);
             const jobMstInfoResponse = await fetch(`/api/job_mst_info?job_ids=${jobIds.join(',')}`);
             if (!jobMstInfoResponse.ok) throw new Error('Job 상세정보 조회 실패');
@@ -76,36 +76,36 @@ export function init() {
             
             jobMstInfoMap = jobMstInfoResult;
             
-            // 주기 정보가 있는 Job만 필터링 (데이터 분석 페이지와 정책 일관성 유지)
+
             const jobsWithSchedule = activeJobs.filter(job => jobMstInfoMap[job.job_id]?.item6);
 
-            // Fetch Jandi data for each job individually
+
             allJandiData = {};
             for (const job of jobsWithSchedule) {
                 const job_id = job.job_id;
                 const jandiDataResponse = await fetch(`/api/jandi-data?job_id=${job_id}&start_date=${startDate}&end_date=${endDate}&allData=${allData}`);
                 if (!jandiDataResponse.ok) {
-                    console.error(`Jandi 데이터 조회 실패 for job_id: ${job_id}`);
-                    continue; // Skip to the next job if an error occurs
+
+                    continue;
                 }
                 const jandiDataResult = await jandiDataResponse.json();
                 
                 const jobDataMap = new Map();
                 jandiDataResult.forEach(item => {
-                    if (item.date) { // 'log_dt'를 'date'로 변경
+                    if (item.date) {
                         try {
-                            // Ensure the dateKey is in "YYYY-MM-DD" format.
+
                             const dateKey = new Date(item.date).toISOString().substring(0, 10);
-                            jobDataMap.set(dateKey, item.count); // 'execution_count'를 'count'로 변경
+                            jobDataMap.set(dateKey, item.count);
                         } catch (e) {
-                            console.error(`Invalid date value for date: ${item.date}`, e);
+
                         }
                     }
                 });
                 allJandiData[job_id] = jobDataMap;
             }
 
-            // Job Info 데이터 준비 - 데이터 분석 페이지와 동일한 매핑 방식
+
             allJobInfoData = jobsWithSchedule.map(job => ({
                 job_id: job.job_id,
                 cd_nm: jobMstInfoMap[job.job_id]?.cd_nm || '',
@@ -121,7 +121,7 @@ export function init() {
             renderPagedHeatmaps(true);
 
         } catch (error) {
-            console.error('Error:', error);
+
             heatmapContainer.innerHTML = `<p class="text-red-500">${error.message}</p>`;
         } finally {
             loadingIndicator.style.display = 'none';
@@ -131,7 +131,7 @@ export function init() {
     function renderPagedHeatmaps(isNewSearch = false) {
         heatmapContainer.innerHTML = '';
 
-        // 주기 정보가 있는 Job만 렌더링 (dataMap에 데이터가 있는 Job만)
+
         let jobIds = Object.keys(allJandiData);
         if (searchTerm) {
             const lowerCaseSearchTerm = searchTerm.toLowerCase();
@@ -233,9 +233,9 @@ export function init() {
         renderPagedHeatmaps();
     });
     
-    // jobInfoSearchInput 이벤트 리스너는 이제 jobInfo.js 모듈에서 중앙 관리됩니다.
 
-    // 엑셀 템플릿 다운로드 버튼 이벤트 리스너
+
+
     const downloadExcelTemplateBtn = document.getElementById('downloadExcelTemplateBtn');
     if (downloadExcelTemplateBtn) {
         downloadExcelTemplateBtn.addEventListener('click', downloadExcelTemplate);

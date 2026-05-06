@@ -1,4 +1,4 @@
--- sql/mngr_sett/get_schedule_settings.sql
+
 SELECT
     s.sett_id,
     s.grp_min_cnt,

@@ -45,18 +45,18 @@ class MailSchedulerService:
         }
         
         try:
-            # 모든 API 키 데이터 조회
+                             
             all_data = self.api_key_service.get_all_api_key_mngr()
             
-            # 대상 CD 필터링
+                       
             if target_cds:
                 all_data = [item for item in all_data if item['cd'] in target_cds]
             
-            # 제외 CD 필터링
+                       
             if exclude_cds:
                 all_data = [item for item in all_data if item['cd'] not in exclude_cds]
             
-            # 메일 설정 가져오기
+                        
             mail_settings = {}
             try:
                 settings_list = self.dao.select_mail_settings()
@@ -73,11 +73,11 @@ class MailSchedulerService:
                 days_remaining = api_key_data.get('days_remaining', 999)
                 email_addr = api_key_data.get('api_ownr_email_addr', '')
                 
-                # 발송 대상 메일 유형 결정
+                                
                 mail_tp = self._determine_mail_type(days_remaining)
                 
                 if mail_tp is None:
-                    # 발송 대상 아님
+                              
                     results['skipped'].append({
                         'cd': cd,
                         'days_remaining': days_remaining,
@@ -85,7 +85,7 @@ class MailSchedulerService:
                     })
                     continue
                 
-                # 이메일 주소 유효성 검사
+                               
                 if not validate_email_address(email_addr):
                     results['skipped'].append({
                         'cd': cd,
@@ -93,11 +93,11 @@ class MailSchedulerService:
                     })
                     continue
                 
-                # 오늘 발송 이력 확인 (중복 발송 방지)
+                                        
                 try:
                     send_log = self.dao.get_mail_send_log(cd, mail_tp, today)
                     if send_log:
-                        # 이미 오늘 발송함 - 스킵
+                                        
                         results['skipped'].append({
                             'cd': cd,
                             'mail_tp': mail_tp,
@@ -107,7 +107,7 @@ class MailSchedulerService:
                 except Exception as e:
                     self.logger.warning(f"Failed to check send log for CD {cd}: {e}")
                 
-                # 메일 발송
+                       
                 try:
                     mail_setting = mail_settings.get(mail_tp, {})
                     subject_template = mail_setting.get('subject', None) or None
@@ -125,7 +125,7 @@ class MailSchedulerService:
                         html_content=body
                     )
                     
-                    # 발송 이력 기록
+                              
                     self.dao.insert_mail_send_log(
                         cd=cd,
                         mail_tp=mail_tp,
@@ -153,7 +153,7 @@ class MailSchedulerService:
                     error_msg = str(e)
                     self.logger.error(f"Failed to send email for CD {cd}: {error_msg}")
                     
-                    # 실패 이력도 기록 (재시도용)
+                                      
                     try:
                         self.dao.insert_mail_send_log(
                             cd=cd,
@@ -171,7 +171,7 @@ class MailSchedulerService:
                         'reason': error_msg
                     })
             
-            # 결과 요약 로깅
+                      
             self.logger.info(
                 f"Mail scheduler completed: "
                 f"success={len(results['success'])}, "
@@ -281,16 +281,16 @@ class MailSchedulerService:
         :return: 발송 결과 dict
         """
         try:
-            # 이메일 유효성 검사
+                        
             if not validate_email_address(test_email):
                 return {
                     'success': False,
                     'message': f'올바르지 않은 이메일 형식입니다: {test_email}'
                 }
             
-            # 테스트 메일 내용 생성
+                          
             subject = '[테스트] API 키 관리 시스템 메일 발송 테스트'
-            # 테스트 메일 본문에 사용할 시간
+                               
             sent_time = self.dao.get_formatted_timestamp('%Y-%m-%d %H:%M:%S')
 
             body = f'''
@@ -310,14 +310,14 @@ class MailSchedulerService:
             </html>
             '''
             
-            # 메일 발송
+                   
             success, error_msg = send_email(
                 to=test_email,
                 subject=subject,
                 html_content=body
             )
             
-            # 발송 이력 기록
+                      
             try:
                 self.dao.insert_mail_send_log(
                     cd='TEST',
@@ -358,7 +358,7 @@ class MailSchedulerService:
         :return: 설정 데이터 dict
         """
         try:
-            # DAO에서 이력 조회
+                         
             result = self.dao.get_mail_setting_history(mail_tp, version)
             
             if result:

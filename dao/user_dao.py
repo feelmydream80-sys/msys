@@ -1,4 +1,4 @@
-# dao/user_dao.py
+                 
 from typing import List, Dict, Any
 from psycopg2.extras import RealDictCursor
 from dao.sql_loader import load_sql
@@ -38,7 +38,7 @@ class UserDao:
     def delete_by_id(self, user_id: str) -> None:
         """ID로 사용자를 삭제합니다."""
         with self.conn.cursor() as cursor:
-            # 관련된 접근 제어 데이터도 함께 삭제합니다 (ON DELETE CASCADE가 설정되어 있지 않은 경우).
+                                                                         
             cursor.execute(load_sql('user/delete_user_permissions.sql'), (user_id,))
             cursor.execute(load_sql('user/delete_by_id.sql'), (user_id,))
 
@@ -85,11 +85,11 @@ class UserDao:
     def update_user_permissions(self, user_id: str, menu_ids: List[str]) -> None:
         """사용자의 메뉴 접근 권한을 업데이트합니다."""
         with self.conn.cursor() as cursor:
-            # 먼저 해당 사용자의 모든 권한을 삭제합니다.
+                                      
             cursor.execute("DELETE FROM TB_USER_AUTH_CTRL WHERE USER_ID = %s", (user_id,))
-            # 새로운 권한을 추가합니다.
+                            
             if menu_ids:
-                # mogrify를 사용하여 SQL 인젝션 방지
+                                          
                 values = [(user_id, menu_id) for menu_id in menu_ids]
                 args_str = ','.join(cursor.mogrify("(%s,%s)", v).decode('utf-8') for v in values)
                 cursor.execute("INSERT INTO TB_USER_AUTH_CTRL (USER_ID, MENU_ID) VALUES " + args_str)

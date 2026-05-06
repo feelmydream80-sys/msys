@@ -17,7 +17,7 @@ class AnalyticsDAO:
         """
         query = load_sql('analytics/insert_user_access_log.sql')
         try:
-            # KST 현재 시간 생성
+                          
             kst_now = get_kst_now()
             with self.conn.cursor() as cur:
                 cur.execute(query, (user_id, menu_name, kst_now))
@@ -51,18 +51,18 @@ class AnalyticsDAO:
         """
         기간별, 메뉴별 접속 통계를 조회합니다.
         """
-        # This method generates a dynamic WHERE clause, so we handle it in the DAO.
+                                                                                   
         base_query = load_sql('analytics/get_user_access_stats.sql')
         
         conditions = []
         params = []
         
         if year and month:
-            # ACS_DT는 이미 KST로 저장됨
+                                 
             conditions.append("EXTRACT(YEAR FROM ACS_DT) = %s AND EXTRACT(MONTH FROM ACS_DT) = %s")
             params.extend([year, month])
         elif start_date and end_date:
-            # ACS_DT는 이미 KST로 저장됨
+                                 
             conditions.append("ACS_DT::date BETWEEN %s AND %s")
             params.extend([start_date, end_date])
             
@@ -85,18 +85,18 @@ class AnalyticsDAO:
         params = []
 
         if view_type == 'daily' and start_date and end_date:
-            # 날짜 범위 비교 (시작일 00:00:00부터 종료일 23:59:59까지)
+                                                      
             conditions.append("ACS_DT >= %s::timestamp AND ACS_DT < (%s::timestamp + INTERVAL '1 day')")
             params.extend([start_date, end_date])
         elif view_type == 'monthly' and year and month:
-            # ACS_DT는 이미 KST로 저장됨
+                                 
             conditions.append("EXTRACT(YEAR FROM ACS_DT) = %s AND EXTRACT(MONTH FROM ACS_DT) = %s")
             params.extend([year, month])
         elif view_type == 'yearly' and year:
-            # ACS_DT는 이미 KST로 저장됨
+                                 
             conditions.append("EXTRACT(YEAR FROM ACS_DT) = %s")
             params.append(year)
-        else: # 기본값: 오늘 하루 (KST 기준)
+        else:                      
             today_kst = format_kst_now('%Y-%m-%d')
             conditions.append("ACS_DT::date = %s")
             params.append(today_kst)
@@ -115,7 +115,7 @@ class AnalyticsDAO:
         """
         가장 최근 접속 데이터가 있는 날짜를 조회합니다. (KST 기준)
         """
-        # ACS_DT는 이미 KST로 저장됨
+                             
         query = "SELECT MAX(ACS_DT::date) FROM TB_USER_ACS_LOG"
         try:
             with self.conn.cursor() as cur:
@@ -140,21 +140,21 @@ class AnalyticsDAO:
         
         total_access_count = sum(item.get('total_access_count', 0) for item in menu_stats)
         
-        # 순 방문자 수는 전체 기간에 대해 고유한 사용자를 다시 계산해야 합니다.
+                                                  
         base_query = "SELECT COUNT(DISTINCT user_id) FROM tb_user_acs_log"
         conditions = []
         params = []
 
         if view_type == 'daily' and start_date and end_date:
-            # 날짜 범위 비교 (시작일 00:00:00부터 종료일 23:59:59까지)
+                                                      
             conditions.append("ACS_DT >= %s::timestamp AND ACS_DT < (%s::timestamp + INTERVAL '1 day')")
             params.extend([start_date, end_date])
         elif view_type == 'monthly' and year and month:
-            # ACS_DT는 이미 KST로 저장됨
+                                 
             conditions.append("EXTRACT(YEAR FROM ACS_DT) = %s AND EXTRACT(MONTH FROM ACS_DT) = %s")
             params.extend([year, month])
         elif view_type == 'yearly' and year:
-            # ACS_DT는 이미 KST로 저장됨
+                                 
             conditions.append("EXTRACT(YEAR FROM ACS_DT) = %s")
             params.append(year)
 
@@ -209,18 +209,18 @@ class AnalyticsDAO:
             cur.execute(query, params)
             daily_stats = cur.fetchall()
 
-        # 2. Python에서 주차 계산 및 재집계
+                                 
         weekly_aggregated_stats = {}
         for row in daily_stats:
             date = row['access_date']
             month = date.month
             
-            # 월의 첫 날과 그 날의 요일 찾기
+                                
             first_day_of_month = date.replace(day=1)
-            first_day_weekday = first_day_of_month.weekday() # Monday is 0 and Sunday is 6
+            first_day_weekday = first_day_of_month.weekday()                              
             
-            # 주차 계산 (일요일 시작 기준)
-            # (day + weekday of 1st of month) / 7, rounded up.
+                               
+                                                              
             week_of_month = (date.day + first_day_weekday) // 7 + 1
 
             week_key = (month, week_of_month, row['menu_nm'])
@@ -228,13 +228,13 @@ class AnalyticsDAO:
             if week_key not in weekly_aggregated_stats:
                 weekly_aggregated_stats[week_key] = {
                     'total_access_count': 0,
-                    'unique_user_count': 0 # 일별 순방문자를 주 단위로 합산
+                    'unique_user_count': 0                    
                 }
             
             weekly_aggregated_stats[week_key]['total_access_count'] += row['total_access_count']
             weekly_aggregated_stats[week_key]['unique_user_count'] += row['unique_user_count']
 
-        # 3. 최종 결과 포맷으로 변환
+                          
         results = []
         for (month, week, menu), stats in weekly_aggregated_stats.items():
             results.append({
@@ -290,7 +290,7 @@ class AnalyticsDAO:
             cur.execute(query, (year,))
             results = {}
             for row in cur.fetchall():
-                # 결과를 (month, week): count 형태의 딕셔너리로 변환
+                                                       
                 results[(row[0], row[1])] = int(row[2])
             logging.info(f"DAO: Fetched weekly total unique users (sum of daily uniques) for year {year}.")
             return results
@@ -302,8 +302,8 @@ class AnalyticsDAO:
         final_result = {'total_access_count': 0, 'total_menu_unique_user_count': 0, 'total_site_unique_user_count': 0}
         
         with self.conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
-            # 1. Get total_access_count
-            # ACS_DT는 이미 KST로 저장됨
+                                       
+                                 
             query1 = "SELECT COUNT(*) AS total_access_count FROM TB_USER_ACS_LOG WHERE EXTRACT(YEAR FROM ACS_DT) = %s"
             params1 = [year]
             if menu_nm and menu_nm != 'all':
@@ -314,8 +314,8 @@ class AnalyticsDAO:
             if res1 and res1['total_access_count'] is not None:
                 final_result['total_access_count'] = int(res1['total_access_count'])
 
-            # 2. Get total_menu_unique_user_count (sum of daily unique users per menu)
-            # ACS_DT는 이미 KST로 저장됨
+                                                                                      
+                                 
             query2_base = """
                 SELECT SUM(t.daily_unique_users) as total_menu_unique_user_count
                 FROM (
@@ -337,8 +337,8 @@ class AnalyticsDAO:
             if res2 and res2['total_menu_unique_user_count'] is not None:
                 final_result['total_menu_unique_user_count'] = int(res2['total_menu_unique_user_count'])
 
-            # 3. Get total_site_unique_user_count (sum of daily unique users for the whole site)
-            # ACS_DT는 이미 KST로 저장됨
+                                                                                                
+                                 
             query3 = """
                 SELECT SUM(t.daily_site_unique_count) as total_site_unique_user_count
                 FROM (
@@ -367,9 +367,9 @@ class AnalyticsDAO:
             logging.info(f"DAO: Fetched {len(results)} records for monthly menu access stats.")
             return [dict(row) for row in results]
 
-    # ==========================================
-    # 사용자접속정보 탭용 메서드
-    # ==========================================
+                                                
+                    
+                                                
 
     def get_user_list_with_stats(self, page: int = 1, page_size: int = 10, search_term: str = None, mode: str = 'all') -> Dict:
         """
@@ -381,11 +381,11 @@ class AnalyticsDAO:
         """
         offset = (page - 1) * page_size
         
-        # mode에 따른 COUNT 방식 결정
+                              
         count_expr = "COUNT(DISTINCT DATE(acs_dt))" if mode == 'distinct' else "COUNT(*)"
         total_count_expr = "COUNT(DISTINCT DATE(ul.acs_dt))" if mode == 'distinct' else "COUNT(ul.acs_dt)"
         
-        # 기본 쿼리 - 최근 6개월 월별 데이터 포함
+                                  
         base_query = """
             WITH user_stats AS (
                 SELECT 
@@ -432,7 +432,7 @@ class AnalyticsDAO:
             LIMIT %s OFFSET %s
         """
         
-        # 검색 조건
+               
         where_clause = ""
         params = []
         if search_term:
@@ -443,25 +443,31 @@ class AnalyticsDAO:
         params.extend([page_size, offset])
         
         with self.conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
-            # 사용자 목록 조회
+                       
             cur.execute(query, params)
             rows = cur.fetchall()
             
-            # 결과 가공 - monthly_counts 배열 추가
+                                          
             users = []
             for row in rows:
                 user = dict(row)
-                # 6개월 월별 데이터 배열로 변환 (최근→과거 순: m0, m1, m2, m3, m4, m5)
+                                                                      
                 user['monthly_counts'] = [user['m0'], user['m1'], user['m2'], user['m3'], user['m4'], user['m5']]
                 del user['m0'], user['m1'], user['m2'], user['m3'], user['m4'], user['m5']
                 users.append(user)
-            
-            # 전체 카운트 조회
-            count_query = """
-                SELECT COUNT(*) as total FROM tb_user
-                {where_clause}
-            """.format(where_clause=where_clause.replace('u.', ''))
-            count_params = [f"%{search_term}%"] if search_term else []
+        
+        if users:
+            distinct = (mode == 'distinct')
+            for user in users:
+                user['weekly_data'] = self.get_user_weekly_heatmap(user['user_id'], distinct)
+        
+                       
+        count_query = """
+            SELECT COUNT(*) as total FROM tb_user
+            {where_clause}
+        """.format(where_clause=where_clause.replace('u.', ''))
+        count_params = [f"%{search_term}%"] if search_term else []
+        with self.conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
             cur.execute(count_query, count_params)
             total = cur.fetchone()['total']
         
@@ -482,7 +488,7 @@ class AnalyticsDAO:
         Args:
             distinct_mode: True인 경우 1일 1접속으로 계산
         """
-        # COUNT 표현식 결정
+                      
         count_expr = "COUNT(DISTINCT DATE(ul.acs_dt))" if distinct_mode else "COUNT(ul.acs_dt)"
         
         query = f"""
@@ -517,9 +523,9 @@ class AnalyticsDAO:
         - distinct_mode=False: 중복 포함 (전체 접속)
         - 반환: 26주 (6개월) 접속 횟수 배열, 월 구분을 위한 None 값 포함
         """
-        # 26주 (6개월) 기준, 매월 4주씩 + 구분자
+                                    
         if distinct_mode:
-            # 1일 1접속 모드: 날짜별 DISTINCT COUNT
+                                           
             query = """
                 WITH weeks AS (
                     SELECT 
@@ -540,7 +546,7 @@ class AnalyticsDAO:
                 ORDER BY w.week_idx
             """
         else:
-            # 중복 포함 모드: 전체 접속 COUNT
+                                   
             query = """
                 WITH weeks AS (
                     SELECT 
@@ -565,16 +571,16 @@ class AnalyticsDAO:
             cur.execute(query, [user_id])
             results = cur.fetchall()
             
-            # 26주 데이터 생성
+                        
             weekly_data = [r[2] for r in results] if results else [0] * 26
             
-            # 월 구분을 위한 포맷팅 (4주씩 묶어서, 매월 마지막에 None 추가)
+                                                     
             formatted_data = []
             for i, count in enumerate(weekly_data):
                 formatted_data.append(count)
-                # 매월 마지막 주 (3, 7, 11, 15, 19, 23 인덱스) 다음에 구분자 추가
+                                                                
                 if i in [3, 7, 11, 15, 19, 23]:
-                    formatted_data.append(None)  # 구분자
+                    formatted_data.append(None)       
             
             return formatted_data
 
@@ -597,7 +603,7 @@ class AnalyticsDAO:
             cur.execute(query, [user_id])
             results = cur.fetchall()
             
-            # 0-23시 배열 초기화
+                          
             hourly = [0] * 24
             for hour, cnt in results:
                 if 0 <= hour < 24:
@@ -625,9 +631,9 @@ class AnalyticsDAO:
             cur.execute(query, [user_id, limit])
             return [dict(row) for row in cur.fetchall()]
 
-    # ==========================================
-    # 시간 제공 메서드 (Dao-centric Time)
-    # ==========================================
+                                                
+                                  
+                                                
 
     def get_current_date_str(self) -> str:
         """현재 KST 기준 날짜 문자열 반환 (YYYY-MM-DD)"""

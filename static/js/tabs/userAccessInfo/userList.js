@@ -1,22 +1,19 @@
-/**
- * 사용자 목록 렌더러
- * 실제 API 연동 버전 - 월별 히트맵 지원
- */
+
 
 import { config } from './config.js';
 import statusManager from './statusManager.js';
 import { formatDBDateTime, getLast6Months, getWeeksPerMonthFn } from '../../modules/common/dateUtils.js';
 
-// 히트맵 색상 계산 (파스텔 퍼플)
+
 function hmColor(value, mode = 'all') {
-    if (!value) return '#f3f4f6'; // 0회: 회색
-    return '#C4A5F8'; // 파스텔 퍼플 (일정)
+    if (!value) return '#f3f4f6';
+    return '#C4A5F8';
 }
 
-// 애니메이션 스타일 전역 플래그
+
 window.__userAccessAnimationsAdded = window.__userAccessAnimationsAdded || false;
 
-// 애니메이션 스타일 추가 (한 번만)
+
 (function addAnimationStyles() {
     if (window.__userAccessAnimationsAdded || document.getElementById('user-access-animations')) {
         return;
@@ -53,7 +50,7 @@ window.__userAccessAnimationsAdded = window.__userAccessAnimationsAdded || false
     document.head.appendChild(style);
 })();
 
-// 날짜 차이 계산
+
 function daysAgo(dateStr) {
     if (!dateStr) return 999;
     const today = new Date();
@@ -61,10 +58,10 @@ function daysAgo(dateStr) {
     return Math.floor((today - date) / (1000 * 60 * 60 * 24));
 }
 
-// 월 이름 배열
+
 const MONTH_NAMES = ['1월', '2월', '3월', '4월', '5월', '6월'];
 
-// 임계값 저장 (동적 로드)
+
 let dynamicThresholds = { cd991: 30, cd992: 7, cd993: 90 };
 
 export function setThresholds(thresholds) {
@@ -81,26 +78,26 @@ class UserListRenderer {
         this.filterDays = 0;
         this.sortKey = null;
         this.sortDir = 'asc';
-        this.users = []; // 사용자 데이터 캐시
-        this.mode = 'all'; // 'all' (중복 포함) 또는 'distinct' (1일 1접속)
-        this.chartType = 'heatmap'; // 전역 차트 타입 (heatmap 또는 line) - 모든 사용자 동일
-        this._renderDebounceTimer = null; // 렌더링 디바운스 타이머
-        this._isRendering = false; // 렌더링 중 플래그
-        this._loadingPromise = null; // Promise 기반 파이프라인: 중복 API 호출 방지
+        this.users = [];
+        this.mode = 'all';
+        this.chartType = 'heatmap';
+        this._renderDebounceTimer = null;
+        this._isRendering = false;
+        this._loadingPromise = null;
     }
 
-    // 전역 차트 타입 설정
+
     setChartType(chartType) {
         this.chartType = chartType;
-        // init 완료된 경우에만 테이블 재렌더링 (중복 방지)
+
         if (window.userAccessInfo?.isInitialized) {
             this.renderTable(this.users);
         }
-        // 버튼 상태 업데이트
+
         this.updateChartTypeButtons();
     }
 
-    // 차트 타입 버튼 상태 업데이트
+
     updateChartTypeButtons() {
         const btnHeatmap = document.getElementById('btn-chart-heatmap');
         const btnLine = document.getElementById('btn-chart-line');
@@ -122,13 +119,13 @@ class UserListRenderer {
 
     async setMode(mode) {
         this.mode = mode;
-        // 모드 변경 시 데이터 다시 로드
+
         await this.render(this.currentPage, this.pageSize, this.searchTerm, this.filterMode, this.filterDays);
     }
 
-    // Promise 기반: 중복 호출 방지
+
     async render(page = 1, pageSize = 10, searchTerm = '', filterMode = 'none', filterDays = 0, forceReload = false) {
-        // 이미 진행 중이면 기존 Promise 반환
+
         if (this._loadingPromise) {
             return this._loadingPromise;
         }
@@ -151,13 +148,13 @@ class UserListRenderer {
 
         let data = null;
 
-        // forceReload가 true이거나 캐시된 데이터가 없으면 API에서 다시 로드
+
         if (forceReload || !this.users || this.users.length === 0) {
             data = await this.fetchUsers(page, pageSize, searchTerm);
             this.users = data.items;
         }
 
-        // 필터 적용
+
         if (filterMode === 'all' && filterDays > 0 && this.users) {
             this.users = this.users.filter(u => daysAgo(u.last_acs_dt) >= filterDays);
             if (data) {
@@ -180,7 +177,7 @@ class UserListRenderer {
             const params = new URLSearchParams({
                 page: page,
                 page_size: pageSize,
-                mode: this.mode  // mode 파라미터 추가
+                mode: this.mode
             });
             
             if (searchTerm) {
@@ -194,20 +191,20 @@ class UserListRenderer {
             
             const data = await response.json();
             
-            // 사용자별 주간 데이터(26주)는 이미 API 응답에 포함됨 (backend get_user_list_with_stats에서 주입)
+
             const usersWithWeeklyData = data.items.map(user => ({
                 ...user,
-                weekly_data: user.weekly_data || [] // 26주 주간 데이터 (이미 포함됨)
+                weekly_data: user.weekly_data || []
             }));
             
-            // API 응답을 프론트엔드 형식으로 변환
+
             return {
                 items: usersWithWeeklyData.map(user => ({
                     user_id: user.user_id,
-                    user_nm: user.user_id, // TB_USER에 이름 필드가 없으면 ID 사용
+                    user_nm: user.user_id,
                     acc_sts: user.acc_sts,
-                    monthly_counts: user.monthly_counts || [0,0,0,0,0,0], // 6개월 월별 데이터
-                    weekly_data: user.weekly_data || [], // 26주 주간 데이터
+                    monthly_counts: user.monthly_counts || [0,0,0,0,0,0],
+                    weekly_data: user.weekly_data || [],
                     total: user.total_acs_cnt || 0,
                     last_acs_dt: user.last_acs_dt,
                     initials: this._getInitials(user.user_id),
@@ -238,7 +235,7 @@ class UserListRenderer {
     }
 
     _calculateStatus(lastAcsDt, accSts) {
-        // acc_sts 값에 따라 직접 표시 (승인/대기/휴 면/비활성화)
+
         const statusMap = {
             'APPROVED': { label: '승인', cls: 'b-green' },
             'PENDING': { label: '대기', cls: 'b-amber' },
@@ -250,7 +247,7 @@ class UserListRenderer {
             return statusMap[accSts];
         }
         
-        // acc_sts가 없는 경우 last_acs_dt 기반으로 계산
+
         if (!lastAcsDt) {
             return { label: '미접속', cls: 'b-gray' };
         }
@@ -258,7 +255,7 @@ class UserListRenderer {
         const da = daysAgo(lastAcsDt);
         const { cd991, cd992, cd993 } = dynamicThresholds;
         
-        // 활성/최근은 수치 기준만 사용 (표시용)
+
         if (da <= cd992) return { label: '활성', cls: 'b-green' };
         if (da <= cd991) return { label: '최근', cls: 'b-amber' };
         if (da <= cd993) return { label: '휴 면', cls: 'b-gray' };
@@ -266,7 +263,7 @@ class UserListRenderer {
     }
 
     renderTable(users) {
-        // 디바운싱: 50ms 이내 중복 호출 방지
+
         if (this._renderDebounceTimer) {
             clearTimeout(this._renderDebounceTimer);
         }
@@ -303,18 +300,18 @@ class UserListRenderer {
             const lastAccessDate = user.last_acs_dt ? 
                 formatDBDateTime(user.last_acs_dt).split(' ')[0] : '-';
 
-            // 주차별 데이터를 월별로 그룹화 - 동적 계산
+
             const weeksPerMonth = getWeeksPerMonthFn(6);
             const weeklyData = user.weekly_data || [];
             
-            // 월별 데이터 렌더링 (차트 타입에 따라 다름) - 둘 다 동일한 26주 데이터 사용
+
             let monthlyCells;
             
             if (this.chartType === 'line') {
-                // 선차트 모드: 26주 데이터를 월별로 집계하여 선으로 표시
+
                 monthlyCells = this._renderWeeklyLineCells(weeklyData, weeksPerMonth);
             } else {
-                // 히트맵(막대 차트) 모드: 주차별 막대
+
                 monthlyCells = this._renderMonthlyHeatmapCells(weeklyData, weeksPerMonth);
             }
 
@@ -340,7 +337,7 @@ class UserListRenderer {
         const container = document.getElementById('userAccessPagination');
         const totalCountEl = document.getElementById('userAccessTotalCount');
         
-        // 총 인원 표시 업데이트
+
         if (totalCountEl) {
             totalCountEl.textContent = `(총 ${data.total}명)`;
         }
@@ -356,12 +353,12 @@ class UserListRenderer {
 
         let html = '';
 
-        // 이전 버튼
+
         if (page > 1) {
             html += `<button onclick="window.userAccessInfo?.render(${page - 1})" style="padding: 6px 12px; border: 1px solid #ddd; background: white; border-radius: 4px; cursor: pointer;">이전</button>`;
         }
 
-        // 페이지 번호
+
         for (let i = 1; i <= total_pages; i++) {
             if (i === 1 || i === total_pages || (i >= page - 2 && i <= page + 2)) {
                 html += `<button onclick="window.userAccessInfo?.render(${i})" 
@@ -371,7 +368,7 @@ class UserListRenderer {
             }
         }
 
-        // 다음 버튼
+
         if (page < total_pages) {
             html += `<button onclick="window.userAccessInfo?.render(${page + 1})" style="padding: 6px 12px; border: 1px solid #ddd; background: white; border-radius: 4px; cursor: pointer;">다음</button>`;
         }
@@ -404,17 +401,17 @@ class UserListRenderer {
         return div.innerHTML;
     }
 
-    // 히트맵(막대 차트) 모드: 월별 셀에 주차별 막대 렌더링
+
     _renderMonthlyHeatmapCells(weeklyData, weeksPerMonth) {
-        // weeklyData가 비어있거나 유효하지 않으면 기본값 사용
+
         if (!weeklyData || weeklyData.length === 0) {
             weeklyData = new Array(26).fill(0);
         }
         
-        // null 구분자 제거하고 순수 주간 데이터만 추출 (최대 26주)
+
         const cleanWeeklyData = weeklyData.filter(v => v !== null).slice(0, 26);
         
-        // 26주가 안되면 0으로 채움
+
         while (cleanWeeklyData.length < 26) {
             cleanWeeklyData.push(0);
         }
@@ -422,27 +419,27 @@ class UserListRenderer {
         let weekIndex = 0;
         
         return weeksPerMonth.map((weekCount, monthIdx) => {
-            // 해당 월의 주차 데이터 추출
+
             const monthWeeks = [];
             for (let i = 0; i < weekCount && weekIndex < cleanWeeklyData.length; i++) {
                 monthWeeks.push(cleanWeeklyData[weekIndex]);
                 weekIndex++;
             }
             
-            // 주차별 막대 렌더링 (값이 0이면 숨김)
+
             const bars = monthWeeks.map((val, idx) => {
                 if (val === 0 || val === undefined || val === null) {
                     return `<div style="width: 4px; height: 30px; visibility: hidden; flex-shrink: 0;"></div>`;
                 }
                 const color = hmColor(val, this.mode);
-                // 값에 비례하여 높이 조정 (최소 30px의 20% = 6px, 최대 100% = 30px)
-                const heightPercent = Math.min(100, Math.max(20, val * 5)); // 값 * 5%로 높이 결정
+
+                const heightPercent = Math.min(100, Math.max(20, val * 5));
                 const heightPx = Math.round(30 * heightPercent / 100);
-                const delay = idx * 40; // 각 막대당 40ms 지연
+                const delay = idx * 40;
                 return `<div class="heatmap-bar" style="width: 4px; height: ${heightPx}px; background: ${color}; border-radius: 1px; flex-shrink: 0; animation-delay: ${delay}ms; opacity: 0;" title="${idx + 1}주차: ${val}회"></div>`;
             }).join('');
             
-            // 해당 월의 총합
+
             const monthTotal = monthWeeks.reduce((sum, v) => sum + (v || 0), 0);
             
             return `<td style="text-align: center; padding: 8px 4px;">
@@ -456,7 +453,7 @@ class UserListRenderer {
         }).join('');
     }
 
-    // 선차트 모드: 26주 데이터 → 주차별 선차트 (히트맵과 동일한 데이터 사용)
+
     _renderWeeklyLineCells(weeklyData, weeksPerMonth) {
         const cleanWeeklyData = (weeklyData || []).filter(v => v !== null).slice(0, 26);
         while (cleanWeeklyData.length < 26) {
@@ -489,17 +486,17 @@ class UserListRenderer {
             });
             const points = pointsArr.map(p => `${p.x},${p.y}`).join(' ');
 
-            // 실제 선 길이 계산 (피타고라스 정리)
+
             let lineLength = 0;
             for (let i = 1; i < pointsArr.length; i++) {
                 const dx = pointsArr[i].x - pointsArr[i-1].x;
                 const dy = pointsArr[i].y - pointsArr[i-1].y;
                 lineLength += Math.sqrt(dx * dx + dy * dy);
             }
-            // 여유 있게 1.5배 (stroke-linecap 등 고려)
+
             lineLength = Math.ceil(lineLength * 1.5);
 
-            // 해당 월의 총합
+
             const monthTotal = monthWeeks.reduce((sum, v) => sum + (v || 0), 0);
 
             return `<td style="text-align: center; padding: 8px 4px;">
@@ -522,7 +519,7 @@ class UserListRenderer {
     }
 }
 
-// Singleton instance
+
 const userListRenderer = new UserListRenderer();
 
 export default userListRenderer;

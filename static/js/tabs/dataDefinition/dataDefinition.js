@@ -1,17 +1,17 @@
-// 데이터 정의 탭 로직
+
 import { FIELD_DEFINITIONS, FIELD_LABELS, DEFAULT_COLUMNS, DISPLAY_OPTIONS, TOAST_TYPES } from './modules/constants.js';
 import { getGroups, createItem, updateGroup, deleteGroup, updateDetail } from './modules/api.js';
 import { showToast, createModal, getAddGroupModalHTML, getEditGroupModalHTML, getDetailModalHTML } from './modules/ui.js';
 import { formatDateTime, toKST } from '../../modules/common/dateUtils.js';
 
-// 전역 상태
+
 let selectedGroup = null;
 let selectedRow = null;
 let isInitialized = false;
-let allData = null; // 전역 데이터 저장
-let detailSortState = { column: 'cd', direction: 'asc' }; // 상세 테이블 정렬 상태
+let allData = null;
+let detailSortState = { column: 'cd', direction: 'asc' };
 
-// 디바운스 함수 (반복 요청 방지)
+
 function debounce(func, delay) {
     let timeoutId;
     return function(...args) {
@@ -23,61 +23,61 @@ function debounce(func, delay) {
 export async function init() {
     
     
-    // 중복 호출 방지
+
     if (isInitialized) {
         
         return;
     }
     
-    // 전역 상태 초기화
+
     isInitialized = true;
     selectedGroup = null;
     selectedRow = null;
     window.isModalOpen = false;
     allData = null;
     
-    // 기존 모달이 남아있다면 제거
+
     const existingModal = document.querySelector('div[style*="rgba(0,0,0,0.5)"]');
     if (existingModal) {
         existingModal.remove();
     }
     
-    // UI 요소 초기화 및 이벤트 리스너 설정
+
     setupUIElements();
     setupEventListeners();
     
-    // DOM 로드 후에 버튼 이벤트 등록 보장
+
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', setupGroupActionButtons);
     } else {
         setupGroupActionButtons();
     }
     
-    // API 데이터로 카드 렌더링
+
     try {
         await renderGroupCards();
         
     } catch (error) {
         
-        // 오류 발생시 사용자에게 알림
+
         const container = document.getElementById('definitionCardContainer');
         container.innerHTML = '<div style="text-align: center; color: #94a3b8; padding: 20px;">데이터 정의 탭 초기화에 실패했습니다. 페이지를 새로고침해 주세요.</div>';
     } finally {
-        // 초기화 완료 후 (성공/실패 모두) 플래그를 false로 설정
+
         isInitialized = false;
     }
 }
 
-// UI 요소 초기화 함수
+
 function setupUIElements() {
-    // 기존 검색 UI가 있는지 확인하여 중복 생성 방지
+
     const existingSearchContainer = document.getElementById('dataDefinitionSearch')?.parentElement;
     if (existingSearchContainer) {
         
         return;
     }
     
-    // 검색 UI 추가
+
     const searchContainer = document.createElement('div');
     searchContainer.style.cssText = 'margin-bottom: 20px; display: flex; gap: 15px; align-items: center;';
     
@@ -99,25 +99,25 @@ function setupUIElements() {
     searchContainer.appendChild(searchInput);
     searchContainer.appendChild(displayOptions);
     
-    // 검색 컨테이너를 카드 컨테이너 위에 삽입
+
     const cardContainer = document.getElementById('definitionCardContainer');
     if (cardContainer && cardContainer.parentNode) {
         cardContainer.parentNode.insertBefore(searchContainer, cardContainer);
     }
     
-    // 검색 이벤트 리스너 추가
+
     searchInput.addEventListener('input', (e) => {
         const searchTerm = e.target.value.toLowerCase();
         filterGroups(searchTerm);
     });
     
-    // 표시 옵션 변경 이벤트 리스너 추가
+
     document.querySelectorAll('input[name="displayOption"]').forEach(radio => {
         radio.addEventListener('change', updateDisplayOption);
     });
 }
 
-// 그룹 필터링 함수 - 대소문자 구분 없는 검색
+
 function filterGroups(searchTerm) {
     const cards = document.querySelectorAll('.card');
     
@@ -133,7 +133,7 @@ function filterGroups(searchTerm) {
     });
 }
 
-// 표시 옵션 업데이트 함수
+
 function updateDisplayOption() {
     const selectedOption = document.querySelector('input[name="displayOption"]:checked').value;
     const cards = document.querySelectorAll('.card');
@@ -142,12 +142,12 @@ function updateDisplayOption() {
         const titleElement = card.querySelector('.card-title');
         const originalText = titleElement.dataset.originalText || titleElement.textContent;
         
-        // 원본 텍스트 저장 (한 번만)
+
         if (!titleElement.dataset.originalText) {
             titleElement.dataset.originalText = originalText;
         }
         
-        // 선택된 옵션에 따라 텍스트 업데이트
+
         if (selectedOption === 'codeName') {
             titleElement.textContent = originalText;
             card.style.display = 'block';
@@ -167,24 +167,24 @@ function updateDisplayOption() {
         }
     });
     
-    // 검색 필터 적용 (삭제 그룹 필터와 함께 작동)
+
     const searchTerm = document.getElementById('dataDefinitionSearch').value.toLowerCase();
     filterGroups(searchTerm);
 }
 
-// 1. 그룹 카드 렌더링
+
 async function renderGroupCards() {
     const container = document.getElementById('definitionCardContainer');
     container.innerHTML = '';
 
     try {
-        // API에서 전체 데이터 가져오기
+
         
         allData = await getGroups();
         
         
         if (allData && allData.length > 0) {
-            // 전체 데이터를 그룹별로 분류
+
             const groupedData = {};
             
             allData.forEach(item => {
@@ -239,7 +239,7 @@ async function renderGroupCards() {
             groups.forEach(group => {
                 const card = document.createElement('div');
                 card.className = 'card';
-                card.dataset.cd = group.cd; // 데이터 속성으로 그룹 코드 저장
+                card.dataset.cd = group.cd;
                 
                 if (group.use_yn && group.use_yn.trim() === 'N') {
                     card.className = 'card inactive-group';
@@ -275,11 +275,11 @@ async function renderGroupCards() {
     }
 }
 
-// 2. 그룹 선택 처리
+
 function selectGroup(group) {
     document.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
     
-    // 데이터 속성으로 정확한 카드 찾기
+
     const selectedCard = document.querySelector(`.card[data-cd="${group.cd}"]`);
     
     if (selectedCard) {
@@ -291,18 +291,18 @@ function selectGroup(group) {
     }
 }
 
-// 페이징 상태 관리
-let currentPage = 1;
-let itemsPerPage = 10; // 페이지당 표시 수량 (기본값)
-const itemsPerPageOptions = [5, 10, 20, 50, 100]; // 표시 수량 옵션
 
-// 3. 그룹 상세 정보 로드 및 렌더링
+let currentPage = 1;
+let itemsPerPage = 10;
+const itemsPerPageOptions = [5, 10, 20, 50, 100];
+
+
 async function loadGroupDetails(groupCd) {
     
     
-    // selectedRow 상태 초기화 (새 그룹을 선택하면 이전 선택된 행이 초기화됨)
+
     selectedRow = null;
-    currentPage = 1; // 페이지 초기화
+    currentPage = 1;
     
     const detailPanel = document.getElementById('detailPanel');
     const selectedGroupTitle = document.getElementById('selectedGroupTitle');
@@ -320,7 +320,7 @@ async function loadGroupDetails(groupCd) {
 
     updateDetailTableHeader();
 
-    // 페이징된 데이터 렌더링
+
     renderPagedDetails(groupDetails);
 
     detailPanel.style.display = 'block';
@@ -329,7 +329,7 @@ async function loadGroupDetails(groupCd) {
     if (buttonContainer) {
         buttonContainer.innerHTML = '';
         
-        // 표시 수량 콤보박스
+
         const itemsPerPageSelect = document.createElement('select');
         itemsPerPageSelect.style.cssText = 'padding: 5px 10px; border: 1px solid #ddd; border-radius: 4px; margin-right: 15px;';
         itemsPerPageOptions.forEach(option => {
@@ -391,10 +391,10 @@ async function loadGroupDetails(groupCd) {
         buttonContainer.appendChild(editBtn);
     }
     
-    // 페이징 버튼 추가 (테이블 하단)
+
     const detailTable = document.querySelector('#detailPanel table');
     if (detailTable && groupDetails.length > itemsPerPage) {
-        // 기존 페이징 컨테이너가 있으면 제거
+
         const existingPagination = document.getElementById('detailPagination');
         if (existingPagination) {
             existingPagination.remove();
@@ -406,7 +406,7 @@ async function loadGroupDetails(groupCd) {
         
         const totalPages = Math.ceil(groupDetails.length / itemsPerPage);
         
-        // 이전 페이지 버튼
+
         const prevBtn = document.createElement('button');
         prevBtn.textContent = '이전';
         prevBtn.className = 'btn';
@@ -420,7 +420,7 @@ async function loadGroupDetails(groupCd) {
             }
         });
         
-        // 페이지 번호 버튼
+
         const pageNumbersContainer = document.createElement('div');
         pageNumbersContainer.style.cssText = 'display: flex; gap: 5px;';
         
@@ -442,7 +442,7 @@ async function loadGroupDetails(groupCd) {
             pageNumbersContainer.appendChild(pageBtn);
         }
         
-        // 다음 페이지 버튼
+
         const nextBtn = document.createElement('button');
         nextBtn.textContent = '다음';
         nextBtn.className = 'btn';
@@ -466,29 +466,29 @@ async function loadGroupDetails(groupCd) {
     
 }
 
-// 페이징된 데이터 렌더링 함수 (정렬 상태 적용)
+
 function renderPagedDetails(groupDetails) {
     const detailTableBody = document.getElementById('detailTableBody');
     detailTableBody.innerHTML = '';
     
-    // 정렬 적용
+
     const sortedData = [...groupDetails].sort((a, b) => {
         const { column, direction } = detailSortState;
         let valA = a[column];
         let valB = b[column];
         
-        // null/undefined 처리
+
         if (valA === null || valA === undefined) valA = '';
         if (valB === null || valB === undefined) valB = '';
         
-        // 날짜 필드 (update_dt)
+
         if (column === 'update_dt') {
             const dateA = toKST(valA);
             const dateB = toKST(valB);
             return direction === 'asc' ? dateA - dateB : dateB - dateA;
         }
         
-        // 문자열 비교
+
         const strA = String(valA).toLowerCase();
         const strB = String(valB).toLowerCase();
         if (strA < strB) return direction === 'asc' ? -1 : 1;
@@ -512,7 +512,7 @@ function renderPagedDetails(groupDetails) {
     }
 }
 
-// 페이징 버튼 업데이트 함수
+
 function updatePagination(groupDetails) {
     const paginationContainer = document.getElementById('detailPagination');
     if (!paginationContainer) {
@@ -522,7 +522,7 @@ function updatePagination(groupDetails) {
     const totalPages = Math.ceil(groupDetails.length / itemsPerPage);
     const pageNumbersContainer = paginationContainer.querySelector('div:nth-child(2)');
     
-    // 페이지 번호 버튼 업데이트
+
     const pageButtons = pageNumbersContainer.querySelectorAll('button');
     pageButtons.forEach((btn, index) => {
         const pageNumber = index + 1;
@@ -539,14 +539,14 @@ function updatePagination(groupDetails) {
         }
     });
     
-    // 이전/다음 버튼 상태 업데이트
+
     const prevBtn = paginationContainer.querySelector('button:first-child');
     const nextBtn = paginationContainer.querySelector('button:last-child');
     prevBtn.disabled = currentPage === 1;
     nextBtn.disabled = currentPage === totalPages;
 }
 
-// 선택된 행 비활성화 함수
+
 async function deactivateSelectedItems() {
     const selectedCheckboxes = document.querySelectorAll('#detailTableBody input[type="checkbox"]:checked');
     const selectedItems = [];
@@ -568,16 +568,16 @@ async function deactivateSelectedItems() {
         }
         
         showToast(`선택된 ${selectedItems.length}개의 항목이 비활성화되었습니다.`, TOAST_TYPES.SUCCESS);
-        allData = await getGroups(); // 전역 데이터 재로드
+        allData = await getGroups();
         await loadGroupDetails(selectedGroup.cd);
-        await renderGroupCards(); // 그룹 카드 리로드
+        await renderGroupCards();
     } catch (error) {
         
         showToast('항목 비활성화에 실패했습니다.', TOAST_TYPES.ERROR);
     }
 }
 
-// 상세 테이블 헤더 업데이트 함수 (체크박스 열 추가 + 정렬 가능)
+
 function updateDetailTableHeader() {
     const detailTable = document.querySelector('#detailPanel table');
     const thead = detailTable.querySelector('thead');
@@ -625,7 +625,7 @@ function updateDetailTableHeader() {
     thead.appendChild(headerRow);
 }
 
-// 상세 테이블 정렬 처리 함수
+
 function handleDetailSort(column) {
     if (detailSortState.column === column) {
         detailSortState.direction = detailSortState.direction === 'asc' ? 'desc' : 'asc';
@@ -634,13 +634,13 @@ function handleDetailSort(column) {
         detailSortState.direction = 'asc';
     }
     
-    // 현재 그룹 데이터 다시 렌더링
+
     if (selectedGroup) {
         loadGroupDetails(selectedGroup.cd);
     }
 }
 
-// 전체 체크박스 토글 함수
+
 function toggleAllCheckboxes() {
     const headerCheckbox = document.getElementById('headerCheckbox');
     const rowCheckboxes = document.querySelectorAll('#detailTableBody input[type="checkbox"]');
@@ -652,7 +652,7 @@ function toggleAllCheckboxes() {
     updateActionButtons();
 }
 
-// 선택된 행 활성화 함수
+
 async function activateSelectedItems() {
     const selectedCheckboxes = document.querySelectorAll('#detailTableBody input[type="checkbox"]:checked');
     const selectedItems = [];
@@ -674,16 +674,16 @@ async function activateSelectedItems() {
         }
         
         showToast(`선택된 ${selectedItems.length}개의 항목이 활성화되었습니다.`, TOAST_TYPES.SUCCESS);
-        allData = await getGroups(); // 전역 데이터 재로드
+        allData = await getGroups();
         await loadGroupDetails(selectedGroup.cd);
-        await renderGroupCards(); // 그룹 카드 리로드
+        await renderGroupCards();
     } catch (error) {
         
         showToast('항목 활성화에 실패했습니다.', TOAST_TYPES.ERROR);
     }
 }
 
-// 4. 상세 행 렌더링 (use_yn에 따른 시각적 구분 포함)
+
 function renderDetailRow(item) {
     const row = document.createElement('tr');
     
@@ -703,7 +703,7 @@ function renderDetailRow(item) {
         selectDetailRow(row, item);
     });
     
-    // 더블 클릭 이벤트: 수정 모달 직접 열기
+
     row.addEventListener('dblclick', (e) => {
         if (e.target.tagName === 'INPUT' && e.target.type === 'checkbox') {
             return;
@@ -726,7 +726,7 @@ function renderDetailRow(item) {
     return row;
 }
 
-// 5. 상세 행 선택 처리
+
 function selectDetailRow(row, item) {
     document.querySelectorAll('#detailTableBody tr').forEach(r => r.style.backgroundColor = '');
     
@@ -736,7 +736,7 @@ function selectDetailRow(row, item) {
     updateActionButtons();
 }
 
-// 6. 액션 버튼 상태 업데이트
+
 function updateActionButtons() {
     const editBtn = document.getElementById('editBtn');
     const activateBtn = document.getElementById('activateBtn');
@@ -767,11 +767,11 @@ function updateActionButtons() {
         }
     }
     
-    // 최종 상태 로그 추가
+
     
 }
 
-// 7. 이벤트 리스너 설정
+
 function setupEventListeners() {
     if (setupEventListeners.hasRun) {
         return;
@@ -792,9 +792,9 @@ function setupEventListeners() {
 }
 setupEventListeners.hasRun = false;
 
-// 8. 그룹 액션 버튼 설정
+
 function setupGroupActionButtons() {
-    // setupGroupActionButtons.hasRun 플래그 제거하여 항상 이벤트 리스너를 재설정하도록 변경
+
     
     
     const addGroupBtn = document.getElementById('addGroupBtn');
@@ -807,25 +807,25 @@ function setupGroupActionButtons() {
     
 
     if (addGroupBtn) {
-        // 기존 이벤트 리스너 제거 후 새로 추가
+
         addGroupBtn.removeEventListener('click', handleAddGroupClick);
         addGroupBtn.addEventListener('click', handleAddGroupClick);
     }
 
     if (editGroupBtn) {
-        // 기존 이벤트 리스너 제거 후 새로 추가
+
         editGroupBtn.removeEventListener('click', handleEditGroupClick);
         editGroupBtn.addEventListener('click', handleEditGroupClick);
     }
 
     if (deleteGroupBtn) {
-        // 기존 이벤트 리스너 제거 후 새로 추가
+
         deleteGroupBtn.removeEventListener('click', handleDeleteGroupClick);
         deleteGroupBtn.addEventListener('click', handleDeleteGroupClick);
     }
 }
 
-// 그룹 액션 버튼 클릭 핸들러 함수들
+
 function handleAddGroupClick() {
     
     showAddGroupModal();
@@ -847,7 +847,7 @@ function handleDeleteGroupClick() {
     }
 }
 
-// 9. 그룹 추가 모달 표시 (tb_con_mst 스키마 기반)
+
 async function showAddGroupModal() {
     if (window.isModalOpen === true) {
         
@@ -912,7 +912,7 @@ async function showAddGroupModal() {
                     alert('그룹이 활성화되었습니다.');
                     window.isModalOpen = false;
                     document.body.removeChild(modal);
-                    allData = await getGroups(); // 전역 데이터 재로드
+                    allData = await getGroups();
                     await renderGroupCards();
                 } catch (error) {
                     
@@ -945,7 +945,7 @@ async function showAddGroupModal() {
                 alert('새 그룹이 추가되었습니다.');
                 window.isModalOpen = false;
                 document.body.removeChild(modal);
-                allData = await getGroups(); // 전역 데이터 재로드
+                allData = await getGroups();
                 await renderGroupCards();
             } catch (error) {
                 
@@ -970,7 +970,7 @@ async function showAddGroupModal() {
         } else {
             const cdClNum = parseInt(cdClValue);
             
-            // 10만 단위(5자리) 이상 체크
+
             if (cdClNum >= 10000) {
                 document.getElementById('newGroupCdClMaxError').style.display = 'block';
                 document.getElementById('newGroupCdClFormatError').style.display = 'none';
@@ -1003,7 +1003,7 @@ async function showAddGroupModal() {
         } else {
             const cdNum = parseInt(cdValue);
             
-            // 10만 단위(5자리) 이상 체크
+
             if (cdNum >= 10000) {
                 document.getElementById('newGroupCdMaxError').style.display = 'block';
                 document.getElementById('newGroupCdRangeError').style.display = 'none';
@@ -1046,21 +1046,21 @@ async function showAddGroupModal() {
     document.getElementById('newGroupNm').addEventListener('input', validateAddGroupModal);
 }
 
-// 10. 그룹 수정 모달 표시
+
 async function showEditGroupModal(group) {
     try {
         if (!allData) {
             allData = await getGroups();
         }
         
-        // groupHeader를 찾을 때 대소문자 구분 없이 검색하거나 더 정확한 조건 사용
+
         const groupHeader = allData.find(item => 
             item.cd_cl === group.cd && item.cd === group.cd
         );
         
         
         
-        // groupHeader가 없을 경우 직접 API 호출로 그룹 헤더 데이터를 가져오기
+
         let safeGroupHeader = groupHeader;
         if (!safeGroupHeader) {
             
@@ -1109,7 +1109,7 @@ async function showEditGroupModal(group) {
                 try {
                     await updateGroup(group.cd, updateData);
                     
-                    // 그룹을 활성화(Y)할 때 하위 데이터도 활성화(Y)로 변경
+
                     if (use_yn === 'Y') {
                         const groupDetails = allData.filter(item => item.cd_cl === group.cd && item.cd !== group.cd);
                         for (const detail of groupDetails) {
@@ -1118,7 +1118,7 @@ async function showEditGroupModal(group) {
                     }
                     
                     alert('그룹이 수정되었습니다.');
-                    allData = await getGroups(); // 전역 데이터 재로드
+                    allData = await getGroups();
                     await renderGroupCards();
                 } catch (error) {
                     
@@ -1132,7 +1132,7 @@ async function showEditGroupModal(group) {
     }
 }
 
-// 11. 그룹 삭제 확인 표시
+
 async function showDeleteGroupConfirm(group) {
     const confirmDelete = confirm(
         `그룹 코드: ${group.cd}\n그룹 명칭: ${group.cd_nm}\n\n이 그룹을 삭제하시겠습니까?\n(그룹 내 모든 데이터가 사용안함으로 변경됩니다)`
@@ -1142,14 +1142,14 @@ async function showDeleteGroupConfirm(group) {
             try {
                 await deleteGroup(group.cd);
                 alert('그룹이 사용안함으로 변경되었습니다.');
-                allData = await getGroups(); // 전역 데이터 재로드
+                allData = await getGroups();
                 await renderGroupCards();
-                // 상세 패널 숨기기 (그룹이 삭제되면 상세 정보도 숨김)
+
                 const detailPanel = document.getElementById('detailPanel');
                 if (detailPanel) {
                     detailPanel.style.display = 'none';
                 }
-                // 선택된 그룹 상태 초기화
+
                 selectedGroup = null;
                 selectedRow = null;
             } catch (error) {
@@ -1159,22 +1159,22 @@ async function showDeleteGroupConfirm(group) {
     }
 }
 
-// 12. 수정 모달 표시
+
 async function showEditModal(item) {
     try {
         
         let groupItemFields = [];
         
-        // allData가 없거나 유효하지 않은 경우 API로 다시 가져오기
+
         if (!allData || !Array.isArray(allData) || allData.length === 0) {
             
             allData = await getGroups();
         }
         
-        // groupHeader 찾기
+
         let groupHeader = allData.find(header => header.cd_cl === item.cd_cl && header.cd === item.cd_cl);
         
-        // groupHeader를 찾지 못한 경우 API로 직접 가져오기
+
         if (!groupHeader) {
             
             const response = await fetch(`/api/data_definition/groups`);
@@ -1231,9 +1231,9 @@ async function showEditModal(item) {
                 try {
                     await updateDetail(item.cd, updateData);
                     alert('데이터가 수정되었습니다.');
-                    allData = await getGroups(); // 전역 데이터 재로드
+                    allData = await getGroups();
                     await loadGroupDetails(selectedGroup.cd);
-                    await renderGroupCards(); // 그룹 카드 리로드
+                    await renderGroupCards();
                 } catch (error) {
                     
                     alert('데이터 수정에 실패했습니다.');
@@ -1246,7 +1246,7 @@ async function showEditModal(item) {
     }
 }
 
-// 14. 상세 항목 추가 모달 표시
+
 async function showAddDetailModal(group) {
     try {
         let groupItemFields = [];
@@ -1268,11 +1268,11 @@ async function showAddDetailModal(group) {
             });
         }
 
-        // 현재 그룹의 사용 중인 CD 목록 분석
+
         const groupDetails = allData.filter(item => item.cd_cl === group.cd && item.cd !== group.cd);
         const groupNum = parseInt(group.cd.replace('CD', ''));
         
-        // 사용 중인 CD 숫자 목록 추출 (CD 접두사 제거)
+
         const usedCodes = new Set();
         groupDetails.forEach(item => {
             const codeNum = parseInt(item.cd.replace('CD', ''));
@@ -1281,7 +1281,7 @@ async function showAddDetailModal(group) {
             }
         });
 
-        // 첫 번째 빈 값 찾기 (groupNum+1 ~ groupNum+99)
+
         let nextAvailableCode = null;
         let firstEmptyCode = null;
         let maxUsedCode = groupNum;
@@ -1296,22 +1296,22 @@ async function showAddDetailModal(group) {
             }
         }
 
-        // 빈 값이 있으면 첫 번째 빈 값, 없으면 최대값+1
+
         if (firstEmptyCode !== null) {
             nextAvailableCode = firstEmptyCode;
         } else if (maxUsedCode < groupNum + 99) {
             nextAvailableCode = maxUsedCode + 1;
         }
 
-        // 모든 코드가 사용 중인지 확인 (nextAvailableCode가 null이면 모두 사용 중)
+
         const isAllCodesUsed = nextAvailableCode === null;
 
-        // 모달 생성 옵션
+
         const modalOptions = {
             title: `${group.cd} - ${group.cd_nm} 추가`,
             width: '1800px',
             saveText: '추가',
-            saveDisabled: isAllCodesUsed // 모두 사용 중이면 저장 버튼 비활성화
+            saveDisabled: isAllCodesUsed
         };
 
         const { modal, modalContent, saveBtn } = createModal(
@@ -1319,22 +1319,22 @@ async function showAddDetailModal(group) {
             modalOptions
         );
 
-        // 모든 코드가 사용 중이 아닌 경우에만 CD 입력 필드에 자동 값 설정
+
         if (!isAllCodesUsed && nextAvailableCode !== null) {
             const cdInput = document.getElementById('newDetailCd');
             if (cdInput) {
                 cdInput.value = nextAvailableCode;
-                // input 이벤트 트리거하여 검증 함수 실행
+
                 cdInput.dispatchEvent(new Event('input'));
             }
         }
 
         const cdInput = document.getElementById('newDetailCd');
-        // cdInput이 null일 수 있음 (모든 코드 사용 중일 때 disabled)
+
         if (!cdInput) {
             return;
         }
-        // 데이터 코드 검증 처리
+
         cdInput.addEventListener('input', debounce(() => {
             const cdValue = cdInput.value.trim();
             const cdNum = parseInt(cdValue);
@@ -1434,20 +1434,20 @@ async function showAddDetailModal(group) {
                 await createItem(newDetailData);
                 alert('새 데이터가 추가되었습니다.');
                 document.body.removeChild(modal);
-                allData = await getGroups(); // 전역 데이터 재로드
+                allData = await getGroups();
                 await loadGroupDetails(group.cd);
-                await renderGroupCards(); // 그룹 카드 리로드
+                await renderGroupCards();
                 
-                // 관리자 설정 데이터 캐시 갱신 (CD309 추가 후 기본설정과 차트/시각화 관리에 표시되도록)
+
                 
                 try {
-                    // dataManager의 refreshAdminSettings 함수를 사용하여 관리자 설정 데이터의 캐시를 갱신합니다.
+
                     await import('../../modules/common/dataManager.js').then(async (dataManager) => {
                         const refreshedData = await dataManager.refreshAdminSettings();
                         
                         
                         
-                        // 관리자 설정 페이지의 테이블 갱신
+
                         if (typeof window.loadPageData === 'function') {
                             
                             window.loadPageData();
@@ -1472,14 +1472,14 @@ async function showAddDetailModal(group) {
     }
 }
 
-// 그룹별 정의된 필드를 반환하는 함수
+
 function getDefinedFieldsForGroup(groupCd) {
     const groupCode = groupCd.substring(0, 4);
     
     return FIELD_DEFINITIONS[groupCode] || [];
 }
 
-// 그룹 코드 중복 체크 함수
+
 async function checkGroupCodeDuplicate(inputId) {
     const inputElement = document.getElementById(inputId);
     const errorElement = document.getElementById(inputId + 'Error');
@@ -1512,7 +1512,7 @@ async function checkGroupCodeDuplicate(inputId) {
     }
 }
 
-// 필드 라벨을 반환하는 함수
+
 function getFieldLabel(key) {
     return FIELD_LABELS[key] || key;
 }

@@ -1,13 +1,11 @@
-// @DOC_FILE: popupManagement.js
-// @DOC_DESC: 팝업 관리 탭 모듈
+
+
 
 import { showToast } from '../utils/toast.js';
 import { popupManagementApi } from '../services/api.js';
 import { getKSTNow, formatDate, formatDateTime } from '../modules/common/dateUtils.js';
 
-/**
- * 팝업 관리 탭 클래스
- */
+
 class PopupManagementTab {
     constructor() {
         this.elements = {
@@ -83,7 +81,7 @@ class PopupManagementTab {
 
         const saveBtn = document.getElementById('savePopupBtn');
         if (saveBtn) {
-            // 기존 이벤트 리스너 제거 후 새로 등록 (중복 방지)
+
             const newSaveBtn = saveBtn.cloneNode(true);
             saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
             newSaveBtn.addEventListener('click', () => this.savePopup());
@@ -97,7 +95,7 @@ class PopupManagementTab {
             });
         }
 
-        // 실시간 미리보기 이벤트 리스너 추가
+
         const liveUpdateFields = [
             'popupTitle', 'popupContent', 'popupLinkUrl',
             'popupWidth', 'popupHeight', 'popupBgColor'
@@ -204,14 +202,13 @@ class PopupManagementTab {
 
     async loadPopups() {
         try {
-            console.log('🔍 [PIPELINE] Frontend: loadPopups() 시작');
+
             const searchTerm = this.elements.searchInput ? this.elements.searchInput.value : '';
             const data = await popupManagementApi.getPopups(searchTerm, this.currentPage, this.itemsPerPage);
-            
-            console.log('🔍 [PIPELINE] Frontend: API 응답 데이터:', data);
-            console.log('🔍 [PIPELINE] Frontend: popups 개수:', data.popups?.length);
+
+
             if (data.popups && data.popups.length > 0) {
-                console.log('🔍 [PIPELINE] Frontend: 첫 번째 팝업:', data.popups[0]);
+
             }
 
             this.totalPopups = data.total || 0;
@@ -220,7 +217,7 @@ class PopupManagementTab {
             this.renderPopupTable(data.popups || []);
             this.renderPagination();
         } catch (error) {
-            console.error('🔍 [PIPELINE] Frontend: loadPopups() 실패:', error);
+
             showToast('팝업 목록 로드 실패: ' + error.message, 'error');
         }
     }
@@ -409,7 +406,7 @@ class PopupManagementTab {
             document.getElementById('popupStatus').value = 'ACTIVE';
             document.getElementById('popupHideDaysMax').value = 7;
 
-            // 기본 날짜 설정 (오늘 ~ 오늘+7일)
+
             document.getElementById('popupStartDate').value = this.getDefaultStartDate();
             document.getElementById('popupEndDate').value = this.getDefaultEndDate();
         }
@@ -417,7 +414,7 @@ class PopupManagementTab {
         form.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
         form.querySelectorAll('.field-error').forEach(el => el.remove());
 
-        // 초기 미리보기 업데이트
+
         this.updateLivePreview();
 
         this.elements.popupModal.style.display = 'block';
@@ -425,26 +422,24 @@ class PopupManagementTab {
     }
 
     populateForm(popup) {
-        console.log('🔍 [PIPELINE] Frontend: populateForm() 시작 - 받은 데이터:', popup);
+
         document.getElementById('popupId').value = popup.popup_id || '';
         document.getElementById('popupTitle').value = popup.titl || '';
         document.getElementById('popupContent').value = popup.cont || '';
         document.getElementById('popupLinkUrl').value = popup.lnk_url || '';
         
-        // 날짜 처리 - 다양한 형식 지원
+
         let startDateStr = '';
         let endDateStr = '';
         
         if (popup.start_dt) {
-            // ISO 8601 형식(2026-04-15T00:00:00) 또는 공백 구분(2026-04-15 00:00:00)
+
             startDateStr = popup.start_dt.split(/[T ]/)[0];
         }
         if (popup.end_dt) {
             endDateStr = popup.end_dt.split(/[T ]/)[0];
         }
-        
-        console.log('🔍 [PIPELINE] Frontend: 날짜 파싱 결과:', { startDateStr, endDateStr, raw_start: popup.start_dt, raw_end: popup.end_dt });
-        
+
         document.getElementById('popupStartDate').value = startDateStr;
         document.getElementById('popupEndDate').value = endDateStr;
         document.getElementById('popupWidth').value = popup.width || 400;
@@ -456,7 +451,7 @@ class PopupManagementTab {
 
         if (popup.img_path) {
             this.showImagePreview(popup.img_path);
-            // 이미지 URL을 미리보기에 설정
+
             const previewImage = document.getElementById('previewImage');
             if (previewImage) {
                 previewImage.src = popup.img_path;
@@ -466,7 +461,7 @@ class PopupManagementTab {
             this.clearImagePreview();
         }
         
-        // 수정 모드에서도 미리보기 업데이트
+
         this.updateLivePreview();
     }
 
@@ -504,7 +499,7 @@ class PopupManagementTab {
             }
         }
         
-        // 이미지 미리보기 업데이트
+
         if (this.uploadedImageFile && previewImage) {
             const reader = new FileReader();
             reader.onload = (e) => {
@@ -583,19 +578,13 @@ class PopupManagementTab {
         }
     }
 
-    /**
-     * 기본 시작일 반환 (오늘 날짜)
-     * @returns {string} YYYY-MM-DD
-     */
+    
     getDefaultStartDate() {
         const now = getKSTNow();
         return formatDate(now);
     }
 
-    /**
-     * 기본 종료일 반환 (오늘 + 7일)
-     * @returns {string} YYYY-MM-DD
-     */
+    
     getDefaultEndDate() {
         const now = getKSTNow();
         now.setDate(now.getDate() + 7);
@@ -603,7 +592,7 @@ class PopupManagementTab {
     }
 
     async savePopup() {
-        // 저장 버튼 중복 클릭 방지
+
         const saveBtn = document.getElementById('savePopupBtn');
         if (saveBtn && saveBtn.disabled) {
             return;
@@ -618,7 +607,7 @@ class PopupManagementTab {
             return;
         }
 
-        // 제목과 내용 빈 값 검증
+
         const title = document.getElementById('popupTitle').value.trim();
         const content = document.getElementById('popupContent').value.trim();
         if (!title || !content) {
@@ -629,7 +618,7 @@ class PopupManagementTab {
 
         const formData = new FormData();
 
-        // 날짜 처리 - 빈 값이면 기본값 사용
+
         const startDateInput = document.getElementById('popupStartDate').value;
         const endDateInput = document.getElementById('popupEndDate').value;
         const startDate = startDateInput || this.getDefaultStartDate();
@@ -687,10 +676,10 @@ class PopupManagementTab {
         try {
             const popup = await popupManagementApi.getPopup(popupId);
             
-            // 모달 열고 해당 팝업 데이터로 채우기
+
             this.openPopupModal(popupId);
             
-            // 미리보기 업데이트
+
             const previewTitle = document.getElementById('previewTitle');
             const previewContent = document.getElementById('previewContent');
             const previewLink = document.getElementById('previewLink');

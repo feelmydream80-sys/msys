@@ -1,4 +1,4 @@
-# service/auth_service.py
+                         
 from mapper.user_mapper import UserMapper
 from service.password_service import PasswordService
 
@@ -55,11 +55,11 @@ class AuthService:
         if not user:
             return False, "존재하지 않는 사용자입니다."
 
-        # 현재 비밀번호 확인
+                    
         if not PasswordService.check_password(current_password, user.get('user_pwd')):
             return False, "현재 비밀번호가 일치하지 않습니다."
 
-        # 새 비밀번호 해시화 및 업데이트
+                           
         hashed_new_password = PasswordService.hash_password(new_password)
         self.user_mapper.update_password(user_id, hashed_new_password)
 

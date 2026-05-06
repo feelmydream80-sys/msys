@@ -1,4 +1,4 @@
-# service/popup_service.py
+                          
 """
 Handles all business logic related to popup management.
 """
@@ -90,13 +90,13 @@ class PopupService:
         try:
             self.logger.info(f"Service: Creating new popup by user {user_id}")
             
-            # Validate required fields
+                                      
             required_fields = ['TITL', 'CONT', 'START_DT', 'END_DT']
             for field in required_fields:
                 if field not in data or not data[field]:
                     raise ValueError(f"Required field '{field}' is missing or empty")
             
-            # Add user_id as registrant
+                                       
             data['REG_USER_ID'] = user_id
             
             popup_id = self.popup_dao.insert_popup(data)
@@ -118,12 +118,12 @@ class PopupService:
         try:
             self.logger.info(f"Service: Updating popup {popup_id} by user {user_id}")
             
-            # Check if popup exists
+                                   
             existing_popup = self.popup_dao.get_popup_by_id(popup_id)
             if not existing_popup:
                 raise ValueError(f"Popup with ID {popup_id} not found")
             
-            # Add user_id as updater
+                                    
             data['UPD_USER_ID'] = user_id
             
             self.popup_dao.update_popup(popup_id, data)
@@ -143,7 +143,7 @@ class PopupService:
         try:
             self.logger.info(f"Service: Deleting popup {popup_id} by user {user_id}")
             
-            # Check if popup exists
+                                   
             existing_popup = self.popup_dao.get_popup_by_id(popup_id)
             if not existing_popup:
                 raise ValueError(f"Popup with ID {popup_id} not found")

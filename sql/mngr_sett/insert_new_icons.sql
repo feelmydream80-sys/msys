@@ -1,4 +1,4 @@
--- 새로운 아이콘 추가 (진행률, 성공률)
+
 INSERT INTO tb_icon (icon_cd, icon_nm, icon_expl, icon_dsp_yn) VALUES
 ('🔄', '진행률', '그룹 진행률 표시 아이콘', TRUE),
 ('🏆', '성공률', '그룹 성공률 표시 아이콘', TRUE)

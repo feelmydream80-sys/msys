@@ -1,12 +1,12 @@
-// 파일명: static/js/modules/eventLog.js
-// 주요 역할: 대시보드의 이벤트 로그 관련 기능을 담당합니다.
+
+
 
 import { showMessage, formatNumberWithCommas } from '../common/utils.js';
 import { initPagination } from '../ui_components/pagination.js';
 import { formatDate, setDefaultDates, getKSTNow } from '../common/dateUtils.js';
 import { displayMinMaxDates } from './ui.js';
 
-// @AI_MOD: 전역 이벤트 로그 배열을 let -> const로 변경하고, toast와 공유
+
 const eventLog = [];
 let allEventLogData = [];
 let eventLogStartDate = formatDate(getKSTNow());
@@ -15,11 +15,11 @@ let allAdminSettings = [];
 
 function formatDurationHr(start, end) {
     if (!start || !end) return '';
-    // KST 시간 문자열(YYYY-MM-DD HH:mm:ss)을 안전하게 파싱
+
     const parseKSTDateTime = (dateTimeStr) => {
         const parts = dateTimeStr.match(/(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2})/);
         if (!parts) return null;
-        // KST 기준으로 Date 객체 생성 (월은 0-based)
+
         return new Date(parseInt(parts[1]), parseInt(parts[2]) - 1, parseInt(parts[3]),
                        parseInt(parts[4]), parseInt(parts[5]), parseInt(parts[6]));
     };
@@ -44,7 +44,7 @@ function filterEventLogData(data, searchTerm, errorCodeMap = {}) {
         if (row.status && row.status.toLowerCase().includes(searchLower)) return true;
         if (row.rqs_info && row.rqs_info.toLowerCase().includes(searchLower)) return true;
 
-        // 동적 상태 매핑 (기본값 제공)
+
         const defaultStatusMap = {
             'CD901': { msg: '정상 수집', desc: '수집완료' },
             'CD902': { msg: '장애 발생', desc: '실패' },
@@ -67,26 +67,26 @@ function renderEventLogToasts(logs, errorCodeMap = {}) {
     const container = document.getElementById('event-log-ul');
     if (!container) return;
 
-    // Adjust container height based on page size
+
     const pageSizeSelect = document.getElementById('eventLogPageSize');
     const pageSize = pageSizeSelect ? parseInt(pageSizeSelect.value, 10) : 5;
-    const rowHeight = 28; // Approximate height of one log entry in pixels
-    const headerHeight = 32; // Height for the header row
+    const rowHeight = 28;
+    const headerHeight = 32;
     container.style.height = `${(pageSize * rowHeight) + headerHeight}px`;
 
-    // Clear previous logs
+
     container.innerHTML = '';
 
     const gridTemplateColumns = '160px 20px 60px 100px 100px 80px 80px 160px';
     const columnNames = ['시간', '', 'Job ID', '상태', '수집 건수', '성공률', '설명', '수집 시간'];
 
-    // Create Header
+
     const header = document.createElement('div');
     header.className = 'grid';
     header.style.gridTemplateColumns = gridTemplateColumns;
     header.style.paddingBottom = '4px';
-    header.style.borderBottom = '2px solid #e5e7eb'; // gray-200
-    header.style.fontWeight = '600'; // font-semibold
+    header.style.borderBottom = '2px solid #e5e7eb';
+    header.style.fontWeight = '600';
 
     columnNames.forEach(name => {
         const cell = document.createElement('div');
@@ -97,7 +97,7 @@ function renderEventLogToasts(logs, errorCodeMap = {}) {
     });
     container.appendChild(header);
 
-    // Create a container for data rows
+
     const grid = document.createElement('div');
     grid.className = 'grid';
     grid.style.gridTemplateColumns = gridTemplateColumns;
@@ -108,7 +108,7 @@ function renderEventLogToasts(logs, errorCodeMap = {}) {
         const status = row.status || '';
         const rqsInfo = row.rqs_info || '';
 
-        // --- 셀 생성을 위한 공통 변수 ---
+
         let icon = '🔔';
         let jobIdText = jobId;
         let statusText = status;
@@ -117,23 +117,23 @@ function renderEventLogToasts(logs, errorCodeMap = {}) {
         let descriptionText = '';
         let durationDisplayText = '';
 
-        // --- 날짜 포맷팅 ---
+
         const dt_str = row.start_dt;
         let mainTime = 'N/A';
         if (dt_str) {
-            // 서버에서 이미 KST로 변환된 문자열을 제공하므로, 그대로 사용합니다.
-            // JS의 Date 객체로 변환 시 발생하는 불필요한 시간대 재해석을 방지합니다.
+
+
             mainTime = dt_str;
         }
 
-        // --- 로그 유형에 따른 분기 처리 ---
+
         if (status.startsWith('AUTH_') || status === 'LOGIN_SUCCESS') {
-            // 인증 관련 이벤트 처리
+
             jobIdText = 'System';
             descriptionText = rqsInfo;
             
             const authStatusMap = {
-                'LOGIN_SUCCESS': '로그인 성공', // 이전 버전 호환용
+                'LOGIN_SUCCESS': '로그인 성공',
                 'AUTH_LOGIN_SUCCESS': '로그인 성공',
                 'AUTH_LOGIN_FAIL': '로그인 실패',
                 'AUTH_REGISTER': '가입 신청',
@@ -147,12 +147,12 @@ function renderEventLogToasts(logs, errorCodeMap = {}) {
             statusText = authStatusMap[status] || status;
 
         } else {
-            // 기존 데이터 수집 작업 로그 처리
+
             const adminSetting = Array.isArray(allAdminSettings)
                 ? (allAdminSettings.find(s => s.cd === jobId) || {})
                 : {};
             
-            // 기본 아이콘 매핑 (CD900번대 코드용)
+
             const defaultIconMap = {
                 'CD901': adminSetting.sr_success_icon_code || '🔔',
                 'CD902': adminSetting.cf_fail_icon_code || '🔔',
@@ -172,7 +172,7 @@ function renderEventLogToasts(logs, errorCodeMap = {}) {
                 }
             }
 
-            // 동적 상태 매핑 (기본값 제공)
+
             const defaultStatusMap = {
                 'CD901': { msg: '정상 수집', desc: '수집완료' },
                 'CD902': { msg: '장애 발생', desc: '실패' },
@@ -190,7 +190,7 @@ function renderEventLogToasts(logs, errorCodeMap = {}) {
             durationDisplayText = status === 'CD904' ? durationHr : `${durationHr}`;
         }
 
-        // --- 셀(Cell) 생성 및 값 할당 ---
+
         const timeCell = document.createElement('div');
         timeCell.className = 'font-monospace text-gray-500 text-sm whitespace-nowrap';
         timeCell.textContent = mainTime;
@@ -218,14 +218,14 @@ function renderEventLogToasts(logs, errorCodeMap = {}) {
         const descriptionCell = document.createElement('div');
         descriptionCell.className = 'text-gray-800 text-sm whitespace-nowrap text-center';
         descriptionCell.textContent = descriptionText;
-        descriptionCell.title = descriptionText; // 긴 설명은 툴팁으로 표시
+        descriptionCell.title = descriptionText;
 
         const durationCell = document.createElement('div');
         durationCell.className = 'text-gray-800 text-sm truncate text-center';
         durationCell.textContent = durationDisplayText;
         durationCell.title = durationDisplayText;
 
-        // --- 그리드에 셀 추가 ---
+
         grid.appendChild(timeCell);
         grid.appendChild(iconCell);
         grid.appendChild(jobIdCell);
@@ -257,7 +257,7 @@ export async function loadEventLogPage(page = 1) {
         
         const rawLogData = await res.json();
 
-        // 모든 사용자가 모든 로그를 볼 수 있도록 필터링 로직 제거
+
         allEventLogData = rawLogData;
         
         initPagination({
@@ -289,8 +289,8 @@ export function initEventLog(settings) {
     const startInput = document.getElementById('eventLogStartDate');
     const endInput = document.getElementById('eventLogEndDate');
     
-    // setDefaultDates를 사용하여 날짜 초기화
-    // eventLog는 다른 페이지와 달리 end_date가 오늘, start_date도 오늘로 시작해야 함
+
+
     if (startInput && endInput) {
         const today = getKSTNow();
         const todayStr = formatDate(today);
@@ -328,7 +328,7 @@ export function initEventLog(settings) {
         });
     }
 
-    // @AI_MOD: 'save-event-log-btn' 이벤트 리스너를 dashboard.js에서 여기로 이동
+
     const saveLogBtn = document.getElementById('save-event-log-btn');
     if (saveLogBtn) {
         saveLogBtn.addEventListener('click', async function() {
@@ -373,10 +373,7 @@ export function initEventLog(settings) {
     }
 }
 
-/**
- * @AI_ADD: 실시간 이벤트 토스트를 표시하는 함수 (dashboard.js에서 이동)
- * @param {object} eventData - 이벤트 데이터 객체 { jobId, eventType, message, icon, color, time }
- */
+
 export function showEventToast({ jobId, eventType, message, icon, color, time }) {
     const container = document.getElementById('event-toast-container');
     if (!container) return;
@@ -395,6 +392,6 @@ export function showEventToast({ jobId, eventType, message, icon, color, time })
     container.appendChild(toast);
     setTimeout(() => toast.remove(), 7000);
 
-    // 로그 배열에 저장 (다운로드용)
+
     eventLog.push({ jobId, eventType, message, icon, color, time });
 }

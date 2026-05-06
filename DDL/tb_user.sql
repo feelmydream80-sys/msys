@@ -1,6 +1,6 @@
--- Table: public.tb_user
 
--- DROP TABLE IF EXISTS public.tb_user;
+
+
 
 CREATE TABLE IF NOT EXISTS public.tb_user
 (

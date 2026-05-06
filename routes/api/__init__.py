@@ -85,9 +85,9 @@ def api_detail():
 
             rows = dashboard_service.get_raw_data(start_date, end_date, job_ids=allowed_job_ids, all_data=all_data)
 
-            # 날짜 객체를 KST 'YYYY-MM-DD HH:MI:SS' 형식의 문자열로 변환
+                                                          
             convert_datetime_fields_to_kst_str(rows)
-            # None 값을 빈 문자열로 변환
+                               
             for row in rows:
                 for key, value in row.items():
                     if value is None:
@@ -113,9 +113,9 @@ def get_mst_list_api():
                     'job_id': job['cd'],
                     'cd_nm': job.get('cd_nm', '-'),
                     'item2': job.get('item2', '-'),
-                    'use_yn': job.get('use_yn', 'Y'),  # use_yn 필드 추가
-                    'item6': job.get('item6', ''),  # cron 필드 추가
-                    'cd_desc': job.get('cd_desc', '')  # 설명 필드 추가
+                    'use_yn': job.get('use_yn', 'Y'),                
+                    'item6': job.get('item6', ''),              
+                    'cd_desc': job.get('cd_desc', '')            
                 })
             return jsonify(result), 200
     except Exception as e:
@@ -155,8 +155,8 @@ def api_raw_data():
         with get_db_connection() as conn:
             dashboard_service = DashboardService(conn)
 
-            # CRITICAL FIX: Raw Data API에서는 반드시 job_ids 파라미터를 지정해야 함
-            # job_ids가 없으면 사용자의 모든 허용 데이터를 반환하는데, 이는 보안 위험
+                                                                    
+                                                          
             if not requested_job_ids:
                 logging.warning(f"[RAW_DATA_API] job_ids parameter not specified - returning empty result for security")
                 return jsonify([]), 200
@@ -166,7 +166,7 @@ def api_raw_data():
                 logging.warning(f"[RAW_DATA_API] User has no permissions for requested jobs, returning empty result")
                 return jsonify([]), 200
 
-            # 권한 확인 로깅 추가
+                         
             user_id = user.get('user_id', 'Unknown') if user else 'NoUser'
             data_permissions = user.get('data_permissions', []) if user else []
             is_admin = user and 'mngr_sett' in user.get('permissions', [])
@@ -174,9 +174,9 @@ def api_raw_data():
 
             rows = dashboard_service.get_raw_data(start_date=start_date, end_date=end_date, all_data=all_data, job_ids=allowed_job_ids, user=user)
 
-            # 날짜 객체를 KST 'YYYY-MM-DD HH:MI:SS' 형식의 문자열로 변환
+                                                          
             convert_datetime_fields_to_kst_str(rows)
-            # None 값을 빈 문자열로 변환
+                               
             for row in rows:
                 for key, value in row.items():
                     if value is None:
@@ -189,20 +189,20 @@ def api_raw_data():
 
 @api_bp.route('/api/gemini', methods=['POST'])
 def gemini_proxy():
-    # 폐쇄망 환경으로 외부 API 호출 비활성화
+                             
     return jsonify({'error': '외부 API 호출이 비활성화되었습니다.'}), 503
-    # data = request.json
-    # headers = {
-    #     'Content-Type': 'application/json',
-    #     'x-goog-api-key': GEMINI_API_KEY
-    # }
-    # url = 'https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent'
-    # try:
-    #     resp = requests.post(url, headers=headers, json=data, verify=False)
-    #     resp.raise_for_status()
-    #     return jsonify(resp.json())
-    # except Exception as e:
-    #     return jsonify({'error': str(e), 'text': resp.text if 'resp' in locals() else ''}), 500
+                         
+                 
+                                             
+                                          
+       
+                                                                                                  
+          
+                                                                             
+                                 
+                                     
+                            
+                                                                                                 
 
 @api_bp.route('/api_test')
 def api_test():
@@ -283,19 +283,19 @@ def get_statistics_config():
         with get_db_connection() as conn:
             analytics_dao = AnalyticsDAO(conn)
             
-            # 메뉴 목록 가져오기 (TB_MENU 테이블)
+                                      
             query = "SELECT MENU_ID, MENU_NM FROM TB_MENU ORDER BY MENU_ID;"
             with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
                 cur.execute(query)
                 menus = [dict(row) for row in cur.fetchall()]
             
-            # 연도 목록 가져오기 (TB_USER_ACS_LOG 테이블의 데이터가 있는 연도)
+                                                          
             query = "SELECT DISTINCT EXTRACT(YEAR FROM ACS_DT)::integer as year FROM TB_USER_ACS_LOG ORDER BY year DESC;"
             with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
                 cur.execute(query)
                 years = [row['year'] for row in cur.fetchall()]
             
-            # 아이콘 데이터 가져오기 (TB_ICON 테이블)
+                                        
             query = "SELECT ICON_ID, ICON_CD, ICON_NM, ICON_EXPL FROM TB_ICON WHERE ICON_DSP_YN = 'Y' ORDER BY ICON_ID;"
             with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
                 cur.execute(query)
@@ -328,7 +328,7 @@ def get_statistics_data():
             analytics_dao = AnalyticsDAO(conn)
             
             if view_type == 'daily':
-                # 일별 통계
+                       
                 if not start_date or not end_date:
                     start_date = end_date = analytics_dao.get_current_date_str()
                 
@@ -350,17 +350,17 @@ def get_statistics_data():
                 }), 200
                 
             elif view_type == 'weekly_monthly':
-                # 주별/월별 통계
+                          
                 if not year:
                     year = analytics_dao.get_current_year()
                 
                 weekly_stats = analytics_dao.get_menu_access_stats_weekly(year, menu_nm)
                 yearly_total = analytics_dao.get_yearly_total_stats(year, menu_nm)
                 
-                # 연간 차트 데이터 가져오기 (일별 데이터 기반으로 주별 집계)
+                                                    
                 yearly_chart_data = analytics_dao.get_menu_access_stats_weekly(year, menu_nm)
                 
-                # 주별 통계 데이터 구조화
+                               
                 structured_weekly_stats = []
                 monthly_data = {}
                 
@@ -386,14 +386,14 @@ def get_statistics_data():
                         'unique_user_count': stat['unique_user_count']
                     })
                 
-                # site_unique_user_count 추가 (주별 전체 순 방문자 수)
+                                                           
                 weekly_site_unique = analytics_dao.get_total_unique_users_by_week(year)
                 for month, weeks in monthly_data.items():
                     for week, week_data in weeks.items():
                         if (month, week) in weekly_site_unique:
                             week_data['site_unique_user_count'] = weekly_site_unique[(month, week)]
                 
-                # 구조화된 데이터를 리스트로 변환
+                                   
                 for month in sorted(monthly_data.keys()):
                     for week in sorted(monthly_data[month].keys()):
                         structured_weekly_stats.append(monthly_data[month][week])
@@ -405,7 +405,7 @@ def get_statistics_data():
                 }), 200
                 
             elif view_type == 'comparison':
-                # 연도별 비교 통계
+                           
                 if not year:
                     year = analytics_dao.get_current_year()
                 
@@ -418,11 +418,11 @@ def get_statistics_data():
                 this_year_total = analytics_dao.get_yearly_total_stats(this_year, menu_nm)
                 last_year_total = analytics_dao.get_yearly_total_stats(last_year, menu_nm)
                 
-                # 연간 차트 데이터 가져오기 (이번 년도와 작년)
+                                            
                 yearly_chart_data_this_year = analytics_dao.get_menu_access_stats_weekly(this_year, menu_nm)
                 yearly_chart_data_last_year = analytics_dao.get_menu_access_stats_weekly(last_year, menu_nm)
                 
-                # 주별 통계 데이터 구조화 (이번 년도)
+                                       
                 structured_this_year_stats = []
                 monthly_data = {}
                 
@@ -458,7 +458,7 @@ def get_statistics_data():
                     for week in sorted(monthly_data[month].keys()):
                         structured_this_year_stats.append(monthly_data[month][week])
                 
-                # 주별 통계 데이터 구조화 (작년)
+                                    
                 structured_last_year_stats = []
                 monthly_data = {}
                 
@@ -551,7 +551,7 @@ def download_statistics():
                 yearly_total = analytics_dao.get_yearly_total_stats(year, menu_nm)
                 yearly_chart_data = analytics_dao.get_menu_access_stats_weekly(year, menu_nm)
                 
-                # 주별 통계 데이터 구조화
+                               
                 structured_weekly_stats = []
                 monthly_data = {}
                 
@@ -577,14 +577,14 @@ def download_statistics():
                         'unique_user_count': stat['unique_user_count']
                     })
                 
-                # site_unique_user_count 추가 (주별 전체 순 방문자 수)
+                                                           
                 weekly_site_unique = analytics_dao.get_total_unique_users_by_week(year)
                 for month, weeks in monthly_data.items():
                     for week, week_data in weeks.items():
                         if (month, week) in weekly_site_unique:
                             week_data['site_unique_user_count'] = weekly_site_unique[(month, week)]
                 
-                # 구조화된 데이터를 리스트로 변환
+                                   
                 for month in sorted(monthly_data.keys()):
                     for week in sorted(monthly_data[month].keys()):
                         structured_weekly_stats.append(monthly_data[month][week])
@@ -611,7 +611,7 @@ def download_statistics():
                 yearly_chart_data_this_year = analytics_dao.get_menu_access_stats_weekly(this_year, menu_nm)
                 yearly_chart_data_last_year = analytics_dao.get_menu_access_stats_weekly(last_year, menu_nm)
                 
-                # 주별 통계 데이터 구조화 (이번 년도)
+                                       
                 structured_this_year_stats = []
                 monthly_data = {}
                 
@@ -647,7 +647,7 @@ def download_statistics():
                     for week in sorted(monthly_data[month].keys()):
                         structured_this_year_stats.append(monthly_data[month][week])
                 
-                # 주별 통계 데이터 구조화 (작년)
+                                    
                 structured_last_year_stats = []
                 monthly_data = {}
                 
@@ -711,27 +711,27 @@ def save_event_log():
         if not log_items:
             return jsonify({'error': 'No data received'}), 400
 
-        # log 디렉토리 생성 (없는 경우)
+                             
         log_dir = 'log'
         os.makedirs(log_dir, exist_ok=True)
 
-        # 파일명에 타임스탬프 추가 (DAO에서 제공)
+                                  
         with get_db_connection() as conn:
             analytics_dao = AnalyticsDAO(conn)
             timestamp = analytics_dao.get_timestamp_for_filename()
         file_path = os.path.join(log_dir, f'event_log_{timestamp}.txt')
 
-        # 텍스트 파일로 저장
+                    
         with open(file_path, 'w', encoding='utf-8') as f:
             for item in log_items:
                 row = item.get('changed_row', {})
                 job_id = row.get('job_id', '')
                 status = row.get('status', '')
                 
-                # Get status codes dynamically
+                                              
                 status_codes = get_status_codes()
 
-                # Create dynamic icon mapping
+                                             
                 icon_map = {}
                 for code, desc in status_codes.items():
                     if desc.upper() == 'SUCCESS':
@@ -743,7 +743,7 @@ def save_event_log():
                     elif desc.upper() == 'IN_PROGRESS':
                         icon_map[code] = '🔵'
                     else:
-                        icon_map[code] = '🔔'  # Default icon
+                        icon_map[code] = '🔔'                
 
                 icon = icon_map.get(status, '🔔')
 
@@ -760,7 +760,7 @@ def save_event_log():
                         success = total - fail
                         percent = round((success / total) * 100) if total > 0 else 0
 
-                # Create dynamic status mapping
+                                               
                 status_map = {}
                 for code, desc in status_codes.items():
                     if desc.upper() == 'SUCCESS':
@@ -803,9 +803,9 @@ def save_event_log():
         return jsonify({'error': str(e)}), 500
 
 
-# ==========================================
-# 상태 코드 색상 정보 API (TB_STS_CD_MST)
-# ==========================================
+                                            
+                                 
+                                            
 
 @api_bp.route('/api/sts_cd/colors', methods=['GET'])
 def get_sts_cd_colors():
@@ -834,7 +834,7 @@ def get_sts_cd_colors():
             """)
             results = cur.fetchall()
             
-            # JavaScript에서 사용하기 쉬운 형태로 변환
+                                         
             color_map = {}
             for row in results:
                 color_map[row['cd']] = {

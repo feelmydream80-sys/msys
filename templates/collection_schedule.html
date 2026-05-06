@@ -4,7 +4,7 @@
 
 {% block head %}
 <style id="page-specific-style">
-    /* Page-specific styles can go here if needed */
+    
     .heatmap-container { border: 1px solid #e5e7eb; border-radius: 8px; background-color: #ffffff; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); }
     .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; }
     .card-title { font-size: 1.25rem; font-weight: 600; }
@@ -26,12 +26,12 @@
         font-weight: 500;
         text-align: center;
         border: 1px solid transparent;
-        /* For text truncation */
+        
         text-overflow: ellipsis;
         white-space: nowrap;
         overflow: hidden;
         display: block;
-        max-width: 100%; /* Ensure it doesn't overflow its container */
+        max-width: 100%; 
     }
     .status-success { background-color: #dcfce7; color: #166534 !important; }
     .status-fail { background-color: #fee2e2; color: #991b1b !important; }
@@ -42,10 +42,10 @@
         position: relative;
         cursor: pointer;
         border-width: 2px;
-        border-style: solid; /* Default border style */
+        border-style: solid; 
         font-weight: bold;
-        white-space: normal; /* Allow multi-line content */
-        overflow: visible; /* Ensure content is not clipped */
+        white-space: normal; 
+        overflow: visible; 
         word-break: break-all;
     }
     .group-pill-summary.status-success { border-color: #166534; }
@@ -60,37 +60,35 @@
     }
     .popup {
         display: none;
-        position: absolute; /* Changed to absolute to display outside the card */
+        position: absolute; 
         background-color: #fff;
         border: 1px solid #d1d5db;
         border-radius: 8px;
         padding: 0.75rem;
-        z-index: 40; /* Lower z-index to be below nav menu (nav is z-50) */
+        z-index: 40; 
         width: max-content;
-        max-width: 660px; /* 5열 레이아웃에 적합한 너비로 증가 (10% 증가) */
+        max-width: 660px; 
         box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
         text-align: left;
         transition: opacity 0.2s;
     }
 
-    /* 팝업 내부 그리드 레이아웃 */
+    
     .popup .popup-content {
         display: grid;
-        grid-template-columns: repeat(5, 1fr); /* 5열 그리드 */
-        gap: 0.25rem; /* Job Pill 간격 최적화 */
+        grid-template-columns: repeat(5, 1fr); 
+        gap: 0.25rem; 
         margin-bottom: 0.75rem;
     }
 
-    /* .group-container:hover .popup {
-        display: block;
-    } */
+    
     .popup .job-pill {
-        margin-bottom: 0; /* 그리드 레이아웃에서 margin-bottom 제거 */
-        font-size: 0.75rem; /* Job Pill 글자 크기 조정 */
-        padding: 0.22rem 0.55rem; /* Job Pill 크기 10% 증가 */
+        margin-bottom: 0; 
+        font-size: 0.75rem; 
+        padding: 0.22rem 0.55rem; 
     }
 
-    /* 페이징 컨트롤 스타일 */
+    
     .popup .pagination {
         display: flex;
         justify-content: center;
@@ -183,7 +181,7 @@
         transform: rotate(-90deg);
     }
 
-    /* Progress Bar Styles */
+    
     .progress-bar-container {
         width: 100%;
         height: 8px;
@@ -198,16 +196,16 @@
         transition: width 0.3s ease;
     }
     .progress-bar-success {
-        background-color: #86efac; /* 파스텔 녹색 */
+        background-color: #86efac; 
     }
     .progress-bar-warning {
-        background-color: #fdba74; /* 파스텔 주황 */
+        background-color: #fdba74; 
     }
     .progress-bar-danger {
-        background-color: #fca5a5; /* 파스텔 빨강 */
+        background-color: #fca5a5; 
     }
 
-    /* Group expand/collapse */
+    
     .group-pill-summary .expand-icon {
         display: inline-block;
         transition: transform 0.2s;
@@ -262,14 +260,14 @@
             <button class="btn active" id="weekly-btn">주간</button>
             <button class="btn" id="monthly-btn">월간</button>
             {% endif %}
-            <!-- 주간/월간 네비게이션 -->
+            
             <div style="display: inline-flex; gap: 0.5rem; margin-left: 1rem; align-items: center;">
-                <!-- 주간 네비게이션 -->
+                
                 <div id="week-navigation" style="display: inline-flex; gap: 0.5rem;">
                     <button class="btn" id="prev-week-btn">← 지난 주</button>
                     <button class="btn" id="next-week-btn">다음 주 →</button>
                 </div>
-                <!-- 월간 네비게이션 (초기에는 숨김, JS에서 표시 제어) -->
+                
                 <div id="month-navigation" style="display: none; gap: 0.5rem; margin-left: 0.5rem;">
                     <button class="btn" id="prev-month-btn">← 지난달</button>
                     <button class="btn" id="next-month-btn">다음달 →</button>
@@ -325,11 +323,11 @@
             </div>
         </div>
         <div class="calendar-grid" id="calendar-grid">
-            <!-- Calendar content will be dynamically generated here -->
+            
         </div>
     </div>
 
-    <!-- Memo Popup -->
+    
     <div id="memo-popup" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
         <div class="bg-white rounded-lg shadow-xl p-6" style="width: 90vw; max-width: 800px; max-height: 90vh; overflow: auto;">
             <div class="flex justify-between items-center mb-4">
@@ -352,20 +350,20 @@
         </div>
     </div>
 
-    <!-- Guide Popup -->
+    
     <div id="guide-container" class="fixed bottom-8 right-8">
         <button id="guide-toggle-btn" class="w-12 h-12 bg-gray-800 text-white rounded-full flex items-center justify-center shadow-lg text-2xl font-bold hover:bg-gray-900 transition-colors">?</button>
         <div id="guide-popup" class="hidden absolute bottom-full mb-3 right-0 w-80 bg-white border border-gray-300 rounded-lg shadow-xl p-4 text-sm">
             <div class="mb-4">
                 <h4 class="font-bold text-base text-gray-800 mb-2">그룹 항목 색상</h4>
                 <ul id="group-status-guide" class="space-y-1">
-                    <!-- Content will be dynamically generated by JavaScript -->
+                    
                 </ul>
             </div>
             <div class="pt-3 border-t">
                 <h4 class="font-bold text-base text-gray-800 mb-2">상세 데이터</h4>
                 <ul id="detail-status-guide" class="space-y-1">
-                    <!-- Content will be dynamically generated by JavaScript -->
+                    
                 </ul>
             </div>
         </div>

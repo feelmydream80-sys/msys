@@ -10,7 +10,7 @@ function highlightActiveNavLink() {
     let bestMatch = null;
     let exactMatch = null;
 
-    // Find an exact match first
+
     links.forEach(link => {
         if (link.pathname === currentPath) {
             exactMatch = link;
@@ -20,7 +20,7 @@ function highlightActiveNavLink() {
     if (exactMatch) {
         bestMatch = exactMatch;
     } else {
-        // If no exact match, find the best partial match (longest path)
+
         links.forEach(link => {
             if (link.pathname !== '/' && currentPath.startsWith(link.pathname)) {
                 if (!bestMatch || link.pathname.length > bestMatch.pathname.length) {
@@ -30,18 +30,18 @@ function highlightActiveNavLink() {
         });
     }
     
-    // Fallback to root if no other match is found
+
     if (!bestMatch && currentPath === '/') {
         bestMatch = document.querySelector('a.nav-link[href="/"]');
     }
 
-    // Remove active class from all links first
+
     links.forEach(link => {
         link.classList.remove('bg-blue-900');
         link.classList.add('hover:bg-blue-700');
     });
 
-    // Apply active class to the best match
+
     if (bestMatch) {
         bestMatch.classList.add('bg-blue-900');
         bestMatch.classList.remove('hover:bg-blue-700');

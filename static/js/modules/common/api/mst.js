@@ -1,13 +1,10 @@
-// static/js/modules/common/api/mst.js
+
 import { showMessage } from '../utils.js';
 import { updateApiStatus } from './client.js';
 
 const BASE_URL = '';
 
-/**
- * @AI_NOTE: 모든 마스터 목록 데이터를 가져옵니다.
- * @returns {Promise<Array<Object>>} 마스터 목록 데이터 배열
- */
+
 export async function fetchAllMstList() {
     const apiName = "mstListFetch";
     updateApiStatus(apiName, "apiCallAttempted", true);
@@ -28,7 +25,7 @@ export async function fetchAllMstList() {
         updateApiStatus(apiName, "apiResponseCount", data.length);
         return data;
     } catch (error) {
-        console.error("마스터 목록 데이터 로드 실패:", error);
+
         showMessage('마스터 목록 데이터 로드 실패: ' + error.message, 'error');
         updateApiStatus(apiName, "error", error.message);
         throw error;
@@ -36,7 +33,7 @@ export async function fetchAllMstList() {
 }
 
 export async function fetchJobMstInfo(jobIds) {
-    // jobIds: 배열
+
     const params = new URLSearchParams();
     if (jobIds && jobIds.length > 0) {
         params.append('job_ids', jobIds.join(','));

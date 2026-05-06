@@ -1,12 +1,9 @@
-// static/js/modules/popup/popupManager.js
+
 
 import { showToast } from '../../utils/toast.js';
 import { popupStorage } from './popupStorage.js';
 
-/**
- * 팝업 관리 클래스
- * Displays and manages popup windows
- */
+
 export class PopupManager {
     constructor() {
         this.popups = [];
@@ -16,34 +13,30 @@ export class PopupManager {
         this.isInitialized = false;
     }
 
-    /**
-     * 팝업 매니저 초기화 및 활성 팝업 조회
-     */
+    
     async init() {
         if (this.isInitialized) return;
 
-        // 만료된 숨김 상태 정리
+
         popupStorage.clearExpiredHidden();
 
-        // 스타일 주입
+
         this.createPopupStyles();
 
-        // 활성 팝업 조회
+
         await this.fetchActivePopups();
 
         this.isInitialized = true;
     }
 
-    /**
-     * API를 호출하여 활성 팝업 목록을 가져옵니다.
-     */
+    
     async fetchActivePopups() {
         try {
             const response = await fetch('/api/popups/active');
             
             if (!response.ok) {
                 if (response.status === 401) {
-                    console.warn('PopupManager: Unauthorized');
+
                     return;
                 }
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -55,31 +48,26 @@ export class PopupManager {
                 this.popups = data.popups.filter(popup => this.shouldShowPopup(popup));
                 this.currentIndex = 0;
 
-                // 첫 번째 팝업 표시
+
                 if (this.popups.length > 0) {
                     this.showNextPopup();
                 }
             }
         } catch (error) {
-            console.error('PopupManager: Failed to fetch active popups', error);
+
         }
     }
 
-    /**
-     * 팝업을 표시해야 하는지 확인합니다.
-     * @param {Object} popup - 팝업 객체
-     * @param {string} popup.id - 팝업 ID
-     * @returns {boolean} 표시해야 하면 true
-     */
+    
     shouldShowPopup(popup) {
         if (!popup || !popup.id) return false;
 
-        // localStorage에 숨김 상태가 있는지 확인
+
         if (popupStorage.isPopupHidden(popup.id)) {
             return false;
         }
 
-        // 시작/종료 시간 확인
+
         const now = new Date();
         
         if (popup.start_date) {
@@ -95,19 +83,16 @@ export class PopupManager {
         return true;
     }
 
-    /**
-     * 단일 팝업을 표시합니다.
-     * @param {Object} popup - 팝업 객체
-     */
+    
     showPopup(popup) {
         if (!popup) return;
 
-        // 이미 표시 중인 팝업이 있으면 닫기
+
         if (this.currentPopupElement) {
             this.closeCurrentPopup(false);
         }
 
-        // 오버레이 생성
+
         this.overlayElement = document.createElement('div');
         this.overlayElement.className = 'popup-overlay';
         this.overlayElement.addEventListener('click', (e) => {
@@ -116,33 +101,31 @@ export class PopupManager {
             }
         });
 
-        // 팝업 컨테이너 생성
+
         const popupContainer = document.createElement('div');
         popupContainer.className = 'popup-container';
         popupContainer.innerHTML = this.renderPopupHTML(popup);
 
-        // 오버레이에 팝업 추가
+
         this.overlayElement.appendChild(popupContainer);
         document.body.appendChild(this.overlayElement);
 
         this.currentPopupElement = popupContainer;
 
-        // 이벤트 리스너 설정
+
         this.setupEventListeners(popup);
 
-        // 애니메이션을 위한 타이밍
+
         requestAnimationFrame(() => {
             this.overlayElement.classList.add('active');
             popupContainer.classList.add('active');
         });
 
-        // 팝업 표시 카운트 증가 API 호출 (선택적)
+
         this.trackPopupView(popup.id);
     }
 
-    /**
-     * 다음 팝업을 표시합니다.
-     */
+    
     showNextPopup() {
         if (this.currentIndex >= this.popups.length) {
             this.currentIndex = 0;
@@ -153,25 +136,22 @@ export class PopupManager {
         this.showPopup(popup);
     }
 
-    /**
-     * 현재 팝업을 닫습니다.
-     * @param {boolean} hideToday - 오늘 하루 숨김 여부
-     */
+    
     closeCurrentPopup(hideToday = false) {
         if (!this.currentPopupElement || !this.overlayElement) return;
 
         const currentPopup = this.popups[this.currentIndex];
 
-        // 오늘 하루 숨김 처리
+
         if (hideToday && currentPopup) {
             popupStorage.setPopupHidden(currentPopup.id, 24);
         }
 
-        // 애니메이션 효과
+
         this.currentPopupElement.classList.remove('active');
         this.overlayElement.classList.remove('active');
 
-        // 애니메이션 후 DOM에서 제거
+
         setTimeout(() => {
             if (this.overlayElement) {
                 this.overlayElement.remove();
@@ -179,7 +159,7 @@ export class PopupManager {
                 this.currentPopupElement = null;
             }
 
-            // 다음 팝업 표시
+
             this.currentIndex++;
             if (this.currentIndex < this.popups.length) {
                 setTimeout(() => this.showNextPopup(), 300);
@@ -187,15 +167,11 @@ export class PopupManager {
         }, 300);
     }
 
-    /**
-     * 팝업 HTML을 생성합니다.
-     * @param {Object} popup - 팝업 객체
-     * @returns {string} HTML 문자열
-     */
+    
     renderPopupHTML(popup) {
         const { id, title, content, type = 'text', image_url, link_url, link_text } = popup;
 
-        // 이미지 타입 팝업
+
         if (type === 'image' && image_url) {
             return `
                 <div class="popup-header">
@@ -226,7 +202,7 @@ export class PopupManager {
             `;
         }
 
-        // 텍스트 타입 팝업 (기본)
+
         return `
             <div class="popup-header">
                 <h3 class="popup-title">${this.escapeHtml(title || '')}</h3>
@@ -249,14 +225,11 @@ export class PopupManager {
         `;
     }
 
-    /**
-     * 이벤트 리스너를 설정합니다.
-     * @param {Object} popup - 팝업 객체
-     */
+    
     setupEventListeners(popup) {
         if (!this.currentPopupElement) return;
 
-        // 닫기 버튼
+
         const closeButtons = this.currentPopupElement.querySelectorAll('[data-action="close"]');
         closeButtons.forEach(btn => {
             btn.addEventListener('click', () => {
@@ -266,7 +239,7 @@ export class PopupManager {
             });
         });
 
-        // 링크 클릭 추적
+
         const linkElements = this.currentPopupElement.querySelectorAll('[data-popup-id]');
         linkElements.forEach(link => {
             link.addEventListener('click', () => {
@@ -274,7 +247,7 @@ export class PopupManager {
             });
         });
 
-        // ESC 키로 닫기
+
         const escHandler = (e) => {
             if (e.key === 'Escape') {
                 const hideCheckbox = this.currentPopupElement.querySelector(`#hide-today-${popup.id}`);
@@ -286,17 +259,15 @@ export class PopupManager {
         document.addEventListener('keydown', escHandler);
     }
 
-    /**
-     * 팝업 CSS 스타일을 주입합니다.
-     */
+    
     createPopupStyles() {
-        // 이미 스타일이 주입되어 있으면 리턴
+
         if (document.getElementById('popup-manager-styles')) return;
 
         const styleElement = document.createElement('style');
         styleElement.id = 'popup-manager-styles';
         styleElement.textContent = `
-            /* Popup Overlay */
+            
             .popup-overlay {
                 position: fixed;
                 top: 0;
@@ -317,7 +288,7 @@ export class PopupManager {
                 opacity: 1;
             }
 
-            /* Popup Container */
+            
             .popup-container {
                 background-color: var(--color-surface, #ffffff);
                 border-radius: 12px;
@@ -338,7 +309,7 @@ export class PopupManager {
                 opacity: 1;
             }
 
-            /* Popup Header */
+            
             .popup-header {
                 display: flex;
                 justify-content: space-between;
@@ -377,7 +348,7 @@ export class PopupManager {
                 color: var(--color-text-primary, #1f2937);
             }
 
-            /* Popup Body */
+            
             .popup-body {
                 padding: 1.25rem;
                 overflow-y: auto;
@@ -393,7 +364,7 @@ export class PopupManager {
                 word-break: break-word;
             }
 
-            /* Popup Image */
+            
             .popup-image-body {
                 padding: 0;
             }
@@ -431,7 +402,7 @@ export class PopupManager {
                 font-size: 3rem;
             }
 
-            /* Popup Footer */
+            
             .popup-footer {
                 display: flex;
                 align-items: center;
@@ -443,7 +414,7 @@ export class PopupManager {
                 flex-wrap: wrap;
             }
 
-            /* Hide Today Checkbox */
+            
             .popup-hide-checkbox {
                 display: flex;
                 align-items: center;
@@ -491,7 +462,7 @@ export class PopupManager {
                 white-space: nowrap;
             }
 
-            /* Popup Buttons */
+            
             .popup-btn-close,
             .popup-btn-link {
                 padding: 0.5rem 1rem;
@@ -524,7 +495,7 @@ export class PopupManager {
                 border-color: var(--color-primary-hover, #2563eb);
             }
 
-            /* Responsive Design */
+            
             @media (max-width: 640px) {
                 .popup-overlay {
                     padding: 0.75rem;
@@ -574,11 +545,7 @@ export class PopupManager {
         document.head.appendChild(styleElement);
     }
 
-    /**
-     * HTML 특수문자를 이스케이프합니다.
-     * @param {string} text - 원본 텍스트
-     * @returns {string} 이스케이프된 텍스트
-     */
+    
     escapeHtml(text) {
         if (!text) return '';
         const div = document.createElement('div');
@@ -586,57 +553,43 @@ export class PopupManager {
         return div.innerHTML;
     }
 
-    /**
-     * 콘텐츠를 포맷팅합니다 (줄바꿈 처리 등).
-     * @param {string} content - 원본 콘텐츠
-     * @returns {string} 포맷팅된 콘텐츠
-     */
+    
     formatContent(content) {
         if (!content) return '';
         return this.escapeHtml(content);
     }
 
-    /**
-     * 팝업 조회를 추적합니다.
-     * @param {string} popupId - 팝업 ID
-     */
+    
     async trackPopupView(popupId) {
         try {
             await fetch(`/api/popups/${popupId}/view`, { method: 'POST' });
         } catch (error) {
-            // 조회 추적 실패는 무시
-            console.debug('PopupManager: Failed to track view', error);
+
+
         }
     }
 
-    /**
-     * 팝업 링크 클릭을 추적합니다.
-     * @param {string} popupId - 팝업 ID
-     */
+    
     async trackPopupClick(popupId) {
         try {
             await fetch(`/api/popups/${popupId}/click`, { method: 'POST' });
         } catch (error) {
-            // 클릭 추적 실패는 무시
-            console.debug('PopupManager: Failed to track click', error);
+
+
         }
     }
 
-    /**
-     * 모든 팝업을 즉시 닫습니다.
-     */
+    
     closeAll() {
         if (this.overlayElement) {
             this.overlayElement.remove();
             this.overlayElement = null;
             this.currentPopupElement = null;
         }
-        this.currentIndex = this.popups.length; // 더 이상 팝업을 표시하지 않도록 설정
+        this.currentIndex = this.popups.length;
     }
 
-    /**
-     * 팝업 매니저를 재설정합니다.
-     */
+    
     reset() {
         this.closeAll();
         this.popups = [];
@@ -645,10 +598,10 @@ export class PopupManager {
     }
 }
 
-// 싱글톤 인스턴스 제공
+
 export const popupManager = new PopupManager();
 
-// 전역 접근을 위한 window 객체 등록
+
 if (typeof window !== 'undefined') {
     window.PopupManager = PopupManager;
     window.popupManager = popupManager;

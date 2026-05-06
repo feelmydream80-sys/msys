@@ -51,9 +51,9 @@ class AnalysisService:
         
         return list(user_permissions)
 
-    # ==========================================
-    # 사용자접속정보 탭용 메서드
-    # ==========================================
+                                                
+                    
+                                                
 
     def get_user_list_with_stats(self, page: int = 1, page_size: int = 10, search_term: str = None, mode: str = 'all') -> Dict:
         """
@@ -71,13 +71,13 @@ class AnalysisService:
             dao = AnalyticsDAO(self.conn)
             result = dao.get_user_list_with_stats(page, page_size, search_term, mode)
             
-            # 사용자 데이터 가공
+                        
             for user in result['items']:
-                # 상태 계산
+                       
                 user['status_info'] = self._calculate_user_status(user)
-                # 이니셜 생성
+                        
                 user['initials'] = self._get_initials(user['user_id'])
-                # monthly_counts가 없으면 기본값 설정
+                                            
                 if 'monthly_counts' not in user:
                     user['monthly_counts'] = [0, 0, 0, 0, 0, 0]
                 
@@ -100,38 +100,38 @@ class AnalysisService:
         try:
             dao = AnalyticsDAO(self.conn)
             
-            # 기본 사용자 정보 (mode 전달)
+                                 
             user_list = dao.get_user_list_with_stats(page=1, page_size=1, search_term=user_id, mode=mode)
             if not user_list['items']:
                 raise ValueError(f"User not found: {user_id}")
             
             user = user_list['items'][0]
             
-            # 히트맵 데이터 (최근 6개월 주차별)
+                                  
             distinct_mode = (mode == 'distinct')
             heatmap = dao.get_user_weekly_heatmap(user_id, distinct_mode)
             
-            # 시간대별 분포
+                     
             hourly = dao.get_user_hourly_distribution(user_id)
             
-            # 최근 접속 로그
+                      
             logs = dao.get_user_recent_logs(user_id, limit=10)
             
-            # 월별 추이 데이터 (실제 월별 데이터 조회)
+                                      
             monthly_data = dao.get_user_monthly_heatmap(user_id, distinct_mode)
             
-            # 연속 접속일 계산
+                       
             streak = self._calculate_streak(logs)
             
-            # 지난 주/달 비교 데이터 (mode 전달)
+                                     
             weekly_prev = self._get_previous_period_count(user_id, 'week', distinct_mode)
             monthly_prev = self._get_previous_period_count(user_id, 'month', distinct_mode)
             
-            # monthly_counts에서 이번 달 값 추출 (첫 번째 요소)
+                                                  
             monthly_counts = user.get('monthly_counts', [0, 0, 0, 0, 0, 0])
             current_monthly = monthly_counts[0] if monthly_counts else 0
             
-            # 주간 데이터에서 이번 주 값 추출 (마지막 요소가 최신)
+                                             
             current_weekly = heatmap[-2] if len(heatmap) >= 2 and heatmap[-2] is not None else 0
             
             result = {
@@ -164,9 +164,9 @@ class AnalysisService:
         TB_CON_MST에서 CD991, CD992, CD993 임계값을 조회합니다.
         """
         default_thresholds = {
-            'cd991': 30,   # 최근 접속 기준 (일)
-            'cd992': 7,    # 활성 사용자 기준 (일)
-            'cd993': 90    # 휴 면 전환 기준 (일)
+            'cd991': 30,                 
+            'cd992': 7,                   
+            'cd993': 90                   
         }
         
         try:
@@ -208,11 +208,11 @@ class AnalysisService:
             return {'label': '미접속', 'cls': 'b-gray'}
         
         try:
-            # DB에서 임계값 조회
+                         
             thresholds = self._get_thresholds_from_db()
-            cd991 = thresholds['cd991']  # 최근 접속 기준
-            cd992 = thresholds['cd992']  # 활성 사용자 기준
-            cd993 = thresholds['cd993']  # 휴 면 전환 기준
+            cd991 = thresholds['cd991']            
+            cd992 = thresholds['cd992']             
+            cd993 = thresholds['cd993']             
             
             last_access = datetime.strptime(user['last_acs_dt'].split()[0], '%Y-%m-%d')
             today = datetime.now()
@@ -233,7 +233,7 @@ class AnalysisService:
         """
         사용자 ID에서 이니셜을 생성합니다.
         """
-        # user_id에서 알파벳만 추출하거나 기본값 반환
+                                     
         import re
         letters = re.findall(r'[a-zA-Z]', user_id)
         if letters:
@@ -271,7 +271,7 @@ class AnalysisService:
             distinct_mode: True인 경우 1일 1접속으로 계산 (COUNT DISTINCT DATE)
         """
         try:
-            # COUNT 표현식 결정
+                          
             count_expr = "COUNT(DISTINCT DATE(acs_dt))" if distinct_mode else "COUNT(*)"
             
             if period == 'week':
@@ -281,7 +281,7 @@ class AnalysisService:
                         AND acs_dt >= DATE_TRUNC('week', CURRENT_TIMESTAMP - INTERVAL '1 week')
                         AND acs_dt < DATE_TRUNC('week', CURRENT_TIMESTAMP)
                 """
-            else:  # month
+            else:         
                 query = f"""
                     SELECT {count_expr} as cnt FROM tb_user_acs_log
                     WHERE user_id = %s

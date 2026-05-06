@@ -533,4 +533,3 @@ INSERT INTO tb_col_mapp (
 
 COMMIT;
 
--- tb_col_mapp table data update completed

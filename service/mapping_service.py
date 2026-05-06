@@ -11,7 +11,7 @@ class MappingService:
 
     def add_mapping(self, mapping_data):
         """새로운 매핑을 추가합니다."""
-        # 간단한 유효성 검사
+                    
         if not mapping_data.get('new_tbl_nm') or not mapping_data.get('new_col_nm'):
             raise ValueError("새 테이블명과 새 컬럼명은 필수입니다.")
         
@@ -36,14 +36,14 @@ class MappingService:
         all_schema_columns = self.mapper.get_all_schema_columns()
         all_mappings = self.mapper.get_all_mappings()
 
-        # 매핑된 컬럼들을 빠르게 조회하기 위해 set으로 변환
+                                       
         mapped_columns = set()
         for mapping in all_mappings:
             mapped_columns.add((mapping['new_tbl_nm'], mapping['new_col_nm']))
 
         unmapped_columns = []
         for schema_col in all_schema_columns:
-            # 'tb_col_mapp' 테이블 자체는 매핑 대상에서 제외
+                                              
             if schema_col['table_name'] == 'tb_col_mapp':
                 continue
             

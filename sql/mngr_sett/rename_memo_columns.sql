@@ -1,4 +1,4 @@
---tb_data_clt_schd_sett 테이블의 미사용 컬럼을 메모 표시 색상으로 용도 변경
+
 ALTER TABLE tb_data_clt_schd_sett
     RENAME COLUMN prgs_icon_id TO memo_icon_id,
     RENAME COLUMN prgs_bg_colr TO memo_bg_colr,

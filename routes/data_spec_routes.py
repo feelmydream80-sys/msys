@@ -1,4 +1,4 @@
-# routes/data_spec_routes.py
+                            
 from flask import Blueprint, request, jsonify, render_template, session, current_app
 import logging
 from functools import wraps
@@ -10,9 +10,9 @@ from routes.admin_routes import log_menu_access
 
 bp = Blueprint('data_spec', __name__, url_prefix='/')
 
-# =============================================
-# 데이터 명세서 (Data Specification)
-# =============================================
+                                               
+                              
+                                               
 @bp.route('/data_spec')
 @login_required
 @log_menu_access
@@ -46,7 +46,7 @@ def handle_data_specs():
                 return jsonify({"message": "Data specification created successfully.", "spec_id": spec_id}), 201
         except ValueError as e:
             logging.warning(f"Failed to create spec: {e}")
-            return jsonify({"message": str(e)}), 400 # Bad Request
+            return jsonify({"message": str(e)}), 400              
         except Exception as e:
             logging.error(f"Error creating data spec: {e}", exc_info=True)
             return jsonify({"message": "Error creating data specification."}), 500
@@ -74,7 +74,7 @@ def check_data_spec_name():
     spec_id = int(spec_id_str) if spec_id_str and spec_id_str.isdigit() else None
 
     if not data_name:
-        return jsonify({"exists": False}), 200 # 이름이 없으면 중복이 아님
+        return jsonify({"exists": False}), 200                 
 
     try:
         with get_db_connection() as conn:
@@ -115,7 +115,7 @@ def handle_data_spec_by_id(spec_id):
                 return jsonify({"message": "Data specification updated successfully."}), 200
         except ValueError as e:
             logging.warning(f"Failed to update spec {spec_id}: {e}")
-            return jsonify({"message": str(e)}), 400 # Bad Request
+            return jsonify({"message": str(e)}), 400              
         except Exception as e:
             logging.error(f"Error updating data spec {spec_id}: {e}", exc_info=True)
             return jsonify({"message": "Error updating data specification."}), 500
@@ -127,7 +127,7 @@ def handle_data_spec_by_id(spec_id):
                 data = request.get_json(silent=True) or {}
                 password = data.get('password')
 
-                # 비밀번호가 없거나 빈 문자열인 경우 None으로 처리
+                                               
                 if not password:
                     password = None
 
@@ -138,7 +138,7 @@ def handle_data_spec_by_id(spec_id):
                 return jsonify({"message": "Data specification deleted successfully."}), 200
         except ValueError as e:
             logging.warning(f"Failed to delete spec {spec_id}: {e}")
-            return jsonify({"message": str(e)}), 403 # Forbidden
+            return jsonify({"message": str(e)}), 403            
         except Exception as e:
             logging.error(f"Error deleting data spec {spec_id}: {e}", exc_info=True)
             return jsonify({"message": "Error deleting data specification."}), 500

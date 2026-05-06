@@ -22,11 +22,11 @@ def should_exclude_job(job_id):
     
     job_id = str(job_id).upper().strip()
     
-    # CD 패턴 매칭
+              
     match = re.match(r'CD(\d+)', job_id)
     if match:
         cd_number = int(match.group(1))
-        # CD900~CD999 또는 100단위 제외
+                                 
         return (900 <= cd_number <= 999) or (cd_number % 100 == 0)
     
     return False
@@ -49,14 +49,14 @@ def validate_job_id_format(job_id):
     
     job_id = str(job_id).upper().strip()
     
-    # CD 패턴 매칭
+              
     match = re.match(r'CD(\d+)', job_id)
     if not match:
         return False, "Job ID는 'CD'로 시작하고 숫자가 따라와야 합니다."
     
     cd_number = int(match.group(1))
     
-    # 10만 단위(5자리) 이상 체크
+                       
     if cd_number >= 10000:
         return False, "그룹 코드는 CD1 ~ CD9999까지만 입력 가능합니다. (4자리 이하)"
     

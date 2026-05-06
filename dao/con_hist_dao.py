@@ -1,5 +1,5 @@
-# 파일명: dao/con_hist_dao.py
-# 주요 역할: tb_con_hist 테이블에 대한 데이터베이스 접근 객체 (DAO)
+                          
+                                               
 
 import logging
 from dao.sql_loader import load_sql
@@ -15,7 +15,7 @@ class ConHistDAO:
         대시보드 요약 데이터를 조회합니다.
         [KST 적용] DashboardSQL.get_dashboard_summary 쿼리를 사용합니다.
         """
-        # KST 시간대 변환이 적용된 새로운 SQL 함수를 호출합니다.
+                                            
         base_query = load_sql('dashboard/get_dashboard_summary.sql')
         conditions = []
         params = []
@@ -48,9 +48,9 @@ class ConHistDAO:
         [기존 기능 유지] 기간별 Job ID별 수집 성공률 추이 데이터를 조회합니다.
         (이 함수는 현재 html/JS에서 직접적으로 사용되지 않음)
         """
-        # job_ids를 SQL 쿼리 함수로 전달
-        # query, params = DashboardSQL.get_success_rate_trend_by_job(start_date, end_date, job_ids) # 만약 별도 함수가 있다면
-        # ... (UNUSED)
+                                
+                                                                                                                   
+                      
         return []
 
     def get_min_max_dates(self) -> Optional[Dict]:

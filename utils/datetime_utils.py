@@ -57,13 +57,13 @@ def is_within_schedule_grace_period(
     if not history_dt_utc:
         return False
 
-    # history_dt가 timezone 정보가 없으면 UTC로 설정
+                                          
     if history_dt_utc.tzinfo is None:
         history_dt_utc = pytz.utc.localize(history_dt_utc)
 
     history_dt_kst = utc_to_kst(history_dt_utc)
 
-    # 시간 차이가 허용 범위 내에 있는지 확인
+                            
     time_diff = abs(schedule_dt_aware - history_dt_kst)
     is_within_grace = time_diff <= timedelta(minutes=grace_minutes)
     current_app.logger.debug(f"Comparing schedule {schedule_dt_aware} with history {history_dt_kst}. "
@@ -108,7 +108,7 @@ def get_kst_now() -> datetime:
     kst = pytz.timezone('Asia/Seoul')
     utc = pytz.utc
 
-    # 현재 UTC 시간을 가져와서 KST로 변환 (서버 timezone 무관)
+                                              
     return datetime.now(utc).astimezone(kst)
 
 def get_utc_now() -> datetime:
@@ -160,15 +160,15 @@ def convert_datetime_fields_to_kst_str(data: Any) -> Any:
             if isinstance(value, datetime):
                 data[key] = utc_to_kst_str(value)
             elif isinstance(value, decimal.Decimal):
-                data[key] = str(value)  # 정확도 보장을 위해 문자열로 변환
+                data[key] = str(value)                      
             elif value is None:
-                data[key] = ''  # None을 빈 문자열로 변환
+                data[key] = ''                   
             else:
-                # 재귀적으로 처리
+                          
                 convert_datetime_fields_to_kst_str(value)
     elif isinstance(data, list):
         for item in data:
             convert_datetime_fields_to_kst_str(item)
-    # 기타 타입은 그대로 반환
+                   
 
     return data

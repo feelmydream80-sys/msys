@@ -1,42 +1,12 @@
-// 파일명: static/js/modules/utils.js
-// 주요 역할: 유틸리티 함수들을 정의합니다.
 
-/**
- * 사용자에게 메시지를 표시합니다.
- * @param {string} message - 표시할 메시지 텍스트
- * @param {string} type - 메시지 유형 ('info', 'success', 'error', '기본값: info')
- */
+
+
+
 export function showMessage(message, type = 'info') {
-    /*
-    const container = document.createElement('div');
-    container.className = `fixed top-20 left-1/2 -translate-x-1/2 p-4 rounded-lg shadow-lg text-white z-50 transition-opacity duration-300`;
-
-    const typeClasses = {
-        info: 'bg-blue-500',
-        success: 'bg-green-500',
-        error: 'bg-red-500'
-    };
-
-    container.classList.add(typeClasses[type] || typeClasses.info);
-    container.textContent = message;
-
-    document.body.appendChild(container);
-
-    setTimeout(() => {
-        container.style.opacity = '0';
-        setTimeout(() => {
-            document.body.removeChild(container);
-        }, 300);
-    }, 3000);
-    */
+    
 }
 
-/**
- * 사용자에게 확인/취소 대화 상자를 표시합니다.
- * @param {string} message - 표시할 확인 메시지 텍스트
- * @param {Function} onConfirm - 사용자가 '확인'을 클릭했을 때 실행될 콜백 함수
- * @param {Function} [onCancel] - 사용자가 '취소'를 클릭했을 때 실행될 콜백 함수 (선택 사항)
- */
+
 export function showConfirm(message, onConfirm, onCancel = () => {}) {
     const confirmOverlay = document.createElement('div');
     confirmOverlay.id = 'confirmOverlay';
@@ -89,7 +59,7 @@ function isIntervalPattern(value, unit) {
         'hour': '시간',
         'day': '일',
         'month': '개월',
-        'dow': '주' // day of week
+        'dow': '주'
     };
     
     return `${interval}${unitMap[unit]}마다`;
@@ -107,34 +77,34 @@ export function parseCronExpression(cronExpression) {
     
     const [minute, hour, dayOfMonth, month, dayOfWeek] = parts;
     
-    // 주기적 실행 패턴 확인
+
     const minuteInterval = isIntervalPattern(minute, 'minute');
     const hourInterval = isIntervalPattern(hour, 'hour');
     const dayInterval = isIntervalPattern(dayOfMonth, 'day');
     const monthInterval = isIntervalPattern(month, 'month');
     const weekInterval = isIntervalPattern(dayOfWeek, 'dow');
     
-    // 분 단위 주기 실행 (예: */5 * * * * → 5분마다)
+
     if (minuteInterval && hour === '*' && dayOfMonth === '*' && month === '*' && dayOfWeek === '*') {
         return `${minuteInterval} 실행`;
     }
     
-    // 시간 단위 주기 실행 (예: 0 */3 * * * → 3시간마다)
+
     if (minute !== '*' && hourInterval && dayOfMonth === '*' && month === '*' && dayOfWeek === '*') {
         return `${hourInterval} ${minute}분에 실행`;
     }
     
-    // 일 단위 주기 실행 (예: 0 0 */5 * * → 5일마다)
+
     if (minute !== '*' && hour !== '*' && dayInterval && month === '*' && dayOfWeek === '*') {
         return `${dayInterval} ${hour}시 ${minute}분에 실행`;
     }
     
-    // 주 단위 주기 실행 (예: 0 0 * * 0 → 매주 일요일)
+
     if (minute !== '*' && hour !== '*' && dayOfMonth === '*' && month === '*' && weekInterval) {
         return `${weekInterval} ${hour}시 ${minute}분에 실행`;
     }
     
-    // 매일 실행 (기본 케이스)
+
     if (dayOfMonth === '*' && dayOfWeek === '*') {
         if (hour === '*' && minute === '*') {
             return '매분 실행';
@@ -147,7 +117,7 @@ export function parseCronExpression(cronExpression) {
         }
     }
     
-    // 특정 요일 실행
+
     if (dayOfWeek !== '*') {
         const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
         if (dayOfWeek.includes(',')) {
@@ -164,7 +134,7 @@ export function parseCronExpression(cronExpression) {
         }
     }
     
-    // 특정 날짜 실행
+
     if (dayOfMonth !== '*') {
         if (dayOfMonth === '*/6') {
             return '6일마다 실행';
@@ -182,7 +152,7 @@ export function parseCronExpression(cronExpression) {
         }
     }
     
-    // 특정 월 실행
+
     if (month !== '*') {
         const months = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
         if (month.includes(',')) {
@@ -196,21 +166,13 @@ export function parseCronExpression(cronExpression) {
     return '정기 실행';
 }
 
-/**
- * 숫자에 천 단위 콤마를 추가하여 문자열로 반환합니다.
- * @param {number | string} number - 포맷할 숫자 또는 숫자 형식의 문자열
- * @returns {string} 천 단위 콤마가 추가된 문자열
- */
+
 export function formatNumberWithCommas(number) {
     if (number === null || number === undefined) return '';
     return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
-/**
- * 숫자를 만, 억 단위로 축약하여 표시하고, 툴팁으로 전체 숫자를 보여줍니다.
- * @param {number} num - 변환할 숫자
- * @returns {string} 포맷된 HTML 문자열
- */
+
 export function formatNumberToKorean(num) {
     if (typeof num !== 'number' || isNaN(num)) {
         return '0';
@@ -230,11 +192,7 @@ export function formatNumberToKorean(num) {
     return `<span title="${fullNumber}">${formattedNumber}</span>`;
 }
 
-/**
- * 숫자를 '만' 단위 이상의 한국어 서식으로 변환합니다.
- * @param {number} number - 변환할 숫자
- * @returns {string} 포맷팅된 문자열
- */
+
 export function formatNumberWithKoreanUnits(number) {
     if (isNaN(number)) return '0';
 
@@ -254,40 +212,29 @@ export function formatNumberWithKoreanUnits(number) {
     return number.toLocaleString();
 }
 
-/**
- * tb_con_mst 데이터에서 use_yn === 'Y'인 항목만 필터링합니다.
- * @param {Array} data - tb_con_mst 데이터 배열
- * @returns {Array} use_yn === 'Y'인 데이터 배열
- */
+
 export function filterActiveMstData(data) {
     if (!Array.isArray(data)) {
-        console.warn('filterActiveMstData: Input is not an array');
+
         return [];
     }
     
     const activeData = data.filter(item => {
-        // use_yn이 'Y'이거나 undefined일 경우는 기본적으로 활성화 처리
+
         return item.use_yn === undefined || item.use_yn === null || item.use_yn.trim().toUpperCase() === 'Y';
     });
-    
-    console.debug(`filterActiveMstData: ${data.length} -> ${activeData.length} items filtered`);
+
     return activeData;
 }
 
-/**
- * Job ID 목록을 규칙에 따라 필터링합니다.
- * - 100의 배수인 Job ID 제외
- * - 900-910 범위의 Job ID 제외
- * @param {Array<Object>} jobs - 필터링할 Job 객체 배열. 각 객체는 'job_id' 또는 'cd' 속성을 가져야 합니다.
- * @returns {Array<Object>} 필터링된 Job 객체 배열
- */
+
 export function filterValidJobs(jobs) {
     if (!Array.isArray(jobs)) {
         return [];
     }
     
     return jobs.filter(job => {
-        const jobId = job.job_id || job.cd; // 다양한 속성 이름에 대응
+        const jobId = job.job_id || job.cd;
         if (!jobId) return false;
 
         const numericString = String(jobId).replace(/[^0-9]/g, '');

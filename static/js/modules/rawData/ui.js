@@ -1,20 +1,11 @@
-/**
- * @module ui
- * @description UI 렌더링 및 조작을 담당하는 클래스를 제공하는 모듈
- */
+
 
 import { formatNumber, formatNumberAbbreviated, getStatusClass } from './utils.js';
 import { initPagination, updatePaginationData } from '../ui_components/pagination.js';
 
-/**
- * @class RawDataUI
- * @description Raw Data 페이지의 UI를 관리하는 클래스
- */
+
 export class RawDataUI {
-    /**
-     * @param {object} options - UI 옵션
-     * @param {Function} options.onPageChange - 페이지 변경 시 호출될 콜백 함수
-     */
+    
     constructor() {
         this.elements = {
             jobSelect: document.getElementById('job-id-select'),
@@ -32,13 +23,10 @@ export class RawDataUI {
         this.filteredData = [];
     }
 
-    /**
-     * Job ID 선택 옵션을 채웁니다.
-     * @param {Array<Object>} jobList - Job ID 목록
-     */
+    
     populateJobIdSelect(jobList) {
         if (!this.elements.jobSelect) return;
-        this.elements.jobSelect.innerHTML = ''; // Clear existing options
+        this.elements.jobSelect.innerHTML = '';
 
         const allOpt = document.createElement('option');
         allOpt.value = '';
@@ -53,31 +41,21 @@ export class RawDataUI {
         });
     }
 
-    /**
-     * 테이블과 관련 UI 요소들을 렌더링합니다.
-     * @param {object} state - 애플리케이션 상태
-     * @param {Array<object>} filteredData - 필터링된 데이터
-     */
+    
     render(state, pageData) {
         this.updateDateDisplay();
         this.renderTable(state, pageData);
         this.renderStatusSummary(state);
     }
 
-    /**
-     * 선택된 날짜 범위를 화면에 표시합니다.
-     */
+    
     updateDateDisplay() {
         const start = this.elements.startDateInput.value;
         const end = this.elements.endDateInput.value;
         this.elements.selectedDateDisplay.textContent = `${start} ~ ${end}`;
     }
 
-    /**
-     * 상세 데이터 테이블을 렌더링합니다.
-     * @param {object} state - 애플리케이션 상태
-     * @param {Array<object>} pageData - 현재 페이지에 해당하는 데이터
-     */
+    
     renderTable(state, pageData) {
         this.elements.tbody.innerHTML = '';
         const { errorCodeMap } = state;
@@ -125,10 +103,7 @@ export class RawDataUI {
         return pageData;
     }
 
-    /**
-     * 상태 요약 정보를 렌더링합니다.
-     * @param {object} state - 애플리케이션 상태
-     */
+    
     renderStatusSummary(state) {
         const statusCount = this.filteredData.reduce((acc, row) => {
             acc[row.status] = (acc[row.status] || 0) + 1;
@@ -137,7 +112,7 @@ export class RawDataUI {
 
         const { errorCodeMap } = state;
 
-        // 기본 색상 매핑 (CD900번대 코드용)
+
         const defaultColorMap = {
             'CD901': 'bg-green-100 text-green-700',
             'CD902': 'bg-red-100 text-red-700',
@@ -148,7 +123,7 @@ export class RawDataUI {
         let summaryHtml = '<div class="flex flex-wrap gap-2">';
         const totalRows = this.filteredData.length;
 
-        // 모든 상태 코드에 대해 처리
+
         Object.keys(statusCount).forEach(code => {
             const count = statusCount[code] || 0;
             if (count > 0) {
@@ -168,11 +143,7 @@ export class RawDataUI {
         this.elements.statusSummary.innerHTML = summaryHtml;
     }
 
-    /**
-     * 페이지네이션 UI를 렌더링합니다.
-     * @param {object} state - 애플리케이션 상태
-     * @param {number} totalRows - 전체 데이터 행 수
-     */
+    
     initializePagination(state, filteredData) {
         if (this.elements.totalCount) {
             this.elements.totalCount.textContent = `총 ${filteredData.length}개`;

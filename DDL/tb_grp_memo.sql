@@ -1,5 +1,5 @@
--- DDL for TB_GRP_MEMO table
--- 그룹 메모 테이블 (데이터 수집 일정 히트맵의 그룹별 메모 저장)
+
+
 
 CREATE TABLE IF NOT EXISTS TB_GRP_MEMO (
     grp_id VARCHAR(20) NOT NULL,

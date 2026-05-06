@@ -1,16 +1,16 @@
-# 파일명: dao/trbl_hist_dao.py
-# 주요 역할: tb_trbl_hist 테이블에 대한 데이터베이스 접근 객체입니다.
-# @AI_NOTE: tb_con_hist 테이블을 사용하도록 수정되었습니다.
+                           
+                                              
+                                           
 
 import logging
-# @AI_NOTE: SQL 쿼리 클래스는 sql.py에 정의되어 있으므로 해당 파일을 임포트합니다.
-from sql.trbl.trbl_sql import TrblSQL as SQL # SQL 클래스 임포트
-# @AI_NOTE: 날짜/시간 객체 처리를 위해 datetime 모듈과 date 타입을 임포트합니다.
+                                                        
+from sql.trbl.trbl_sql import TrblSQL as SQL              
+                                                         
 from datetime import datetime, date
 from typing import Optional, List, Dict, Tuple
 from msys.column_mapper import convert_to_legacy_columns
 
-# @AI_NOTE: 로깅 설정은 msys_app.py에서 전역적으로 관리되므로, 여기서는 별도로 설정하지 않습니다.
+                                                                 
 
 class TrblHistDAO:
     def __init__(self, conn):
@@ -31,7 +31,7 @@ class TrblHistDAO:
         logging.info(f"▶ DAO: get_all_troubles 호출됨 (시작일: {start_date}, 종료일: {end_date})")
         cur = self.conn.cursor()
         try:
-            # @AI_NOTE: SQL.get_all_troubles_query 함수를 호출합니다.
+                                                             
             query, params = SQL.get_all_troubles_query(start_date, end_date)
            
             logging.debug(f"DAO: SQL 쿼리 실행 직전 - 쿼리: {query.strip()[:200]}..., 파라미터: {params}")
@@ -47,9 +47,9 @@ class TrblHistDAO:
            
             processed_results = []
             for row_tuple in rows:
-                # 모든 컬럼 이름을 소문자로 변환하여 딕셔너리 생성
+                                             
                 normalized_row_dict = {k.lower(): v for k, v in zip(columns, row_tuple)}
-                # @AI_NOTE: SQL 쿼리에서 'status AS trbl_status'로 반환되므로 'trbl_status'를 사용합니다.
+                                                                                         
                 status = normalized_row_dict.get('trbl_status')
                 count = normalized_row_dict.get('count')
                
@@ -63,8 +63,8 @@ class TrblHistDAO:
             return convert_to_legacy_columns('TB_CON_HIST', processed_results)
         except Exception as e:
             logging.error(f"❌ DAO: DB 조회 중 오류 발생: {e}", exc_info=True)
-            self.conn.rollback() # 오류 발생 시 롤백
-            raise # 예외를 상위 계층으로 다시 발생시켜 서비스 계층에서 처리하도록 함
+            self.conn.rollback()             
+            raise                                       
         finally:
             cur.close()
        
@@ -83,7 +83,7 @@ class TrblHistDAO:
         logging.info(f"▶ DAO: get_hourly_trouble_stats 호출됨 (시작일: {start_date}, 종료일: {end_date})")
         cur = self.conn.cursor()
         try:
-            # @AI_NOTE: SQL.get_trouble_hourly_query 함수를 호출합니다.
+                                                               
             query, params = SQL.get_trouble_hourly_query(start_date, end_date)
            
             logging.debug(f"DAO: SQL 쿼리 실행 직전 - 쿼리: {query.strip()[:200]}..., 파라미터: {params}")
@@ -134,17 +134,17 @@ class TrblHistDAO:
         cur = self.conn.cursor()
        
         try:
-            # 1. SQL 쿼리 생성
-            # @AI_NOTE: SQL.get_trouble_hourly_by_status_query 함수를 호출합니다.
-            # @AI_EXPECTED_SQL_CALL: SQL.get_trouble_hourly_by_status_query(start_date, end_date, job_ids)
+                          
+                                                                         
+                                                                                                          
             query, params = SQL.get_trouble_hourly_by_status_query(start_date, end_date, job_ids)
            
             logging.debug(f"DAO: SQL 쿼리 실행 직전 - 쿼리: {query.strip()[:200]}..., 파라미터: {params}")
            
-            # 2. 쿼리 실행
+                      
             cur.execute(query, params)
            
-            # 3. 결과 가져오기
+                        
             columns = [desc[0] for desc in cur.description]
             rows = cur.fetchall()
            
@@ -158,8 +158,8 @@ class TrblHistDAO:
             for row_tuple in rows:
                 normalized_row_dict = {k.lower(): v for k, v in zip(columns, row_tuple)}
                 hour = normalized_row_dict.get('hour')
-                # @AI_NOTE: SQL 쿼리에서 'status AS trbl_status'로 반환되므로 'trbl_status'를 사용합니다.
-                # 그러나 프론트엔드에서는 'status'를 기대하므로, 여기서 'status'로 매핑합니다.
+                                                                                         
+                                                                    
                 status = normalized_row_dict.get('trbl_status')
                 count = normalized_row_dict.get('count')
                
@@ -172,8 +172,8 @@ class TrblHistDAO:
             return convert_to_legacy_columns('TB_CON_HIST', processed_results)
         except Exception as e:
             logging.error(f"❌ DAO: DB 조회 중 오류 발생: {e}", exc_info=True)
-            self.conn.rollback() # 오류 발생 시 롤백
-            raise # 예외를 상위 계층으로 다시 발생시켜 서비스 계층에서 처리하도록 함
+            self.conn.rollback()             
+            raise                                       
         finally:
             cur.close()
 
@@ -192,17 +192,17 @@ class TrblHistDAO:
         cur = self.conn.cursor()
 
         try:
-            # 1. SQL 쿼리 생성
-            # @AI_NOTE: SQL.success_rate_trend_by_job 함수를 호출합니다.
-            # @AI_EXPECTED_SQL_CALL: SQL.success_rate_trend_by_job(start_date_str, end_date_str, job_ids)
+                          
+                                                                
+                                                                                                         
             query, params = SQL.success_rate_trend_by_job(start_date_str, end_date_str, job_ids)
 
             logging.debug(f"DAO: SQL 쿼리 실행 직전 - 쿼리: {query.strip()[:200]}..., 파라미터: {params}")
 
-            # 2. 쿼리 실행
+                      
             cur.execute(query, params)
 
-            # 3. 결과 가져오기
+                        
             columns = [desc[0] for desc in cur.description]
             rows = cur.fetchall()
 
@@ -212,12 +212,12 @@ class TrblHistDAO:
             else:
                 logging.warning("⚠️ DAO: DB로부터 받은 성공률 추이 로우 데이터가 0건입니다. SQL 쿼리 및 DB 데이터 확인 필요.")
 
-            # 4. 결과 가공 (딕셔너리 형태로 변환)
+                                    
             result = []
             for row_tuple in rows:
                 row_dict = dict(zip(columns, row_tuple))
-                # @AI_NOTE: log_dt는 datetime 객체로 반환되므로 HTTP Date 형식 문자열로 변환합니다.
-                # isinstance 체크 시 datetime.datetime과 datetime.date를 모두 확인합니다.
+                                                                               
+                                                                             
                 if 'log_dt' in row_dict and isinstance(row_dict['log_dt'], (datetime, date)):
                     row_dict['log_dt'] = row_dict['log_dt'].strftime("%a, %d %b %Y %H:%M:%S GMT")
                 result.append(row_dict)

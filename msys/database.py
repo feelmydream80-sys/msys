@@ -6,7 +6,7 @@ from flask import g
 from psycopg2 import pool
 from msys.config import config
 
-# --- Connection Pool ---
+                         
 db_pool = None
 
 def init_db_pool():
@@ -20,7 +20,7 @@ def init_db_pool():
             db_config_with_encoding['client_encoding'] = 'UTF8'
             db_pool = pool.SimpleConnectionPool(
                 minconn=1,
-                maxconn=20,  # 테스트를 위해 최대 연결 수 증가
+                maxconn=20,                      
                 **db_config_with_encoding
             )
             logging.info("✅ DB 커넥션 풀이 성공적으로 초기화되었습니다.")

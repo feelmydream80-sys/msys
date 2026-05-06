@@ -1,4 +1,4 @@
--- 테스트용: get_schedule_settings.sql 실행 예시
+
 SELECT
     s.sett_id,
     s.grp_min_cnt,

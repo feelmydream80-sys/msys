@@ -34,7 +34,7 @@ def get_dashboard_summary():
                     if start_date_obj > end_date_obj:
                         return jsonify({"message": "시작 날짜는 종료 날짜보다 빠를 수 없습니다."}), 400
                     
-                    # Add one day to the end date to include all data of the selected day
+                                                                                         
                     end_date_obj += timedelta(days=1)
                     end_date_str = end_date_obj.strftime('%Y-%m-%d')
                 except ValueError:
@@ -44,10 +44,10 @@ def get_dashboard_summary():
             summary_data = dashboard_service.get_summary(start_date_str, end_date_str, all_data, user=user)
             logging.info(f"[PIPELINE-7] API response data count before conversion: {len(summary_data)}")
 
-            # Convert datetime objects to KST strings before jsonify
+                                                                    
             convert_datetime_fields_to_kst_str(summary_data)
             logging.info(f"[PIPELINE-8] API response data count after conversion: {len(summary_data)}")
-            # None 값을 빈 문자열로 변환
+                               
             for item in summary_data:
                 for key, value in item.items():
                     if value is None:
@@ -65,11 +65,11 @@ def get_day_stats_api(date_str):
     try:
         with get_db_connection() as conn:
             dashboard_service = DashboardService(conn)
-            # This service method might be deprecated or needs refactoring.
-            # For now, assuming it might be removed or changed.
-            # day_stats = dashboard_service.get_day_stats(date_str)
-            # return jsonify(day_stats), 200
-            return jsonify([]), 200 # Returning empty list as the service method was removed
+                                                                           
+                                                               
+                                                                   
+                                            
+            return jsonify([]), 200                                                         
     except Exception as e:
         logging.error(f"❌ API: 일별 통계 조회 실패: {e}", exc_info=True)
         return jsonify({"message": "일별 통계 조회 중 오류가 발생했습니다."}), 500
@@ -116,9 +116,9 @@ def get_event_log_api():
             user = session.get('user')
             event_log_data = dashboard_service.get_event_log(start_date_str, end_date_str, all_data, user=user)
 
-            # Convert datetime objects to KST strings before jsonify
+                                                                    
             convert_datetime_fields_to_kst_str(event_log_data)
-            # None 값을 빈 문자열로 변환
+                               
             for item in event_log_data:
                 for key, value in item.items():
                     if value is None:

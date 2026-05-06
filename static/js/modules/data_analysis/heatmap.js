@@ -1,4 +1,4 @@
-// --- Jandi Heatmap Functions ---
+
 
 export function clearHeatmap(container) {
     container.innerHTML = '';
@@ -8,16 +8,14 @@ export function drawContinuousHeatmap(container, data, startDateStr, endDateStr,
     container.innerHTML = '';
     if (container.clientWidth === 0) return;
 
-    // Store data for redraws
+
     container.dataset.heatmapData = JSON.stringify(Array.from(data.entries()));
     container.dataset.startDate = startDateStr;
     container.dataset.endDate = endDateStr;
 
 
     const width = container.clientWidth;
-/*    const weekLabelWidth = 25;
-    const monthLabelHeight = 20;
-    const yearLabelHeight = 20; // 줄여서 카드의 연도와 top의 마진 감소*/
+
     const weekLabelWidth = 25;
     const monthLabelHeight = 14;
     const yearLabelHeight = 20;
@@ -45,7 +43,7 @@ export function drawContinuousHeatmap(container, data, startDateStr, endDateStr,
 
     const timeFormat = d3.timeFormat("%Y-%m-%d");
 
-    // Dynamic gradient coloring with adjusted intensity for low maximums.
+
     const values = Array.from(data.values()).filter(v => v > 0);
     const maxCount = d3.max(values) || 1;
 
@@ -57,7 +55,7 @@ export function drawContinuousHeatmap(container, data, startDateStr, endDateStr,
     const weekOfYear = d3.timeFormat("%U");
 
     const rects = svg.selectAll(".day")
-        .data(days) // Draw a rect for every day in the range
+        .data(days)
         .enter().append("rect")
         .attr("class", "day")
         .attr("width", cellSize)
@@ -73,7 +71,7 @@ export function drawContinuousHeatmap(container, data, startDateStr, endDateStr,
         .style("fill", d => {
             const value = data.get(timeFormat(d));
             if (value === undefined || value === null || value <= 0) {
-                return "#ebedf0"; // Gray for 0 or no data
+                return "#ebedf0";
             }
             return color(value);
         });
@@ -115,14 +113,14 @@ export function drawContinuousHeatmap(container, data, startDateStr, endDateStr,
             const weekIndex = d3.timeWeek.count(startOfWeek, firstDayOfYear);
             return weekIndex * (cellSize + cellMargin);
         })
-        .attr("y", -25) // Position above month labels
+        .attr("y", -25)
         .style("font-size", "12px")
         .style("font-weight", "bold")
         .text(d3.timeFormat("%Y"));
 
-    // Add year separator lines
+
     svg.selectAll(".year-separator")
-        .data(yearData.slice(1)) // Don't draw a line for the first year
+        .data(yearData.slice(1))
         .enter().append("line")
         .attr("class", "year-separator")
         .attr("x1", d => {
@@ -183,9 +181,9 @@ export function redrawAllHeatmaps() {
  */
 export function drawHeatmapIfNeeded(card) {
     const graphDiv = card.querySelector('.graph');
-    // Check if the graph container is visible (clientWidth > 0) and has no content.
+
     if (graphDiv && graphDiv.clientWidth > 0 && graphDiv.innerHTML.trim() === '') {
-        // Check if the necessary data is stored in the dataset.
+
         if (graphDiv.dataset.heatmapData && graphDiv.dataset.startDate && graphDiv.dataset.endDate) {
             try {
                 const contributions = new Map(JSON.parse(graphDiv.dataset.heatmapData));
@@ -195,7 +193,7 @@ export function drawHeatmapIfNeeded(card) {
                 const setting = adminSettings[card.id.replace('jandi-card-', '')] || {};
                 drawContinuousHeatmap(graphDiv, contributions, startDate, endDate, setting.jandi_color_min, setting.jandi_color_max);
             } catch (e) {
-                console.error("Failed to parse heatmap data for lazy rendering:", e);
+
             }
         }
     }

@@ -1,4 +1,4 @@
-# routes/api/popup_routes.py
+                            
 """
 API routes for popup management.
 """
@@ -31,7 +31,7 @@ def validate_and_convert_datetime(date_str, field_name):
         logging.warning(f"⚠️ {field_name} 값이 비어있습니다.")
         return None
     
-    # YYYY-MM-DD HH:MM:SS 형식 검증
+                               
     pattern = r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$'
     if not re.match(pattern, date_str.strip()):
         logging.warning(f"⚠️ {field_name} 형식 오류: '{date_str}' (YYYY-MM-DD HH:MM:SS 필요)")
@@ -90,10 +90,10 @@ def get_all_popups():
             if popups:
                 logging.info(f"🔍 [PIPELINE] 첫 번째 팝업 데이터: {popups[0]}")
 
-            # Convert datetime objects to KST strings before jsonify
+                                                                    
             convert_datetime_fields_to_kst_str(popups)
 
-            # None 값을 빈 문자열로 변환
+                               
             for popup in popups:
                 for key, value in popup.items():
                     if value is None:
@@ -101,7 +101,7 @@ def get_all_popups():
             
             logging.info(f"🔍 [PIPELINE] 변환 후 응답 데이터: popups={len(popups)}개")
 
-            # Frontend와 호환되는 응답 구조로 변경 (popups, total)
+                                                      
             return jsonify({
                 "popups": popups,
                 "total": len(popups)
@@ -124,10 +124,10 @@ def get_active_popups():
             popup_service = PopupService(conn)
             popups = popup_service.get_active_popups()
             
-            # Convert datetime objects to KST strings before jsonify
+                                                                    
             convert_datetime_fields_to_kst_str(popups)
             
-            # None 값을 빈 문자열로 변환
+                               
             for popup in popups:
                 for key, value in popup.items():
                     if value is None:
@@ -158,10 +158,10 @@ def get_popup(popup_id):
             if not popup:
                 return jsonify({"message": "팝업을 찾을 수 없습니다."}), 404
             
-            # Convert datetime objects to KST strings before jsonify
+                                                                    
             convert_datetime_fields_to_kst_str(popup)
             
-            # None 값을 빈 문자열로 변환
+                               
             for key, value in popup.items():
                 if value is None:
                     popup[key] = ''
@@ -198,12 +198,12 @@ def create_popup():
         JSON with created popup ID and success message.
     """
     try:
-        # Process form data from multipart/form-data
-        # Field names match DB column names (lowercase)
+                                                    
+                                                       
         logging.info(f"🔍 API: Received form data keys: {list(request.form.keys())}")
         logging.info(f"🔍 API: Received files: {list(request.files.keys())}")
         
-        # 날짜 검증 및 변환
+                    
         start_dt_str = request.form.get('start_dt')
         end_dt_str = request.form.get('end_dt')
         
@@ -237,18 +237,18 @@ def create_popup():
         
         logging.info(f"🔍 API: Processed data TITL='{data['TITL']}', LOC='{data['LOC']}', START_DT='{data['START_DT']}', END_DT='{data['END_DT']}'")
         
-        # Handle image file upload
+                                  
         if 'image' in request.files:
             file = request.files['image']
             if file and file.filename != '':
-                # Check file extension
+                                      
                 allowed_extensions = {'png', 'jpg', 'jpeg', 'gif'}
                 file_ext = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else ''
                 
                 if file_ext not in allowed_extensions:
                     return jsonify({"message": "허용되지 않는 파일 형식입니다. (png, jpg, jpeg, gif만 가능)"}), 400
                 
-                # Check file size (5MB = 5 * 1024 * 1024 bytes)
+                                                               
                 file.seek(0, os.SEEK_END)
                 file_size = file.tell()
                 file.seek(0)
@@ -256,28 +256,28 @@ def create_popup():
                 if file_size > 5 * 1024 * 1024:
                     return jsonify({"message": "파일 크기는 5MB를 초과할 수 없습니다."}), 400
                 
-                # Generate unique filename
+                                          
                 timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
                 unique_id = str(uuid.uuid4())[:8]
                 new_filename = f"popup_{timestamp}_{unique_id}.{file_ext}"
                 
-                # Save file
+                           
                 upload_folder = os.path.join('static', 'uploads', 'popups')
                 os.makedirs(upload_folder, exist_ok=True)
                 
                 file_path = os.path.join(upload_folder, new_filename)
                 file.save(file_path)
                 
-                # Set image path
+                                
                 data['IMG_PATH'] = f"/static/uploads/popups/{new_filename}"
         
-        # Validate required fields
+                                  
         required_fields = ['TITL', 'CONT', 'START_DT', 'END_DT']
         for field in required_fields:
             if not data.get(field):
                 return jsonify({"message": f"필수 항목 '{field}'이(가) 누락되었습니다."}), 400
         
-        # Get current user ID
+                             
         user_id = session.get('user', {}).get('user_id')
         
         with get_db_connection() as conn:
@@ -325,10 +325,10 @@ def update_popup(popup_id):
         JSON with success message.
     """
     try:
-        # Process form data from multipart/form-data
-        # Field names match DB column names (lowercase)
+                                                    
+                                                       
         
-        # 날짜 검증 및 변환
+                    
         start_dt_str = request.form.get('start_dt')
         end_dt_str = request.form.get('end_dt')
         
@@ -360,18 +360,18 @@ def update_popup(popup_id):
             'LOC': request.form.get('loc', 'CENTER')
         }
         
-        # Handle image file upload
+                                  
         if 'image' in request.files:
             file = request.files['image']
             if file and file.filename != '':
-                # Check file extension
+                                      
                 allowed_extensions = {'png', 'jpg', 'jpeg', 'gif'}
                 file_ext = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else ''
                 
                 if file_ext not in allowed_extensions:
                     return jsonify({"message": "허용되지 않는 파일 형식입니다. (png, jpg, jpeg, gif만 가능)"}), 400
                 
-                # Check file size (5MB = 5 * 1024 * 1024 bytes)
+                                                               
                 file.seek(0, os.SEEK_END)
                 file_size = file.tell()
                 file.seek(0)
@@ -379,28 +379,28 @@ def update_popup(popup_id):
                 if file_size > 5 * 1024 * 1024:
                     return jsonify({"message": "파일 크기는 5MB를 초과할 수 없습니다."}), 400
                 
-                # Generate unique filename
+                                          
                 timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
                 unique_id = str(uuid.uuid4())[:8]
                 new_filename = f"popup_{timestamp}_{unique_id}.{file_ext}"
                 
-                # Save file
+                           
                 upload_folder = os.path.join('static', 'uploads', 'popups')
                 os.makedirs(upload_folder, exist_ok=True)
                 
                 file_path = os.path.join(upload_folder, new_filename)
                 file.save(file_path)
                 
-                # Set image path
+                                
                 data['IMG_PATH'] = f"/static/uploads/popups/{new_filename}"
         
-        # Validate required fields
+                                  
         required_fields = ['TITL', 'CONT', 'START_DT', 'END_DT']
         for field in required_fields:
             if not data.get(field):
                 return jsonify({"message": f"필수 항목 '{field}'이(가) 누락되었습니다."}), 400
         
-        # Get current user ID
+                             
         user_id = session.get('user', {}).get('user_id')
         
         with get_db_connection() as conn:
@@ -432,7 +432,7 @@ def delete_popup(popup_id):
         JSON with success message.
     """
     try:
-        # Get current user ID
+                             
         user_id = session.get('user', {}).get('user_id')
         
         with get_db_connection() as conn:
@@ -472,14 +472,14 @@ def upload_image():
         if file.filename == '':
             return jsonify({"message": "파일이 선택되지 않았습니다."}), 400
         
-        # Check file extension
+                              
         allowed_extensions = {'png', 'jpg', 'jpeg', 'gif'}
         file_ext = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else ''
         
         if file_ext not in allowed_extensions:
             return jsonify({"message": "허용되지 않는 파일 형식입니다. (png, jpg, jpeg, gif만 가능)"}), 400
         
-        # Check file size (5MB = 5 * 1024 * 1024 bytes)
+                                                       
         file.seek(0, os.SEEK_END)
         file_size = file.tell()
         file.seek(0)
@@ -487,19 +487,19 @@ def upload_image():
         if file_size > 5 * 1024 * 1024:
             return jsonify({"message": "파일 크기는 5MB를 초과할 수 없습니다."}), 400
         
-        # Generate unique filename
+                                  
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         unique_id = str(uuid.uuid4())[:8]
         new_filename = f"popup_{timestamp}_{unique_id}.{file_ext}"
         
-        # Save file
+                   
         upload_folder = os.path.join('static', 'uploads', 'popups')
         os.makedirs(upload_folder, exist_ok=True)
         
         file_path = os.path.join(upload_folder, new_filename)
         file.save(file_path)
         
-        # Return relative path for database storage
+                                                   
         image_path = f"/static/uploads/popups/{new_filename}"
         
         logging.info(f"✅ API: 이미지 업로드 성공 - {new_filename}")

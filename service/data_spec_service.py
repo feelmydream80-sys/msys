@@ -1,4 +1,4 @@
-# service/data_spec_service.py
+                              
 import logging
 import os
 from mapper.data_spec_mapper import DataSpecMapper
@@ -46,7 +46,7 @@ class DataSpecService:
         if not existing_spec:
             return False
         if spec_id and existing_spec.get('id') == spec_id:
-            return False # It's the same spec, so not a duplicate
+            return False                                         
         return True
 
     def update_spec(self, spec_id, spec_data, params_data):
@@ -77,13 +77,13 @@ class DataSpecService:
             master_password = os.getenv('MASTER_PASSWORD')
             hashed_pw = mapper.get_password_hash(spec_id)
 
-            # 마스터 비밀번호 확인
+                         
             if password and password == master_password:
                 is_authorized = True
-            # 저장된 해시가 없는 경우, 제공된 비밀번호도 없어야 함
+                                            
             elif not hashed_pw:
                 is_authorized = not password
-            # 해시와 비밀번호 모두 있는 경우, 일치 여부 확인
+                                         
             else:
                 is_authorized = self.password_service.check_password(password, hashed_pw)
 

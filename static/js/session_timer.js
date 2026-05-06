@@ -40,15 +40,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         } catch (error) {
-            console.error('Error fetching auth status:', error);
+
             if (sessionTimeoutInterval) clearInterval(sessionTimeoutInterval);
             if (periodicFetchInterval) clearInterval(periodicFetchInterval);
         }
     }
 
-    // Initial fetch
+
     fetchAuthStatus();
 
-    // Periodically sync with server to get the accurate remaining time
-    periodicFetchInterval = setInterval(fetchAuthStatus, 60 * 1000); // every 1 minute
+
+    periodicFetchInterval = setInterval(fetchAuthStatus, 60 * 1000);
 });

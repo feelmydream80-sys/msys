@@ -4,12 +4,7 @@ import { fetchMinMaxDates } from './api/dashboard.js';
 const tabContainer = document.getElementById('tab-container');
 const contentContainer = document.getElementById('tab-content-container');
 
-/**
- * API 테스트 섹션 생성
- * @param {Object} api - API 정보 객체
- * @param {string} id - 섹션의 고유 식별자
- * @returns {HTMLElement} 생성된 API 섹션 요소
- */
+
 function createApiSection(api, id) {
     const section = document.createElement('div');
     section.className = 'api-section mb-6';
@@ -52,9 +47,7 @@ function createApiSection(api, id) {
     return section;
 }
 
-/**
- * 탭 UI 초기화 함수
- */
+
 export function initializeTabs() {
     tabContainer.innerHTML = '';
     contentContainer.innerHTML = '';
@@ -96,9 +89,7 @@ export function initializeTabs() {
     addAutoTestTab();
 }
 
-/**
- * 자동 테스트 탭 추가
- */
+
 function addAutoTestTab() {
     const tabButton = document.createElement('button');
     tabButton.className = 'tab-button';
@@ -234,15 +225,11 @@ async function runAllTests() {
     `;
 }
 
-/**
- * 지정된 요소에 데이터의 실제 존재 기간을 "시작일 ~ 종료일" 형식으로 표시합니다.
- * @param {string} dataType - 조회할 데이터 타입 (e.g., 'rawData', 'dashboardSummary')
- * @param {string} elementId - 날짜 범위를 표시할 요소의 ID
- */
+
 export async function updateDateRangeDisplay(dataType, elementId) {
     const displayElement = document.getElementById(elementId);
     if (!displayElement) {
-        console.warn(`Element with ID '${elementId}' not found.`);
+
         return;
     }
 
@@ -254,7 +241,7 @@ export async function updateDateRangeDisplay(dataType, elementId) {
             displayElement.textContent = 'N/A';
         }
     } catch (error) {
-        console.error(`Failed to fetch min/max dates for ${dataType}:`, error);
+
         displayElement.textContent = 'Error';
     }
 }

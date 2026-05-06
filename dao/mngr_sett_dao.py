@@ -1,4 +1,4 @@
-# dao/admin_settings_dao.py
+                           
 """
 DAO for handling administrator settings in the database.
 """
@@ -38,7 +38,7 @@ class MngrSettDAO:
         Inserts new settings into the database.
         """
         query = load_sql('mngr_sett/insert_mngr_sett.sql')
-        # The order of values must match the order of columns in the INSERT query
+                                                                                 
         values = (
             settings_data.get('cd'),
             settings_data.get('cnn_failr_thrs_val'),
@@ -76,7 +76,7 @@ class MngrSettDAO:
         Updates existing settings in the database.
         """
         query = load_sql('mngr_sett/update_mngr_sett.sql')
-        # The order of values must match the order of columns in the UPDATE query
+                                                                                 
         values = (
             settings_data.get('cnn_failr_thrs_val'),
             settings_data.get('cnn_warn_thrs_val'),
@@ -99,7 +99,7 @@ class MngrSettDAO:
             settings_data.get('chrt_dsp_yn'),
             settings_data.get('grass_chrt_min_colr'),
             settings_data.get('grass_chrt_max_colr'),
-            settings_data.get('cd')  # for the WHERE clause
+            settings_data.get('cd')                        
         )
         try:
             with self.conn.cursor() as cur:
@@ -143,7 +143,7 @@ class MngrSettDAO:
             with self.conn.cursor(cursor_factory=RealDictCursor) as cur:
                 cur.execute(query)
                 results = cur.fetchall()
-                # self.logger.info(f"DAO MENU DATA: {results}")
+                                                               
                 return [dict(row) for row in results]
         except psycopg2.Error as e:
             self.logger.error(f"DAO: Error fetching all menu settings: {e}", exc_info=True)

@@ -1,26 +1,16 @@
-/**
- * 날짜 및 시간 유틸리티 모듈 (KST 기준)
- * 모든 시간 관련 처리는 이 모듈을 통해统一적으로管理
- */
 
-const KST_OFFSET_MS = 9 * 60 * 60 * 1000; // UTC+9 (KST)
 
-/**
- * 현재 시간을 KST 기준으로 반환합니다.
- * @returns {Date} KST 기준 현재 시간
- */
+const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+
+
 export function getKSTNow() {
     const now = new Date();
-    // 현재 로컬 시간을 UTC로 변환 후 KST 오프셋 적용
+
     const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
     return new Date(utc + KST_OFFSET_MS);
 }
 
-/**
- * Date 객체를 KST 시간대로 변환합니다.
- * @param {Date|string} date - 변환할 Date 객체 또는 날짜 문자열
- * @returns {Date} KST 시간대 Date 객체
- */
+
 export function toKST(date) {
     const d = new Date(date);
     if (isNaN(d.getTime())) {
@@ -29,17 +19,12 @@ export function toKST(date) {
     return new Date(d.getTime() + KST_OFFSET_MS);
 }
 
-/**
- * 과거 N개월의 月 배열을 반환합니다 (가장 최근 月 first).
- * 예: 현재 4월 → ['26.4', '26.3', '26.2', '26.1', '25.12', '25.11']
- * @param {number} months - 개월 수 (기본값: 6)
- * @returns {string[]} YY.M 형식의 月 배열
- */
+
 export function getLast6Months(months = 6) {
     const result = [];
     const now = getKSTNow();
     const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth() + 1; // 1-12
+    const currentMonth = now.getMonth() + 1;
 
     for (let i = 0; i < months; i++) {
         let month = currentMonth - i;
@@ -58,25 +43,14 @@ export function getLast6Months(months = 6) {
     return result;
 }
 
-/**
- * 지정된 月의 첫 번째 주차 번호(1-5)를 반환합니다.
- * 주 开始이 月 시작과 다른 경우 분할로 처리.
- * @param {number} year - 연도
- * @param {number} month - 월 (1-12)
- * @returns {number} 첫 번째 주차 번호 (1-5)
- */
+
 export function getFirstWeekOfMonth(year, month) {
     const firstDay = new Date(year, month - 1, 1);
     const dayOfWeek = firstDay.getDay();
     return dayOfWeek === 0 ? 1 : dayOfWeek < 4 ? 1 : 2;
 }
 
-/**
- * 각 月의 주차 수 배열을 동적으로 계산합니다.
- * [4,5,4,5,4,4] - 현재 4월 기준 6개월
- * @param {number} months - 개월 수 (기본값: 6)
- * @returns {number[]} 각 月별 주차 수 배열
- */
+
 export function getWeeksPerMonthFn(months = 6) {
     const now = getKSTNow();
     const currentYear = now.getFullYear();
@@ -108,11 +82,7 @@ export function getWeeksPerMonthFn(months = 6) {
     return result.reverse();
 }
 
-/**
- * 날짜를 YYYY-MM-DD 형식의 문자열로 변환합니다.
- * @param {Date} date - 변환할 Date 객체
- * @returns {string} YYYY-MM-DD 형식의 날짜 문자열
- */
+
 export function formatDate(date) {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -120,35 +90,30 @@ export function formatDate(date) {
     return `${year}-${month}-${day}`;
 }
 
-/**
- * 날짜와 시간을 KST 기준으로 포맷팅합니다.
- * @param {Date|string} date - 포맷팅할 날짜 (Date 객체 또는 문자열)
- * @param {string} format - 포맷 형식 (기본값: 'YYYY-MM-DD')
- * @returns {string} 포맷팅된 날짜 문자열
- */
+
 export function formatDateTime(date, format = 'YYYY-MM-DD') {
-    // 문자열이 들어온 경우
+
     if (typeof date === 'string') {
-        // 시간대 정보가 포함된 경우 (+09:00 = KST)
+
         if (date.includes('+09:00')) {
             return date.replace('+09:00', '');
         }
-        // GMT/UTC가 포함된 경우 - UTC → KST 변환 필요
+
         if (date.includes('GMT') || date.includes('UTC')) {
-            // GMT 제거하고 수동 파싱
+
             const dateStr = date.replace('GMT', '').replace('UTC', '').trim();
-            // RFC 2822 형식 파싱: "Mon, 13 Apr 2026 08:35:35"
+
             const parts = dateStr.match(/(\d+)\s+(\w+)\s+(\d+)\s+(\d+):(\d+):(\d+)/);
             if (parts) {
                 const months = { 'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5, 'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11 };
                 const year = parseInt(parts[3]);
                 const month = months[parts[2]];
                 const day = parseInt(parts[1]);
-                const hours = parseInt(parts[4]) + 9; // UTC → KST (시간 더하기)
+                const hours = parseInt(parts[4]) + 9;
                 const minutes = parseInt(parts[5]);
                 const seconds = parseInt(parts[6]);
                 
-                // 날짜Overflow 처리
+
                 let newDay = day;
                 let newMonth = month;
                 let newYear = year;
@@ -157,7 +122,7 @@ export function formatDateTime(date, format = 'YYYY-MM-DD') {
                 if (hours >= 24) {
                     newHours = hours - 24;
                     newDay = day + 1;
-                    //月末 처리
+
                     const daysInMonth = new Date(year, month + 1, 0).getDate();
                     if (newDay > daysInMonth) {
                         newDay = 1;
@@ -173,7 +138,7 @@ export function formatDateTime(date, format = 'YYYY-MM-DD') {
             }
             return date;
         }
-        // 시간대 정보 없으면 그대로 반환
+
         return date;
     }
     
@@ -199,11 +164,7 @@ export function formatDateTime(date, format = 'YYYY-MM-DD') {
         .replace('ss', seconds);
 }
 
-/**
- * 지정된 일수 이전부터 오늘까지의 날짜 범위를 가져옵니다.
- * @param {number} daysAgo - 오늘로부터 며칠 전을 시작일로 할지 지정합니다.
- * @returns {{startDate: string, endDate: string}} 시작일과 종료일(오늘)
- */
+
 export function getDateRange(daysAgo) {
     const today = getKSTNow();
     const startDate = new Date(today);
@@ -215,14 +176,11 @@ export function getDateRange(daysAgo) {
     };
 }
 
-/**
- * 기본 날짜 범위를 가져옵니다.
- * @returns {{startDateValue: string, todayDate: string}} 2024년 2월 7일부터 오늘 날짜
- */
+
 export function getDefaultDateRange() {
     const today = getKSTNow();
 
-    const startDate = new Date(2024, 1, 7); // 2월은 1, 7일
+    const startDate = new Date(2024, 1, 7);
 
     const todayDate = formatDate(today);
     const startDateValue = formatDate(startDate);
@@ -230,10 +188,7 @@ export function getDefaultDateRange() {
     return { startDateValue, todayDate };
 }
 
-/**
- * 페이지의 날짜 입력 필드에 기본값을 설정합니다.
- * 'start-date'와 'end-date' ID를 가진 요소를 찾아 값을 설정합니다.
- */
+
 export function setDefaultDates() {
     const { startDateValue, todayDate } = getDefaultDateRange();
 
@@ -248,10 +203,7 @@ export function setDefaultDates() {
     }
 }
 
-/**
- * 페이지의 날짜 입력 필드에 '올해 1월 1일'부터 '오늘'까지의 값을 설정합니다.
- * 'start-date'와 'end-date' ID를 가진 요소를 찾아 값을 설정합니다.
- */
+
 export function setYearToDate() {
     const today = getKSTNow();
     const year = today.getFullYear();
@@ -268,20 +220,15 @@ export function setYearToDate() {
     }
 }
 
-/**
- * DB에서 가져온 KST 시간 문자열을 표시용 포맷으로 변환합니다.
- * DB에 저장된 시간은 KST(UTC+9) 기준으로 가정합니다.
- * @param {string} dbDateTime - DB 시간 문자열 (YYYY-MM-DD HH:mm:ss)
- * @returns {string} 포맷팅된 시간 문자열 (YY.MM.DD HH:mm), 파싱 실패 시 빈 문자열 반환
- */
+
 export function formatDBDateTime(dbDateTime) {
     if (!dbDateTime) return '';
 
-    // YYYY-MM-DD HH:mm:ss 형식 파싱 (DB KST 시간)
+
     const parts = dbDateTime.match(/(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2})/);
     if (!parts) return '';
 
-    const year = parts[1].slice(2);  // YY
+    const year = parts[1].slice(2);
     const month = parts[2];
     const day = parts[3];
     const hours = parts[4];

@@ -7,12 +7,12 @@
 
 {% block content %}
     <style id="page-specific-style">
-        /* General container styles, consistent with dashboard/analytics */
+        
         .container {
-            max-width: 1920px; /* 20% 증가 */
+            max-width: 1920px; 
             margin-left: auto;
             margin-right: auto;
-            padding: 1rem; /* p-4 */
+            padding: 1rem; 
         }
 
         .shadow-md {
@@ -23,30 +23,30 @@
             border-radius: 0.5rem;
         }
 
-        /* Main page title style, consistent with dashboard/analytics */
+        
         #mngr_sett_page .page-title {
             color: #2c3e50;
             margin-top: 1px;
             margin-bottom: 1px;
             font-size: 2.5em;
             font-weight: 700;
-            text-align: center; /* Admin page title remains centered for prominence */
+            text-align: center; 
         }
 
-        /* Section wrapper style, consistent with dashboard/analytics */
+        
         #mngr_sett_page .content-section {
             background-color: #ffffff;
-            padding: 24px; /* p-6 */
-            border-radius: 8px; /* rounded-lg */
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* shadow-md */
-            margin-bottom: 24px; /* mb-6 */
+            padding: 24px; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); 
+            margin-bottom: 24px; 
         }
 
-        /* Styles specific to admin_settings.css, adapted to new layout */
+        
         #mngr_sett_page .icon-examples {
             margin-bottom: 20px;
             padding: 15px;
-            background-color: #e8f5e9; /* Light green background */
+            background-color: #e8f5e9; 
             border-radius: 8px;
             border: 1px solid #c8e6c9;
             display: flex;
@@ -68,13 +68,13 @@
 
         #mngr_sett_page .chart-container {
             position: relative;
-            height: 400px; /* Fixed height for charts */
+            height: 400px; 
             width: 100%;
         }
 
         #mngr_sett_page #messageContainer {
             position: fixed;
-            top: 50px; /* 상단 네비게이션 바 높이만큼 띄움 */
+            top: 50px; 
             left: 0;
             right: 0;
             z-index: 1000;
@@ -83,11 +83,11 @@
             justify-content: center;
             padding: 5px 0;
             box-sizing: border-box;
-            pointer-events: none; /* 메시지 외 영역 클릭 통과 */
+            pointer-events: none; 
         }
         
         #mngr_sett_page #messageContainer .message {
-            pointer-events: auto; /* 메시지는 클릭 가능 */
+            pointer-events: auto; 
         }
 
         #mngr_sett_page .message {
@@ -147,7 +147,7 @@
 
         #mngr_sett_page .tab-content {
             display: none;
-            padding-top: 20px; /* Adjusted to fit the new content-section padding */
+            padding-top: 20px; 
             border-top: none;
         }
 
@@ -155,9 +155,9 @@
             display: block;
         }
 
-        /* Settings Table Specific Styles */
+        
         #mngr_sett_page .table-responsive {
-            overflow-x: auto; /* 가로 스크롤 허용 */
+            overflow-x: auto; 
             margin-bottom: 20px;
             border: 1px solid #e0e0e0;
             border-radius: 8px;
@@ -165,28 +165,28 @@
         }
 
         #mngr_sett_page #chartSettings .settings-table input[type="color"] {
-            width: 60px; /* 너비를 고정값으로 설정 */
-            min-width: 40px; /* 최소 너비 설정 */
+            width: 60px; 
+            min-width: 40px; 
             padding: 2px;
         }
 
         #mngr_sett_page .settings-table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 1600px; /* 테이블 최소 너비 설정 (컬럼 수에 따라 조정) */
+            min-width: 1600px; 
         }
 
-        /* 차트 설정 테이블은 컬럼이 적으므로 최소 너비 제한을 두지 않음 */
+        
         #mngr_sett_page .chart-settings-table,
         #mngr_sett_page .data-permission-table {
             min-width: auto;
         }
 
         #mngr_sett_page .settings-table th, #mngr_sett_page .settings-table td {
-            border: 1px dashed #e0e0e0; /* 점선 테두리로 변경 */
+            border: 1px dashed #e0e0e0; 
             padding: 10px 8px;
             text-align: center;
-            white-space: nowrap; /* 셀 내용이 줄바꿈되지 않도록 */
+            white-space: nowrap; 
             font-size: 0.9em;
         }
 
@@ -207,7 +207,7 @@
 
         #mngr_sett_page .settings-table thead tr:nth-child(2) th {
             position: sticky;
-            top: 37px; /* 첫 번째 행의 높이에 맞춰 조정 */
+            top: 37px; 
             z-index: 2;
         }
 
@@ -222,7 +222,7 @@
         #mngr_sett_page .settings-table input[type="number"],
         #mngr_sett_page .settings-table input[type="text"],
         #mngr_sett_page .settings-table select {
-            width: 100%; /* 셀 너비에 맞춤 */
+            width: 100%; 
             padding: 6px;
             border: 1px solid #ccc;
             border-radius: 4px;
@@ -231,7 +231,7 @@
         }
 
         #mngr_sett_page .settings-table input[type="color"] {
-            width: 100%; /* 셀 너비에 맞춤 */
+            width: 100%; 
             height: 30px;
             padding: 2px;
             border: 1px solid #ccc;
@@ -250,7 +250,7 @@
             background-color: #eef;
         }
 
-        /* Form Actions */
+        
         #mngr_sett_page .form-actions {
             display: flex;
             justify-content: center;
@@ -289,7 +289,7 @@
         #mngr_sett_page .export { background-color: var(--color-info); color: white; }
         #mngr_sett_page .export:hover { background-color: #138496; transform: translateY(-2px); }
 
-        /* Import Section */
+        
         #mngr_sett_page .import-section {
             display: flex;
             align-items: center;
@@ -331,7 +331,7 @@
             background-color: #218838;
         }
 
-        /* Icon Management Specific Styles */
+        
         #mngr_sett_page .icon-form {
             display: flex;
             flex-wrap: wrap;
@@ -341,14 +341,14 @@
             border-radius: 8px;
             margin-bottom: 20px;
             border: 1px solid #eee;
-            align-items: center; /* 모든 요소를 중앙에 정렬 */
+            align-items: center; 
         }
 
         #mngr_sett_page .icon-form .form-group {
             display: flex;
             flex-direction: column;
-            flex: 1; /* 유연한 너비 */
-            min-width: 150px; /* 최소 너비 설정 */
+            flex: 1; 
+            min-width: 150px; 
         }
 
         #mngr_sett_page .icon-form .form-group label {
@@ -360,13 +360,13 @@
         #mngr_sett_page .icon-form input[type="text"],
         #mngr_sett_page .icon-form input[type="number"],
         #mngr_sett_page .icon-form textarea,
-        #mngr_sett_page .icon-form select { /* select도 추가 */
+        #mngr_sett_page .icon-form select { 
             padding: 10px;
             border: 1px solid #ccc;
             border-radius: 5px;
             font-size: 1em;
             box-sizing: border-box;
-            height: 42px; /* 명시적 높이 설정 */
+            height: 42px; 
         }
 
         #mngr_sett_page .icon-form textarea {
@@ -391,7 +391,7 @@
             font-size: 1.2em !important;
             font-weight: 700 !important;
             transition: background-color 0.3s ease, transform 0.2s ease !important;
-            height: 50px !important; /* 더 큰 크기로 설정 */
+            height: 50px !important; 
             box-sizing: border-box !important;
             min-height: 50px !important;
         }
@@ -410,9 +410,9 @@
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 20px;
-            min-width: 700px; /* 아이콘 테이블 최소 너비 */
-            max-height: 600px; /* 세로 스크롤 생성 */
-            overflow-y: auto; /* 세로 스크롤 허용 */
+            min-width: 700px; 
+            max-height: 600px; 
+            overflow-y: auto; 
         }
 
         #mngr_sett_page .icon-management-table th, #mngr_sett_page .icon-management-table td {
@@ -462,13 +462,13 @@
         #mngr_sett_page .icon-management-table .delete-btn:hover { background-color: #c82333; }
 
         #mngr_sett_page .icon-actions {
-            justify-content: flex-end; /* 아이콘 내보내기/가져오기 버튼 오른쪽 정렬 */
+            justify-content: flex-end; 
         }
 
 
-        /* Responsive adjustments */
+        
         @media (max-width: 1024px) {
-            /* .admin-container class is removed, styles are applied to .container and .content-section */
+            
             #mngr_sett_page .page-title {
                 font-size: 2em;
             }
@@ -477,7 +477,7 @@
                 font-size: 1em;
             }
             #mngr_sett_page .settings-table, #mngr_sett_page .icon-management-table {
-                min-width: unset; /* 모바일에서 최소 너비 제한 해제 */
+                min-width: unset; 
             }
             #mngr_sett_page .settings-table th, #mngr_sett_page .settings-table td,
             #mngr_sett_page .icon-management-table th, #mngr_sett_page .icon-management-table td {
@@ -518,7 +518,7 @@
                 justify-content: center;
             }
         }
-        /* Hexagon Color Palette Styles */
+        
         #mngr_sett_page .color-palette {
             display: flex;
             flex-wrap: wrap;
@@ -551,7 +551,7 @@
         }
         
         #mngr_sett_page .color-input-wrapper input[type="color"] {
-            padding-left: 35px; /* Make space for the preview */
+            padding-left: 35px; 
         }
 
         #mngr_sett_page .color-preview {
@@ -561,10 +561,10 @@
             height: 25px;
             border: 1px solid #ccc;
             border-radius: 4px;
-            pointer-events: none; /* Make it non-interactive */
+            pointer-events: none; 
         }
 
-        /* Border Style Selector Styles */
+        
         #mngr_sett_page .border-style-selector {
             display: flex;
             gap: 10px;
@@ -581,7 +581,7 @@
             transition: border-color 0.2s;
         }
         #mngr_sett_page .border-style-option input[type="radio"] {
-            display: none; /* Hide the actual radio button */
+            display: none; 
         }
         #mngr_sett_page .border-style-option .border-symbol {
             font-size: 1.5em;
@@ -606,14 +606,14 @@
             color: #007bff;
         }
 
-        /* 데이터 정의 카드 스타일 */
+        
         #mngr_sett_page {
             --space-1: 16px;
             --space-2: 24px;
             --space-3: 32px;
         }
 
-        /* 카드 그리드 레이아웃 */
+        
         #mngr_sett_page .card-grid-legacy {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -680,7 +680,7 @@
             color: #c53030;
         }
 
-        /* 상세 패널 스타일 */
+        
         #mngr_sett_page .detail-panel {
             background: white;
             border-radius: 12px;
@@ -743,7 +743,7 @@
             background-color: #dc2626;
         }
 
-        /* 테이블 스타일 */
+        
         #mngr_sett_page .detail-panel table {
             width: 100%;
             border-collapse: collapse;
@@ -765,7 +765,7 @@
             background-color: #f1f5f9;
         }
 
-        /* 비활성 상태 스타일 */
+        
         #mngr_sett_page .inactive-row {
             opacity: 0.5;
             text-decoration: line-through;
@@ -776,7 +776,7 @@
             font-style: italic;
         }
 
-        /* 로딩 및 에러 상태 */
+        
         #mngr_sett_page .loading {
             text-align: center;
             padding: 40px;
@@ -791,7 +791,7 @@
             margin: 10px 0;
         }
 
-        /* 반응형 디자인 */
+        
         @media (max-width: 768px) {
             #mngr_sett_page .card-grid-legacy {
                 grid-template-columns: 1fr;
@@ -809,7 +809,7 @@
             }
         }
 
-        /* User Management Button Styles */
+        
         #mngr_sett_page .reset-password-btn,
         #mngr_sett_page .delete-user-btn {
             padding: 5px 10px;
@@ -821,7 +821,7 @@
             transition: background-color 0.2s ease;
         }
 
-        /* Data Access Permission Button Styles */
+        
         #mngr_sett_page .manage-permission-btn {
             padding: 5px 10px;
             margin: 2px;
@@ -832,7 +832,7 @@
             transition: background-color 0.2s ease;
         }
 
-        /* Data Access Permission Modal Styles */
+        
         #mngr_sett_page .modal {
             display: none;
             position: fixed;
@@ -928,7 +928,7 @@
         }
         
         #dataPermissionModal .permission-list li.selected {
-            background-color: #d4edda; /* Light green */
+            background-color: #d4edda; 
             color: #155724;
         }
 
@@ -965,7 +965,7 @@
              padding: 10px 20px;
         }
 
-        /* Popup Management Badge Styles */
+        
         #mngr_sett_page .badge {
             padding: 4px 8px;
             border-radius: 4px;
@@ -985,7 +985,7 @@
             color: #0c5460;
         }
 
-        /* Popup Management Action Buttons */
+        
         #mngr_sett_page .action-buttons {
             display: flex;
             justify-content: center;
@@ -1022,7 +1022,7 @@
             background-color: #c82333;
         }
 
-        /* Popup Modal Specific Styles */
+        
         #popupModal .form-group input.error,
         #popupModal .form-group textarea.error {
             border-color: #dc3545;
@@ -1035,12 +1035,12 @@
         }
     </style>
     <div id="mngr_sett_page" class="container mx-auto p-4">
-        <!-- Message Container (Moved outside content-section to maintain sticky behavior) -->
+        
         <div id="messageContainer">
             <div class="message" id="messageArea"></div>
         </div>
 
-        <!-- Tabbed Content Section (Wrapped in content-section) -->
+        
         <div class="content-section">
             <div class="tabs">
                 <button class="tab-button active" data-tab="basicSettings">기본 설정</button>
@@ -1061,7 +1061,7 @@
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-xl font-semibold text-gray-700">Job ID별 기본 설정 <span id="settingsTotalCount" class="text-sm font-normal text-gray-500"></span></h2>
                     <div class="flex gap-2 items-center">
-                        <!-- 검색 기능 추가 (자동 검색 - debounce 적용) -->
+                        
                         <div class="search-container" style="display: flex; align-items: center;">
                             <input type="text" id="settingsSearchInput" placeholder="Job ID 또는 Job 이름 검색..." 
                                    style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; width: 220px;">
@@ -1077,35 +1077,35 @@
                         <button id="saveBasicSettingsBtn" class="save">기본 설정 저장</button>
                     </div>
                 </div>
-                <!-- 검색 결과 정보 -->
+                
                 <div id="searchResultInfo" style="display: none; padding: 8px 12px; background-color: #e7f3ff; border-radius: 4px; margin-bottom: 12px; font-size: 14px; color: #004085;">
                     <span id="searchResultText"></span>
                 </div>
                 <div class="table-responsive">
                     <table class="settings-table" id="settingsTable">
                         <colgroup>
-                            <col style="width: 3%;"> {# Job ID #}
-                            <col style="width: 5%;"> {# Job 이름 #}
-                            <col style="width: 8%;"> {# Job 설명 #}
-                            <col style="width: 5%;"> {# 비고 #}
-                            <col style="width: 2%;"> {# 실패(CNT) #}
-                            <col style="width: 3.5%;"> {# 실패(Icon) #}
-                            <col style="width: 2%;"> {# 실패(Color) #}
-                            <col style="width: 2%;"> {# 경고(CNT) #}
-                            <col style="width: 3.5%;"> {# 경고(Icon) #}
-                            <col style="width: 2%;"> {# 경고(Color) #}
-                            <col style="width: 3.5%;"> {# 정상(Icon) #}
-                            <col style="width: 2%;"> {# 정상(Color) #}
-                            <col style="width: 2%;"> {# 일간 임계값 #}
-                            <col style="width: 3%;"> {# 주간 임계값 #}
-                            <col style="width: 3%;"> {# 월간 임계값 #}
-                            <col style="width: 3%;"> {# 반기 임계값 #}
-                            <col style="width: 3%;"> {# 연간 임계값 #}
-                            <col style="width: 3.5%;"> {# 성공 아이콘 #}
-                            <col style="width: 2%;"> {# 성공 색상 #}
-                            <col style="width: 3.5%;"> {# 경고 아이콘 #}
-                            <col style="width: 2%;"> {# 경고 색상 #}
-                            <col style="width: 3%;"> {# 대시보드 표시 여부 #}
+                            <col style="width: 3%;"> 
+                            <col style="width: 5%;"> 
+                            <col style="width: 8%;"> 
+                            <col style="width: 5%;"> 
+                            <col style="width: 2%;"> 
+                            <col style="width: 3.5%;"> 
+                            <col style="width: 2%;"> 
+                            <col style="width: 2%;"> 
+                            <col style="width: 3.5%;"> 
+                            <col style="width: 2%;"> 
+                            <col style="width: 3.5%;"> 
+                            <col style="width: 2%;"> 
+                            <col style="width: 2%;"> 
+                            <col style="width: 3%;"> 
+                            <col style="width: 3%;"> 
+                            <col style="width: 3%;"> 
+                            <col style="width: 3%;"> 
+                            <col style="width: 3.5%;"> 
+                            <col style="width: 2%;"> 
+                            <col style="width: 3.5%;"> 
+                            <col style="width: 2%;"> 
+                            <col style="width: 3%;"> 
                         </colgroup>
                         <thead>
                             <tr>
@@ -1115,7 +1115,7 @@
                                 <th rowspan="2">비고</th>
                                 <th colspan="8">연속 실패시 표시방법</th>
                                 <th colspan="9">성공률 기준 임계치 설정 (기간별)</th>
-                                <th rowspan="2">대시보드 표시 여부</th> {# 대시보드 표시 여부 헤더 #}
+                                <th rowspan="2">대시보드 표시 여부</th> 
                             </tr>
                             <tr>
                                 <th>실패(CNT) </th>
@@ -1148,7 +1148,7 @@
                 <div class="mt-6">
                     <h4 class="text-md font-semibold text-gray-700 mb-2">컬러 팔레트</h4>
                     <div id="basicSettingsColorPaletteContainer">
-                        <!-- Palette will be inserted here by JavaScript -->
+                        
                     </div>
                 </div>
 
@@ -1168,18 +1168,18 @@
                     <button class="save" id="saveScheduleSettingsBtn">스케줄 표시 설정 저장</button>
                 </div>
                 <div id="scheduleSettingsForm" class="space-y-6">
-                    <!-- 데이터가 여기에 동적으로 채워집니다. -->
+                    
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label for="grp_prgs_icon_id" class="block text-sm font-medium text-gray-700">그룹 진행률 아이콘</label>
                             <select id="grp_prgs_icon_id" name="grp_prgs_icon_id" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                                <!-- 아이콘 옵션이 여기에 동적으로 채워집니다. -->
+                                
                             </select>
                         </div>
                         <div>
                             <label for="grp_sucs_icon_id" class="block text-sm font-medium text-gray-700">그룹 성공률 아이콘</label>
                             <select id="grp_sucs_icon_id" name="grp_sucs_icon_id" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                                <!-- 아이콘 옵션이 여기에 동적으로 채워집니다. -->
+                                
                             </select>
                         </div>
                     </div>
@@ -1237,9 +1237,9 @@
                     </tbody>
                 </table>
 
-                <!-- 페이징 버튼이 테이블 바로 밑에 위치 -->
+                
                 <div id="iconsPagination" class="flex justify-center items-center gap-2 mt-4">
-                    <!-- 페이징 버튼이 여기에 동적으로 생성됩니다 -->
+                    
                 </div>
 
                 <div class="form-actions icon-actions mt-4">
@@ -1277,7 +1277,7 @@
                             </tr>
                         </thead>
                         <tbody id="chartSettingsTableBody">
-                            <!-- 차트/시각화 설정 데이터가 여기에 로드됩니다 -->
+                            
                         </tbody>
                     </table>
                 </div>
@@ -1331,12 +1331,12 @@
                             </tr>
                         </thead>
                         <tbody id="dataPermissionUserTableBody">
-                            <!-- 사용자 데이터가 여기에 로드됩니다 -->
+                            
                         </tbody>
                     </table>
                 </div>
 
-                <!-- Data Access Permission Modal -->
+                
                 <div id="dataPermissionModal" class="modal">
                     <div class="modal-content">
                         <div class="modal-header">
@@ -1349,7 +1349,7 @@
                                     <h4>미할당 Job ID</h4>
                                     <input type="text" id="unassignedJobSearchInput" placeholder="Job ID 또는 이름 검색..." class="w-full p-2 mb-2 border rounded-md shadow-sm">
                                     <ul id="unassignedJobs" class="permission-list">
-                                        <!-- 미할당 Job ID가 여기에 로드됩니다 -->
+                                        
                                     </ul>
                                 </div>
                                 <div class="permission-controls">
@@ -1359,7 +1359,7 @@
                                 <div class="permission-box">
                                     <h4>할당된 Job ID</h4>
                                     <ul id="assignedJobs" class="permission-list">
-                                        <!-- 할당된 Job ID가 여기에 로드됩니다 -->
+                                        
                                     </ul>
                                 </div>
                             </div>
@@ -1374,22 +1374,22 @@
             <div id="excelTemplateManagement" class="tab-content">
                 <h2 class="text-xl font-semibold text-gray-700 mb-4">엑셀 양식 관리</h2>
 
-                <!-- 파일 상태 표시 -->
+                
                 <div id="excelTemplateStatus" class="mb-6 p-4 bg-gray-50 rounded-lg">
                     <h3 class="text-lg font-medium mb-2">현재 파일 상태</h3>
                     <div id="excelTemplateInfo" class="text-sm text-gray-600">
-                        <!-- 파일 정보가 여기에 표시됩니다 -->
+                        
                     </div>
                 </div>
 
-                <!-- 파일 업로드 섹션 -->
+                
                 <div class="import-section mb-6">
                     <label for="excelTemplateFile">엑셀 파일 선택 (.xlsx, .xls):</label>
                     <input type="file" id="excelTemplateFile" accept=".xlsx,.xls" />
                     <button id="uploadExcelTemplateBtn" class="import">업로드</button>
                 </div>
 
-                <!-- 액션 버튼들 -->
+                
                 <div class="form-actions">
                     <button id="downloadExcelTemplateBtn" class="export">다운로드</button>
                     <button id="deleteExcelTemplateBtn" class="reset">삭제</button>
@@ -1397,11 +1397,11 @@
             </div>
 
             <div id="statistics" class="tab-content">
-                <!-- Filters -->
+                
                 <div class="flex justify-between items-center mb-4 flex-wrap gap-4">
                     <h2 class="text-xl font-semibold text-gray-700">접속 통계</h2>
                     <div class="flex items-center gap-4 flex-wrap">
-                        <!-- View Type Radio Buttons -->
+                        
                         <div class="flex items-center gap-2">
                             <input type="radio" name="statsViewType" id="dailyViewRadio" value="daily" checked>
                             <label for="dailyViewRadio">일별 현황</label>
@@ -1415,11 +1415,11 @@
                             <label for="comparisonViewRadio">비교 현황</label>
                         </div>
                         
-                        <!-- Year and Menu Selectors -->
+                        
                         <select id="statsYearSelect" class="border p-2 rounded"></select>
                         <select id="statsMenuSelect" class="border p-2 rounded"></select>
 
-                        <!-- Date Range for Daily View -->
+                        
                         <div id="statsDateRangeContainer" class="flex items-center gap-2">
                             <input type="date" id="statsStartDate" class="border p-2 rounded">
                         </div>
@@ -1428,10 +1428,10 @@
                     </div>
                 </div>
 
-                <!-- Daily View Container -->
+                
                 <div id="dailyViewContainer">
                     <div id="statsSummary" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                        <!-- Summary data will be loaded here -->
+                        
                     </div>
                     <div>
                         <h3 class="text-lg font-semibold mb-2">메뉴별 접속 현황</h3>
@@ -1450,29 +1450,29 @@
                                     </tr>
                                 </thead>
                                 <tbody id="menuStatsTableBody">
-                                    <!-- Daily menu stats will be loaded here -->
+                                    
                                 </tbody>
                             </table>
                         </div>
                     </div>
                 </div>
 
-                <!-- Weekly/Monthly View Container -->
+                
                 <div id="weeklyMonthlyViewContainer" style="display: none;">
                     <h3 class="text-lg font-semibold mb-2">주별/월별 접속 현황</h3>
                     <div class="table-responsive">
                         <table class="settings-table" id="weeklyMonthlyStatsTable" style="width: 100%; min-width: auto;">
                             <thead>
-                                <!-- Header will be generated by JS -->
+                                
                             </thead>
                             <tbody>
-                                <!-- Body will be generated by JS -->
+                                
                             </tbody>
                         </table>
                     </div>
                 </div>
 
-                <!-- Comparison View Container -->
+                
                 <div id="comparisonViewContainer" style="display: none;">
                     <div class="flex justify-between items-center mb-2">
                         <h3 class="text-lg font-semibold">전년 동기 대비 접속 현황</h3>
@@ -1481,19 +1481,19 @@
                     <div class="table-responsive">
                         <table class="settings-table" id="comparisonStatsTable" style="width: 100%; min-width: auto;">
                             <thead>
-                                <!-- JS를 통해 동적으로 채워짐 -->
+                                
                             </thead>
                             <tbody>
-                                <!-- JS를 통해 동적으로 채워짐 -->
+                                
                             </tbody>
                             <tfoot>
-                                <!-- JS를 통해 동적으로 채워짐 -->
+                                
                             </tfoot>
                         </table>
                     </div>
                 </div>
 
-                <!-- Chart Container -->
+                
                 <div class="mt-6">
                     <h3 class="text-lg font-semibold mb-2">접속 통계 차트</h3>
                     <div class="chart-container">
@@ -1503,7 +1503,7 @@
             </div>
 
             <div id="dataDefinition" class="tab-content">
-                <!-- 메인 화면 버튼 영역 -->
+                
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-xl font-semibold text-gray-700">데이터 정의</h2>
                     <div class="flex gap-2">
@@ -1513,17 +1513,17 @@
                     </div>
                 </div>
 
-                <!-- 데이터 정의 - 100번대 그룹 관리 -->
+                
                 <div class="card-grid-legacy" id="definitionCardContainer">
                     <div class="loading">로딩 중...</div>
                 </div>
 
-                <!-- 선택된 그룹의 상세 정보 영역 -->
+                
                 <div class="detail-panel" id="detailPanel">
                     <div class="detail-header">
                         <div class="detail-title" id="selectedGroupTitle">선택된 그룹</div>
                         <div class="action-buttons" id="buttonContainer">
-                            <!-- 버튼이 동적으로 추가됨 -->
+                            
                         </div>
                     </div>
                     <table>
@@ -1536,12 +1536,12 @@
                             </tr>
                         </thead>
                         <tbody id="detailTableBody">
-                            <!-- 상세 데이터 동적 생성 -->
+                            
                         </tbody>
                     </table>
                 </div>
 
-                <!-- 그룹 추가 모달 -->
+                
                 <div class="modal fade" id="addGroupModal" tabindex="-1" aria-labelledby="addGroupModalLabel" aria-hidden="true">
                     <div class="modal-dialog modal-lg">
                         <div class="modal-content">
@@ -1551,7 +1551,7 @@
                             </div>
                             <div class="modal-body">
                                 <form id="addGroupForm">
-                                    <!-- 상단 섹션 -->
+                                    
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="mb-3">
@@ -1581,7 +1581,7 @@
                                         </div>
                                     </div>
                                     
-                                    <!-- 아이템 섹션 -->
+                                    
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="mb-3">
@@ -1647,7 +1647,7 @@
                                         </div>
                                     </div>
                                     
-                                    <!-- 하단 섹션 -->
+                                    
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="mb-3">
@@ -1699,25 +1699,25 @@
                             </tr>
                         </thead>
                         <tbody id="popupTableBody">
-                            <!-- 팝업 데이터가 여기에 로드됩니다 -->
+                            
                         </tbody>
                     </table>
                 </div>
                 <div id="popupPagination" class="flex justify-center items-center gap-2 mt-4">
-                    <!-- 페이징 버튼이 여기에 동적으로 생성됩니다 -->
+                    
                 </div>
 
-                <!-- 팝업 미리보기 컨테이너 -->
+                
                 <div id="popupPreviewContainer" style="display: none; margin-top: 20px; padding: 20px; background: #f5f5f5; border-radius: 8px;">
-                    <!-- 미리보기 내용이 여기에 표시됩니다 -->
+                    
                 </div>
             </div>
 
-            <!-- 사용자접속정보 탭 콘텐츠 -->
+            
             <div id="userAccessInfo" class="tab-content">
-        <!-- 상단 영역: 제목 + 상태 설정 (45:45 비율, 한 행 고정) -->
+        
         <div style="display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: nowrap; overflow-x: auto;">
-            <!-- 왼쪽: 검색/필터 (45%) -->
+            
             <div style="width: 45%; flex-shrink: 0; min-width: 0; background: white; border-radius: 8px; padding: 16px; border: 1px solid #eee;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 8px;">
                     <h2 style="font-size: 20px; font-weight: 600; margin: 0; white-space: nowrap;">
@@ -1733,7 +1733,7 @@
                     </div>
                 </div>
 
-                <!-- 검색 및 필터 툴 바 -->
+                
                 <div style="display: flex; gap: 6px; align-items: center; flex-wrap: nowrap; overflow-x: auto;">
                     <input type="text" id="userAccessSearchInput" placeholder="ID 검색..." 
                            style="height: 32px; padding: 0 8px; border-radius: 4px; border: 1px solid rgba(0,0,0,0.16); background: white; font-size: 13px; width: 100px; flex-shrink: 0;">
@@ -1759,10 +1759,10 @@
                 </div>
             </div>
 
-            <!-- 오른쪽: 상태 설정 (45%) -->
+            
             <div style="width: 45%; flex-shrink: 0; min-width: 0; background: white; border-radius: 8px; padding: 16px; border: 1px solid #eee;">
                 <h3 style="margin: 0 0 12px 0; font-size: 20px; font-weight: 600;">상태 설정</h3>
-                <!-- 가로 1줄 배치 -->
+                
                 <div style="display: flex; gap: 8px; align-items: center; flex-wrap: nowrap; overflow-x: auto;">
                     <div style="display: flex; align-items: center; gap: 4px; flex-shrink: 0;">
                         <label style="font-size: 12px; color: #666; white-space: nowrap;">최근 접속</label>
@@ -1784,7 +1784,7 @@
             </div>
         </div>
 
-        <!-- 히트맵 모드 설정 및 차트 타입 선택 -->
+        
         <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 16px;">
             <span style="font-size: 12px; color: #666;">히트맵 집계 방식:</span>
             <button id="btn-mode-all"
@@ -1810,7 +1810,7 @@
             </button>
         </div>
 
-        <!-- 사용자 목록 -->
+        
         <div class="table-responsive">
             <table class="settings-table" id="userAccessTable">
                 <thead id="userAccessTableHead">
@@ -1829,15 +1829,15 @@
                     </tr>
                 </thead>
                 <tbody id="userAccessTableBody">
-                    <!-- 사용자 데이터가 여기에 로드됩니다 -->
+                    
                 </tbody>
             </table>
         </div>
         <div id="userAccessPagination" class="flex justify-center items-center gap-2 mt-4">
-            <!-- 페이지네이션이 여기에 로드됩니다 -->
+            
         </div>
 
-        <!-- 상세 패널 -->
+        
         <div id="userAccessDetailPanel" style="display: none; margin-top: 28px;">
             <button class="panel-back" onclick="window.userAccessInfo?.showList()" style="display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: #666; cursor: pointer; margin-bottom: 18px; padding: 5px 10px; border-radius: 4px; border: 1px solid #ddd; background: white;">
                 ← 목록으로
@@ -1877,7 +1877,7 @@
                 </div>
             </div>
 
-            <!-- 주간 히트맵/차트 영역 -->
+            
             <div style="background: white; border: 1px solid #eee; border-radius: 12px; padding: 16px; margin-bottom: 12px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                     <div style="font-size: 12px; color: #666;">주간 접속 현황 (최근 26주)</div>
@@ -1908,7 +1908,7 @@
         </div>
     </div>
 
-    <!-- 팝업 관리 모달 -->
+    
     <div id="popupModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
         <div class="modal-content" style="position: relative; width: min(95vw, 1400px); height: min(90vh, 900px); margin: auto; top: 50%; transform: translateY(-50%); background: white; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column;">
             <div class="modal-header" style="padding: 15px 20px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center;">
@@ -1917,7 +1917,7 @@
             </div>
             <div class="modal-body" style="flex: 1; overflow: hidden; padding: 20px;">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; height: 100%;">
-                    <!-- 좌측: 실시간 미리보기 -->
+                    
                     <div style="background: #f5f5f5; border-radius: 8px; padding: 20px; overflow: auto;">
                         <h4 style="margin-top: 0; margin-bottom: 15px; color: #666;">미리보기</h4>
                         <div id="livePreviewContainer" style="display: flex; justify-content: center; align-items: flex-start; min-height: 300px;">
@@ -1934,24 +1934,24 @@
                         </div>
                     </div>
                     
-                    <!-- 우측: 입력 폼 -->
+                    
                     <div style="overflow-y: auto; padding-right: 10px;">
                         <form id="popupForm">
                             <input type="hidden" id="popupId">
                             
-                            <!-- 제목 -->
+                            
                             <div class="form-group" style="margin-bottom: 12px;">
                                 <label for="popupTitle" style="display: block; margin-bottom: 4px; font-weight: 600; font-size: 14px;">제목 *</label>
                                 <input type="text" id="popupTitle" required style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
                             </div>
 
-                            <!-- 내용 -->
+                            
                             <div class="form-group" style="margin-bottom: 12px;">
                                 <label for="popupContent" style="display: block; margin-bottom: 4px; font-weight: 600; font-size: 14px;">내용 *</label>
                                 <textarea id="popupContent" rows="4" required style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; resize: vertical; font-size: 14px;"></textarea>
                             </div>
 
-                            <!-- 이미지와 링크 (한 줄) -->
+                            
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
                                 <div class="form-group">
                                     <label for="popupImageInput" style="display: block; margin-bottom: 4px; font-weight: 600; font-size: 14px;">이미지</label>
@@ -1964,7 +1964,7 @@
                                 </div>
                             </div>
 
-                            <!-- 설정 6개 (한 줄) - 위치 추가 -->
+                            
                             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px;">
                                 <div class="form-group">
                                     <label for="popupWidth" style="display: block; margin-bottom: 4px; font-weight: 600; font-size: 12px;">너비</label>
@@ -2015,7 +2015,7 @@
                                 </div>
                             </div>
 
-                            <!-- 게시 기간 (한 줄) -->
+                            
                             <div class="form-group" style="margin-bottom: 12px;">
                                 <label style="display: block; margin-bottom: 4px; font-weight: 600; font-size: 14px;">게시 기간</label>
                                 <div style="display: flex; gap: 8px; align-items: center;">
@@ -2038,9 +2038,9 @@
 {% endblock %}
 
 {% block scripts %}
-    <!-- XLSX Library for Excel Export -->
+    
     <script src="{{ url_for('static', filename='vendor/js/xlsx.full.min.js') }}"></script>
-    <!-- Custom JavaScript -->
+    
     <script type="module">
         import { init } from '/static/js/pages/mngr_sett.js';
         init();

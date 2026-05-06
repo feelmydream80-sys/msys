@@ -1,6 +1,6 @@
--- Table: public.tb_user_auth_ctrl
 
--- DROP TABLE IF EXISTS public.tb_user_auth_ctrl;
+
+
 
 CREATE TABLE IF NOT EXISTS public.tb_user_auth_ctrl
 (

@@ -1,9 +1,9 @@
--- TB_USER_AUTH_CTRL 테이블의 MENU_ID를 소문자로 변경합니다.
+
 UPDATE TB_USER_AUTH_CTRL
 SET MENU_ID = 'card_summary'
 WHERE MENU_ID = 'CARD_SUMMARY';
 
--- TB_MENU 테이블의 MENU_ID를 소문자로 변경합니다.
+
 UPDATE TB_MENU
 SET MENU_ID = 'card_summary'
 WHERE MENU_ID = 'CARD_SUMMARY';

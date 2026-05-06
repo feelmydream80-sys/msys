@@ -1,4 +1,4 @@
-# service/url_analyzer_service.py
+                                 
 """
 A service to analyze a generic HTML content string or plain text, and extract 
 potential data candidates for user mapping.
@@ -48,7 +48,7 @@ class UrlAnalyzerService:
             else:
                 logging.info("Content detected as plain text. Parsing by lines.")
                 lines = [line.strip() for line in content.split('\n') if line.strip()]
-                # Treat every line as a 'heading' candidate for simplicity in the UI
+                                                                                    
                 result['headings'] = [{'tag': 'txt', 'text': line} for line in lines]
 
             logging.debug("--- Extracted JSON Data (After Processing) ---")
@@ -73,14 +73,14 @@ class UrlAnalyzerService:
     def _extract_paragraphs(self, soup: BeautifulSoup) -> List[Dict[str, str]]:
         """Extracts paragraphs and other potential text blocks as candidates."""
         paragraphs = []
-        # Broaden the search to include common text-holding tags
+                                                                
         for tag in soup.find_all(['p', 'div', 'li', 'span']):
             text = tag.get_text(strip=True)
-            # Basic filter to avoid noise
+                                         
             if text and '\n' not in text and len(text) > 5:
                 paragraphs.append({'tag': tag.name, 'text': text})
         
-        # Remove duplicates while preserving order
+                                                  
         seen = set()
         unique_paragraphs = []
         for p in paragraphs:
@@ -96,18 +96,18 @@ class UrlAnalyzerService:
         for i, table in enumerate(soup.find_all('table')):
             rows = []
             for tr in table.find_all('tr'):
-                # Get all th and td cells in order
+                                                  
                 cells = tr.find_all(['th', 'td'])
                 row_data = [cell.get_text(strip=True) for cell in cells]
-                if any(row_data): # Only add non-empty rows
+                if any(row_data):                          
                     rows.append(row_data)
             
             if rows:
-                # Try to guess the header: the first row with content
+                                                                     
                 headers = rows[0]
                 body_rows = rows[1:]
                 
-                # A simple heuristic: if a table has at least a header and one row of data
+                                                                                          
                 if headers and body_rows:
                     tables.append({
                         'id': f'table-{i}',

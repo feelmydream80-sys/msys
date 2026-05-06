@@ -1,4 +1,4 @@
--- sql/icon/update_icon.sql
+
 UPDATE TB_ICON
 SET
     ICON_CD = %(ICON_CD)s,

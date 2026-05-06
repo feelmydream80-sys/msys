@@ -9,7 +9,7 @@ from datetime import datetime
 import logging
 from msys.config import config
 
-# Configure logging
+                   
 logger = logging.getLogger(__name__)
 
 def send_email(to, subject, html_content):
@@ -21,24 +21,24 @@ def send_email(to, subject, html_content):
     :return: tuple (success: bool, error_msg: str or None)
     """
     try:
-        # [Step 1] 메시지 생성
+                         
         logger.info("[Step 1] 메시지 생성 시작")
         msg = MIMEMultipart('alternative')
-        # MAIL_SENDER가 비어있으면 수신자 주소를 발신자로 사용
+                                            
         sender = config.MAIL_SENDER if config.MAIL_SENDER else to
         msg['From'] = sender
         msg['To'] = to
         msg['Subject'] = subject
         
-        # Attach HTML content
+                             
         part_html = MIMEText(html_content, 'html')
         msg.attach(part_html)
         logger.info("[Step 1] 메시지 생성 완료")
         
-        # [Step 2] SMTP 서버 연결
+                             
         logger.info(f"[Step 2] SMTP 서버 연결: {config.MAIL_SERVER}:{config.MAIL_PORT}")
         with smtplib.SMTP(config.MAIL_SERVER, config.MAIL_PORT) as server:
-            # [Step 3] TLS
+                          
             if config.MAIL_USE_TLS:
                 logger.info("[Step 3] TLS 시작")
                 server.starttls()
@@ -46,7 +46,7 @@ def send_email(to, subject, html_content):
             else:
                 logger.info("[Step 3] TLS 사용하지 않음 (SKIP)")
             
-            # [Step 4] 인증
+                         
             if config.MAIL_USERNAME and config.MAIL_PASSWORD:
                 logger.info("[Step 4] SMTP 인증 시도")
                 server.login(config.MAIL_USERNAME, config.MAIL_PASSWORD)
@@ -54,7 +54,7 @@ def send_email(to, subject, html_content):
             else:
                 logger.info("[Step 4] 인증 정보 없음 (SKIP)")
             
-            # [Step 5] 메일 전송
+                            
             logger.info(f"[Step 5] 메일 전송: {sender} -> {to}")
             server.sendmail(sender, to, msg.as_string())
             logger.info("[Step 5] 메일 전송 성공")
@@ -117,10 +117,10 @@ def create_api_key_expiry_email(api_key_data, subject_template=None, body_templa
     :param body_template: Optional body template (uses default if None)
     :return: Email subject and HTML body
     """
-    # 코드 명칭 가져오기
+                
     cd_nm = api_key_data.get('cd_nm', api_key_data.get('cd', ''))
     
-    # 템플릿 치환을 위한 컨텍스트
+                     
     context = {
         'cd': api_key_data.get('cd', ''),
         'cd_nm': cd_nm,
@@ -131,11 +131,11 @@ def create_api_key_expiry_email(api_key_data, subject_template=None, body_templa
         'api_ownr_email_addr': api_key_data.get('api_ownr_email_addr', ''),
     }
     
-    # 기본 제목 템플릿
+               
     if subject_template is None:
         subject_template = "[빅데이터 플랫폼] API 키 만료 알림: {{cd}} - {{expiry_dt}}"
     
-    # 기본 본문 템플릿
+               
     if body_template is None:
         body_template = """API 키 '{{cd_nm}}({{cd}})'가 곧 만료됩니다.<br/> <br/>
 API 키 코드: {{cd}}<br/> <br/>
@@ -150,7 +150,7 @@ API 키 코드: {{cd}}<br/> <br/>
 감사합니다.<br/>
 빅데이터 플랫폼 관리팀"""
     
-    # 템플릿 변수 치환
+               
     subject = subject_template
     body = body_template
     for key, value in context.items():

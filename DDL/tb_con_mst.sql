@@ -1,6 +1,6 @@
--- Table: public.tb_con_mst
 
--- DROP TABLE IF EXISTS public.tb_con_mst;
+
+
 
 CREATE TABLE IF NOT EXISTS public.tb_con_mst
 (

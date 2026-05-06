@@ -1,4 +1,4 @@
-// 데이터 정의 공통 상수 및 필드 정의
+
 export const FIELD_DEFINITIONS = {
     'CD100': ['item1', 'item2', 'item3', 'item4', 'item5', 'item6', 'item7', 'item8'],
     'CD200': ['item1', 'item2', 'item3', 'item4', 'item5', 'item6', 'item7', 'item8'],

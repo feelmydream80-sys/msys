@@ -1,26 +1,14 @@
-// static/js/modules/data_spec/ui.js
 
-/**
- * @module ui
- * @description 데이터 명세 페이지의 UI 렌더링, DOM 조작, 모달 관리를 담당합니다.
- * 
- * @example
- * import * as ui from './ui.js';
- * 
- * ui.initializeDOMElements();
- * ui.renderSpecList(specs);
- * ui.openModal();
- */
 
-// DOM 요소들을 저장할 객체
+
+
+
 export const elements = {};
 
-// 현재 명세가 비밀번호를 가지고 있는지 여부
+
 let currentSpecHasPassword = false;
 
-/**
- * @description 페이지의 주요 DOM 요소들을 찾아 `elements` 객체에 할당합니다.
- */
+
 export function initializeDOMElements() {
     elements.specListBody = document.getElementById('spec-list-body');
     elements.addNewBtn = document.getElementById('add-new-btn');
@@ -59,11 +47,7 @@ export function initializeDOMElements() {
     elements.charCounter = document.getElementById('charCounter');
 }
 
-/**
- * @description 명세 목록을 테이블에 렌더링합니다.
- * @param {Array<Object>} specs - 명세 데이터 배열
- * @param {Function} viewHandler - 행 클릭 시 호출될 이벤트 핸들러
- */
+
 export function renderSpecList(specs, viewHandler) {
     elements.specListBody.innerHTML = '';
     if (!specs || specs.length === 0) {
@@ -93,11 +77,7 @@ export function renderSpecList(specs, viewHandler) {
     });
 }
 
-/**
- * @description 파라미터 목록을 테이블 형태로 렌더링합니다.
- * @param {Array<Object>} params - 파라미터 데이터 배열
- * @param {HTMLElement} container - 파라미터 테이블이 추가될 컨테이너 요소
- */
+
 export function renderParamsTable(params, container) {
     container.innerHTML = '';
     const table = document.createElement('table');
@@ -125,7 +105,7 @@ export function renderParamsTable(params, container) {
     container.appendChild(table);
 }
 
-// --- Modal & Form Functions ---
+
 
 export const openModal = () => elements.modal.classList.remove('hidden');
 export const closeModal = () => elements.modal.classList.add('hidden');
@@ -136,13 +116,11 @@ export const closeSavePasswordModal = () => elements.savePasswordConfirmModal.cl
 export function openDeletePasswordModal() {
     const modal = elements.passwordConfirmModal;
     modal.classList.remove('hidden');
-    modal.style.zIndex = '9999'; // 강제로 최상단에 표시
+    modal.style.zIndex = '9999';
 }
 export const closeDeletePasswordModal = () => elements.passwordConfirmModal.classList.add('hidden');
 
-/**
- * @description 명세 편집 폼을 초기 상태로 리셋합니다.
- */
+
 export function resetForm() {
     elements.specIdInput.value = '';
     elements.dataNameInput.value = '';
@@ -167,12 +145,7 @@ export function resetForm() {
     elements.saveBtn.disabled = false;
 }
 
-/**
- * @description 명세 데이터로 폼을 채웁니다.
- * @param {Object} spec - 명세 데이터
- * @param {Array} params - 파라미터 데이터
- * @param {Object|null} scrapedData - 스크래핑된 데이터 (있는 경우)
- */
+
 export function populateForm(spec, params = [], scrapedData = null) {
     resetForm();
     let requestParams, responseParams;
@@ -197,7 +170,7 @@ export function populateForm(spec, params = [], scrapedData = null) {
         if (scrapedData.reference_doc && scrapedData.reference_doc.onclick) {
             const match = scrapedData.reference_doc.onclick.match(/fileDown\('([^']*)'/);
             if (match && match[1]) {
-                elements.refDocUrlInput.value = `https://www.data.go.kr/data/${match[1]}/fileData.do`;
+                elements.refDocUrlInput.value = `https:
             }
         } else {
              elements.refDocUrlInput.value = elements.scrapeUrlInput.value;
@@ -247,10 +220,7 @@ export function populateForm(spec, params = [], scrapedData = null) {
     }
 }
 
-/**
- * @description 현재 명세가 비밀번호를 가지고 있는지 여부를 반환합니다.
- * @returns {boolean}
- */
+
 export function hasPassword() {
     return currentSpecHasPassword;
 }

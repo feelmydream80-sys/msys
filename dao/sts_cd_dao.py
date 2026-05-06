@@ -144,7 +144,7 @@ class StsCdDAO:
             db = get_db_connection()
             cursor = db.cursor()
 
-            # tb_con_mst에만 있고 tb_sts_cd_mst에 없는 CD 찾기 (CD900은 그룹코드이므로 제외)
+                                                                         
             cursor.execute("""
                 SELECT m.CD
                 FROM TB_CON_MST m
@@ -163,7 +163,7 @@ class StsCdDAO:
 
             inserted_count = 0
             for (cd,) in missing_codes:
-                # CD 번호로부터 순서(ord) 계산 (CD901 → 901)
+                                                   
                 try:
                     ord_value = int(cd.replace('CD', ''))
                 except ValueError:
@@ -211,18 +211,18 @@ class StsCdDAO:
             db = get_db_connection()
             cursor = db.cursor()
 
-            # 필수 필드 검증
+                      
             cd = data.get('cd')
             if not cd:
                 raise ValueError("상태코드(cd)는 필수입니다.")
 
-            # CD 번호로부터 순서(ord) 계산 (CD901 → 901)
+                                               
             try:
                 ord_value = int(cd.replace('CD', ''))
             except ValueError:
                 ord_value = 999
 
-            # PostgreSQL 호환 upsert - UI 설정값만 저장
+                                               
             cursor.execute("""
                 INSERT INTO TB_STS_CD_MST (
                     CD, NM, DESCR, COLR, ICON_CD, ORD, BG_COLR, TXT_COLR,

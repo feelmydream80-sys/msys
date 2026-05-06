@@ -32,13 +32,13 @@ def mngr_sett_test_page():
     """관리자 설정 테스트 페이지를 렌더링합니다."""
     return render_template('mngr_sett_test.html')
 
-# --- API Endpoints ---
+                       
 api_mngr_sett_bp = Blueprint('api_mngr_sett', __name__, url_prefix='/api/mngr_sett')
 
 def mngr_sett_required(f):
     """'mngr_sett' 권한을 확인하는 데코레이터"""
     def decorated_function(*args, **kwargs):
-        # g.user 대신 session['user']를 사용하도록 수정
+                                             
         if 'user' not in session or 'mngr_sett' not in session['user'].get('permissions', []):
             return jsonify({"error": "관리자 권한이 필요합니다."}), 403
         return f(*args, **kwargs)
@@ -64,7 +64,7 @@ def get_all_mngr_sett():
     logging.info(f"Current user: {current_user.get('user_id', 'None')}")
     logging.info(f"User permissions: {current_user.get('permissions', [])}")
 
-    # 페이징 및 검색 파라미터 추출
+                      
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
     search_term = request.args.get('search_term', None)
@@ -75,7 +75,7 @@ def get_all_mngr_sett():
         conn = get_db_connection()
         mngr_sett_service = MngrSettService(conn)
         
-        # 페이징/검색 파라미터가 있으면 페이징 조회, 없으면 기존 전체 조회 (하위 호환성)
+                                                        
         if page or per_page != 10 or search_term:
             result = mngr_sett_service.get_all_settings_paged(page, per_page, search_term)
             conn.commit()
@@ -108,18 +108,18 @@ def save_all_settings():
 
     try:
         conn = get_db_connection()
-        # 1. Job ID별 설정 저장
+                          
         if mngr_settings:
             mngr_sett_service = MngrSettService(conn)
             for settings_data in mngr_settings:
                 mngr_sett_service.insert_or_update_settings(settings_data)
 
-        # 2. 사용자 권한 정보 저장
+                         
         if user_permissions:
             user_service = UserService(conn)
             current_user_id = session.get('user', {}).get('user_id')
 
-            # 비교를 위해 현재 모든 사용자의 권한 정보를 가져옵니다.
+                                             
             all_users_data = user_service.get_all_users_with_permissions()
             existing_permissions_map = {
                 user['user_id']: set(user.get('permissions', []))
@@ -128,25 +128,25 @@ def save_all_settings():
 
             for perm_data in user_permissions:
                 user_id = perm_data.get('user_id')
-                # 비교를 위해 새로운 권한 목록을 집합(set)으로 변환합니다.
+                                                    
                 new_menu_ids_set = set(perm_data.get('menu_ids', []))
                 
                 if user_id:
-                    # 기존 권한과 새로운 권한을 비교합니다.
+                                           
                     existing_perms_set = existing_permissions_map.get(user_id, set())
                     
                     if new_menu_ids_set != existing_perms_set:
-                        # 서비스 메소드에는 다시 리스트 형태로 전달합니다.
+                                                     
                         new_menu_ids_list = list(new_menu_ids_set)
                         user_service.update_permissions(user_id, new_menu_ids_list)
                         
-                        # 만약 업데이트된 사용자가 현재 로그인한 사용자와 동일하다면,
-                        # 세션의 권한 정보도 즉시 갱신합니다.
+                                                           
+                                              
                         if user_id == current_user_id:
                             session['user']['permissions'] = new_menu_ids_list
-                            session.modified = True  # 세션이 수정되었음을 명시적으로 알림
+                            session.modified = True                       
                     else:
-                        # 권한에 변경이 없는 경우 로그만 남기고 건너뜁니다.
+                                                      
                         pass
 
         conn.commit()
@@ -311,17 +311,17 @@ def export_icons():
         icons = icon_service.get_all_icons_data()
         
         output = io.StringIO()
-        output.write('\ufeff') # UTF-8 BOM for Excel compatibility
+        output.write('\ufeff')                                    
 
-        # 동적으로 필드 이름 결정, 데이터가 없을 경우 기본 헤더 사용
+                                            
         if icons:
-            # 첫 번째 데이터의 키를 사용하여 필드 순서를 보장
+                                         
             fieldnames = list(icons[0].keys())
             writer = csv.DictWriter(output, fieldnames=fieldnames)
             writer.writeheader()
             writer.writerows(icons)
         else:
-            # 데이터가 없을 때 기본 헤더만 작성
+                                 
             fieldnames = ['ICON_ID', 'ICON_CD', 'ICON_NM', 'ICON_EXPL', 'ICON_DSP_YN', 'REGR_ID', 'REG_DT', 'UPDR_ID', 'UPD_DT']
             writer = csv.DictWriter(output, fieldnames=fieldnames)
             writer.writeheader()
@@ -336,7 +336,7 @@ def export_icons():
         logging.error(f"❌ API: 아이콘 CSV 데이터 내보내기 실패: {e}", exc_info=True)
         return jsonify({"message": "아이콘 데이터 내보내기 중 오류가 발생했습니다."}), 500
 
-# --- 상태코드 API ---
+                  
 @api_mngr_sett_bp.route('/status_codes', methods=['GET'])
 def get_all_status_codes():
     """
@@ -393,13 +393,13 @@ def save_status_code():
     """
     data = request.json
     try:
-        # DB 연결 및 서비스 호출
+                        
         conn = get_db_connection()
         service = MngrSettService(conn)
         service.save_status_code_service(data)
         conn.commit()
         
-        # 배열인 경우와 단일 객체인 경우 구분하여 로그 출력
+                                      
         if isinstance(data, list):
             logging.info(f"✅ API: 상태코드 배치 저장 완료 - 총 {len(data)}개")
         else:
@@ -410,7 +410,7 @@ def save_status_code():
         logging.error(f"❌ API: 상태코드 저장 실패: {e}", exc_info=True)
         return jsonify({"message": "상태코드 저장 중 오류가 발생했습니다."}), 500
 
-# --- 사용자 관리 API ---
+                    
 
 @api_mngr_sett_bp.route('/users', methods=['GET'])
 @login_required
@@ -424,7 +424,7 @@ def get_all_users():
         user_service = UserService(conn)
         data = user_service.get_all_users_with_permissions(search_term)
         
-        # KST 시간대 변환
+                    
         convert_datetime_fields_to_kst_str(data.get('users', []))
         
         return jsonify(data), 200
@@ -528,7 +528,7 @@ def bulk_add_users():
     if not user_ids or not isinstance(user_ids, list):
         return jsonify({"message": "user_ids 배열이 필요합니다."}), 400
 
-    # Validate user IDs
+                       
     invalid_ids = [user_id for user_id in user_ids
                   if not user_id or len(user_id) < 4 or len(user_id) > 20 or not user_id.isalnum()]
 
@@ -544,24 +544,24 @@ def bulk_add_users():
         conn = get_db_connection()
         user_service = UserService(conn)
 
-        # Add users and track results
+                                     
         success_count = 0
         failed_users = []
         already_exists_users = []
 
         for user_id in user_ids:
             try:
-                # Check if user already exists
+                                              
                 existing_user = user_service.user_mapper.find_by_id(user_id)
                 if existing_user:
                     already_exists_users.append(user_id)
                     continue
 
-                # Add user with default password (same as user_id)
+                                                                  
                 hashed_password = PasswordService.hash_password(user_id)
                 user_service.user_mapper.save(user_id, hashed_password)
 
-                # Set default status as APPROVED for bulk added users
+                                                                     
                 user_service.user_mapper.update_status(user_id, 'APPROVED')
 
                 success_count += 1
@@ -573,7 +573,7 @@ def bulk_add_users():
 
         conn.commit()
 
-        # Prepare detailed response
+                                   
         response_data = {
             "message": f"성공적으로 {success_count}명의 사용자를 추가했습니다.",
             "success_count": success_count,
@@ -581,7 +581,7 @@ def bulk_add_users():
             "failed_users": failed_users
         }
 
-        # Add already exists users info if any
+                                              
         if already_exists_users:
             response_data["message"] += f" (이미 존재하는 사용자: {len(already_exists_users)}명 - {', '.join(already_exists_users)})"
             response_data["already_exists_count"] = len(already_exists_users)
@@ -618,7 +618,7 @@ def update_user_permissions():
         conn.commit()
         return jsonify({"message": f"'{user_id}' 사용자의 권한이 업데이트되었습니다."}), 200
     except ValueError as e:
-        # 서비스 계층에서 발생시킨 명확한 오류 메시지를 클라이언트에게 전달합니다.
+                                                  
         logging.error(f"❌ API: 사용자 권한 업데이트 실패 (잘못된 요청): {e}", exc_info=True)
         return jsonify({"message": str(e)}), 400
     except Exception as e:
@@ -648,11 +648,11 @@ def update_bulk_user_permissions():
             menu_ids = item.get('menu_ids', [])
             if user_id:
                 user_service.update_permissions(user_id, menu_ids)
-                # 만약 업데이트된 사용자가 현재 로그인한 사용자와 동일하다면,
-                # 세션의 권한 정보도 즉시 갱신합니다.
+                                                   
+                                      
                 if user_id == current_user_id:
                     session['user']['permissions'] = menu_ids
-                    session.modified = True  # 세션이 수정되었음을 명시적으로 알림
+                    session.modified = True                       
         
         conn.commit()
         return jsonify({"message": "사용자 권한이 성공적으로 저장되었습니다."}), 200
@@ -663,7 +663,7 @@ def update_bulk_user_permissions():
        logging.error(f"❌ API: 사용자 권한 대량 업데이트 실패 (서버 오류): {e}", exc_info=True)
        return jsonify({"message": "사용자 권한 대량 업데이트 중 오류가 발생했습니다."}), 500
 
-# --- Schedule Settings API ---
+                               
 @api_mngr_sett_bp.route('/schedule_settings', methods=['GET'])
 def get_schedule_display_settings():
     """데이터 수집 일정 표시 설정을 조회합니다."""
@@ -671,28 +671,28 @@ def get_schedule_display_settings():
     logging.info(f"ROUTE: 요청 정보 - Method: {request.method}, URL: {request.url}, User: {session.get('user', {}).get('user_id', 'Unknown')}")
 
     try:
-        # 데이터베이스 연결
+                   
         logging.info("ROUTE: 데이터베이스 연결 시도")
         conn = get_db_connection()
         logging.info("ROUTE: 데이터베이스 연결 성공")
 
-        # 서비스 생성
+                
         logging.info("ROUTE: MngrSettService 인스턴스 생성")
         service = MngrSettService(conn)
         logging.info("ROUTE: MngrSettService 인스턴스 생성 성공")
 
-        # 서비스 메소드 호출
+                    
         logging.info("ROUTE: service.get_schedule_settings_service() 호출")
         settings = service.get_schedule_settings_service()
         logging.info(f"ROUTE: 서비스 호출 완료. 반환 타입: {type(settings)}")
 
-        # 결과 검증
+               
         if settings is None:
             logging.warning("ROUTE: 서비스에서 None 반환")
             response = jsonify(None), 200
         elif isinstance(settings, dict):
             logging.info(f"ROUTE: 서비스에서 {len(settings)}개 필드의 딕셔너리 반환")
-            # JSON 직렬화 시도
+                         
             logging.info("ROUTE: JSON 직렬화 시도")
             response = jsonify(settings), 200
             logging.info("ROUTE: JSON 직렬화 성공")
@@ -704,15 +704,15 @@ def get_schedule_display_settings():
         return response
 
     except Exception as e:
-        # 실제 예외 타입과 메시지 상세 로깅
+                             
         logging.error(f"ROUTE: 스케줄 표시 설정 조회 중 예외 발생 - 타입: {type(e).__name__}, 메시지: {str(e)}", exc_info=True)
 
-        # 추가 디버깅 정보
+                   
         try:
             import traceback
             logging.error(f"ROUTE: 전체 스택 트레이스:\n{traceback.format_exc()}")
 
-            # 현재 작업 디렉토리와 파일 경로 확인
+                                  
             import os
             current_dir = os.getcwd()
             logging.error(f"ROUTE: 현재 작업 디렉토리: {current_dir}")
@@ -721,7 +721,7 @@ def get_schedule_display_settings():
             file_exists = os.path.exists(sql_file_path)
             logging.error(f"ROUTE: SQL 파일 존재 여부 ({sql_file_path}): {file_exists}")
 
-            # 현재 세션 상태 로깅
+                         
             if 'user' in session:
                 logging.info(f"ROUTE: 세션 사용자 정보: {session['user'].get('user_id', 'Unknown')}")
                 logging.info(f"ROUTE: 세션 권한 정보: {session['user'].get('permissions', [])}")
@@ -734,7 +734,7 @@ def get_schedule_display_settings():
         except Exception as log_error:
             logging.error(f"ROUTE: 추가 로깅 중 오류: {log_error}")
 
-        # 클라이언트에게 반환할 오류 응답
+                           
         error_response = {
             "message": "스케줄 표시 설정 조회 중 오류가 발생했습니다.",
             "error_type": type(e).__name__,
@@ -785,7 +785,7 @@ def import_icons():
     if file.filename == '':
         return jsonify({"message": "파일이 선택되지 않았습니다."}), 400
 
-    # 파일 확장자 확인 (CSV만 허용)
+                         
     if not file.filename.lower().endswith('.csv'):
         return jsonify({"message": "CSV 파일만 업로드할 수 있습니다."}), 400
 
@@ -794,8 +794,8 @@ def import_icons():
         conn = get_db_connection()
         icon_service = IconService(conn)
         
-        # 서비스의 import_icons_from_csv 함수를 호출하여 파일을 처리합니다.
-        # file.stream은 파일의 내용을 바이트 스트림으로 제공합니다.
+                                                        
+                                               
         count = icon_service.import_icons_from_csv(file.stream)
         
         logging.info("데이터베이스 트랜잭션 커밋을 시도합니다.")
@@ -814,7 +814,7 @@ def import_icons():
             conn.rollback()
         return jsonify({"message": f"아이콘 가져오기 중 오류가 발생했습니다: {e}"}), 500
 
-# --- 데이터 접근 권한 API ---
+                       
 
 @api_mngr_sett_bp.route('/data_permission/users', methods=['GET'])
 @login_required
@@ -827,18 +827,18 @@ def get_users_for_data_permission():
         conn = get_db_connection()
         user_service = UserService(conn)
         
-        # 1. 기존의 안정적인 사용자 정보 + 메뉴 권한 조회 함수를 호출합니다.
+                                                  
         user_data = user_service.get_all_users_with_permissions(search_term)
         users = user_data.get('users', [])
 
-        # 2. 각 사용자에게 데이터 접근 권한(Job ID) 정보를 추가합니다.
+                                                 
         mngr_sett_service = MngrSettService(conn)
         for user in users:
             user_id = user.get('user_id')
-            # MngrSettService에 사용자 ID로 Job ID 목록을 가져오는 간단한 메서드를 추가하거나
-            # 직접 매퍼를 사용하여 가져올 수 있습니다. 여기서는 후자를 가정합니다.
+                                                                     
+                                                     
             job_ids = mngr_sett_service.user_mapper.find_data_permissions_by_user_id(user_id)
-            # Job ID를 오름차순으로 정렬
+                               
             user['job_ids'] = sorted(job_ids) if job_ids else []
 
         return jsonify(users), 200

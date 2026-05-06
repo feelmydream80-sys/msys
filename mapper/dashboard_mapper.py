@@ -1,4 +1,4 @@
-# mapper/dashboard_mapper.py
+                            
 import logging
 from dao.sql_loader import load_sql
 from sql.dashboard.dashboard_sql import DashboardSQL
@@ -16,18 +16,18 @@ class DashboardMapper:
         self.conn = conn
 
     def get_summary(self, start_date: Optional[str] = None, end_date: Optional[str] = None, all_data: bool = False, job_ids: Optional[List[str]] = None) -> List[Dict]:
-        # logging.debug(f"--- [DEBUG] DashboardMapper.get_summary called with job_ids: {job_ids}")
+                                                                                                  
         query, params = DashboardSQL.get_dashboard_summary(start_date, end_date, all_data, job_ids)
-        # logging.debug(f"--- [DEBUG] Generated SQL Query:\n{query}")
-        # logging.debug(f"--- [DEBUG] Query Parameters: {params}")
+                                                                     
+                                                                  
         with self.conn.cursor() as cur:
             cur.execute(query, params)
             columns = [desc[0] for desc in cur.description]
             results = [dict(zip(columns, row)) for row in cur.fetchall()]
-            # logging.info(f"Mapper: Fetched {len(results)} records for summary.")
-            # logging.info(f"Original data: {results}")
+                                                                                  
+                                                       
             converted_results = convert_to_new_columns('TB_CON_HIST', results)
-            # logging.info(f"Converted data: {converted_results}")
+                                                                  
             return converted_results
 
     def get_min_max_dates(self) -> Optional[Dict]:
@@ -133,13 +133,13 @@ class DashboardMapper:
                 where_clauses.append("EVNT_OCCR_TIME <= %s")
                 params.append(end_dt_utc)
 
-        # 데이터 접근 권한 적용 - Job ID 필터링
+                                   
         if job_ids is not None:
-            if not job_ids:  # 빈 리스트인 경우
-                return []  # 빈 결과 반환
-            # job_id가 NULL인 경우도 고려하여 조건 추가
+            if not job_ids:             
+                return []           
+                                          
             job_id_conditions = ["(EVNT_CHG_ROW ->> 'job_id')::text = %s" for _ in job_ids]
-            job_id_conditions.append("(EVNT_CHG_ROW ->> 'job_id')::text IS NULL")  # NULL 값도 포함
+            job_id_conditions.append("(EVNT_CHG_ROW ->> 'job_id')::text IS NULL")              
             where_clauses.append("(" + " OR ".join(job_id_conditions) + ")")
             params.extend(job_ids)
 

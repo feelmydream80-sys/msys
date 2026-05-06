@@ -1,15 +1,11 @@
-/**
- * 사용자접속정보 메인 모듈
- * Tab content module for user access information management
- * 실제 API 연동 버전
- */
+
 
 import { config } from './config.js';
 import statusManager from './statusManager.js';
 import userListRenderer, { setThresholds } from './userList.js';
 import { getKSTNow, getLast6Months } from '../../modules/common/dateUtils.js';
 
-// Chart.js가 로드되어 있는지 확인
+
 function ensureChartJS() {
     return new Promise((resolve, reject) => {
         if (typeof Chart !== 'undefined') {
@@ -17,7 +13,7 @@ function ensureChartJS() {
             return;
         }
         
-        // Chart.js 로드
+
         const script = document.createElement('script');
         script.src = '/static/vendor/js/chart.umd.js';
         script.onload = () => resolve();
@@ -34,26 +30,26 @@ class UserAccessInfo {
         this.weeklyChartInst = null;
         this.currentUser = null;
         this.currentMode = 'all';
-        this.chartType = 'heatmap'; // 'heatmap' 또는 'line'
-        this.userListRenderer = userListRenderer; // 외부에서 접근 가능하도록
+        this.chartType = 'heatmap';
+        this.userListRenderer = userListRenderer;
     }
 
-    // 차트 타입 설정 (히트맵 vs 선차트) - 전역 적용
+
     setChartType(type) {
         this.chartType = type;
-        // init 완료 후에만 userListRenderer의 차트 타입 동기화 (중복 렌더링 방지)
+
         if (this.isInitialized && this.userListRenderer) {
             this.userListRenderer.setChartType(type);
         }
         this.updateChartTypeButtons(type);
-        // 현재 사용자가 있으면 차트 다시 렌더링
+
         if (this.currentUser) {
             this.renderWeeklyChart(this.currentUser);
         }
     }
 
     updateChartTypeButtons(type) {
-        // 목록 뷰 버튼 업데이트
+
         const listBtnHeatmap = document.getElementById('btn-chart-heatmap');
         const listBtnLine = document.getElementById('btn-chart-line');
         if (listBtnHeatmap && listBtnLine) {
@@ -66,7 +62,7 @@ class UserAccessInfo {
             }
         }
 
-        // 상세 뷰 버튼 업데이트
+
         const detailBtnHeatmap = document.getElementById('ua-chart-type-heatmap');
         const detailBtnLine = document.getElementById('ua-chart-type-line');
         if (detailBtnHeatmap && detailBtnLine) {
@@ -98,7 +94,7 @@ class UserAccessInfo {
         this.isInitialized = true;
     }
 
-    // Promise 기반 파이프라인: 중복 호출 방지
+
     async pipeline() {
         if (this._pipelinePromise) {
             return this._pipelinePromise;
@@ -114,11 +110,11 @@ class UserAccessInfo {
     }
 
     async _executePipeline() {
-        // 순차 실행: 초기화 → 데이터 로드 → 렌더링 → 애니메이션
+
         if (!this.isInitialized) {
             await this.init();
         } else {
-            // 이미 초기화됨: 헤더 업데이트 후 forceReload로 데이터 갱신
+
             this.updateMonthHeaders();
             this.updateThresholdInputs();
             await userListRenderer.render(1, null, null, true);
@@ -136,7 +132,7 @@ class UserAccessInfo {
     }
 
     setupEventListeners() {
-        // 검색 입력
+
         const searchInput = document.getElementById('userAccessSearchInput');
         if (searchInput) {
             let searchTimeout;
@@ -148,7 +144,7 @@ class UserAccessInfo {
             });
         }
 
-        // 페이지 크기 선택
+
         const pageSizeSelect = document.getElementById('userAccessItemsPerPage');
         if (pageSizeSelect) {
             pageSizeSelect.addEventListener('change', (e) => {
@@ -167,7 +163,7 @@ class UserAccessInfo {
         const btnAll = document.getElementById('btn-filter-all');
         const btnNone = document.getElementById('btn-filter-none');
         if (btnAll && btnNone) {
-            // 높이 32px로 통일
+
             btnAll.style.cssText = mode === 'all' 
                 ? 'height: 32px; padding: 0 10px; border-radius: 4px; border: 1px solid #333; background: #333; color: #fff; font-size: 12px; cursor: pointer;'
                 : 'height: 32px; padding: 0 10px; border-radius: 4px; border: 1px solid rgba(0,0,0,0.16); background: white; color: #666; font-size: 12px; cursor: pointer;';
@@ -178,9 +174,9 @@ class UserAccessInfo {
         }
     }
 
-    // 히트맵 모드 설정 (중복 포함 / 1일 1접속)
+
     async setMode(mode) {
-        // 모드 변경 시 데이터 다시 로드
+
         await userListRenderer.setMode(mode);
         this.updateModeButtons(mode);
     }
@@ -236,13 +232,13 @@ class UserAccessInfo {
         return success;
     }
 
-    // 상세 패널 표시
+
     async showDetail(userId) {
         try {
-            // 현재 모드 가져오기
+
             const mode = userListRenderer.mode || 'all';
             
-            // API에서 사용자 상세 정보 가져오기 (mode 파라미터 추가)
+
             const response = await fetch(`/api/analytics/statistics/user-detail/${userId}?mode=${mode}`);
             if (!response.ok) {
                 throw new Error('Failed to fetch user detail');
@@ -252,12 +248,12 @@ class UserAccessInfo {
             this.currentUser = user;
             this.currentMode = mode;
 
-            // 목록 숨기고 상세 패널 표시
+
             const tableContainer = document.querySelector('#userAccessInfo .table-responsive');
             const pagination = document.getElementById('userAccessPagination');
             const detailPanel = document.getElementById('userAccessDetailPanel');
-            const toolbar = document.querySelector('#userAccessInfo > div:nth-child(3)'); // 검색/필터 툴 바
-            const settingsSection = document.querySelector('#userAccessInfo > div:nth-child(4)'); // 상태 설정 섹션
+            const toolbar = document.querySelector('#userAccessInfo > div:nth-child(3)');
+            const settingsSection = document.querySelector('#userAccessInfo > div:nth-child(4)');
 
             if (tableContainer) tableContainer.style.display = 'none';
             if (pagination) pagination.style.display = 'none';
@@ -265,7 +261,7 @@ class UserAccessInfo {
             if (settingsSection) settingsSection.style.display = 'none';
             if (detailPanel) detailPanel.style.display = 'block';
 
-            // 사용자 정보 채우기
+
             document.getElementById('ua-avatar').textContent = user.initials || user.user_id.substring(0, 2).toUpperCase();
             document.getElementById('ua-user-id').textContent = user.user_id;
 
@@ -274,7 +270,7 @@ class UserAccessInfo {
             badge.textContent = st.label;
             badge.style.cssText = `display:inline-block;padding:2px 8px;border-radius:20px;font-size:12px;font-weight:500;background:${st.cls === 'b-green' ? '#f0fdf4;color:#166534' : st.cls === 'b-amber' ? '#fffbeb;color:#92400e' : st.cls === 'b-red' ? '#fef2f2;color:#991b1b' : '#f4f4f4;color:#6b7280'}`;
 
-            // 날짜 계산
+
             const daysAgo = user.last_acs_dt ? 
                 Math.floor((new Date() - new Date(user.last_acs_dt)) / (1000 * 60 * 60 * 24)) : 
                 999;
@@ -283,7 +279,7 @@ class UserAccessInfo {
             document.getElementById('ua-meta').textContent = 
                 `마지막 접속: ${user.last_acs_dt || '-'} (${daLabel}) · 누적 접속: ${(user.total || 0).toLocaleString()}회 · 연속 접속: ${user.streak || 0}일`;
 
-            // 통계 값
+
             document.getElementById('ua-monthly').textContent = (user.monthly || 0) + '회';
             const md = (user.monthly || 0) - (user.monthlyPrev || 0);
             document.getElementById('ua-monthly-sub').innerHTML = 
@@ -297,14 +293,14 @@ class UserAccessInfo {
             document.getElementById('ua-total').textContent = (user.total || 0).toLocaleString() + '회';
             document.getElementById('ua-streak').textContent = (user.streak || 0) + '일';
 
-            // 차트 렌더링
+
             this.renderCharts(user);
         } catch (e) {
             this.showMessage('사용자 상세 정보 로드에 실패했습니다.', 'error');
         }
     }
 
-    // 목록으로 돌아가기
+
     showList() {
         const tableContainer = document.querySelector('#userAccessInfo .table-responsive');
         const pagination = document.getElementById('userAccessPagination');
@@ -318,7 +314,7 @@ class UserAccessInfo {
         if (settingsSection) settingsSection.style.display = 'block';
         if (detailPanel) detailPanel.style.display = 'none';
 
-        // 차트 정리
+
         if (this.chartInst) {
             this.chartInst.destroy();
             this.chartInst = null;
@@ -361,10 +357,10 @@ class UserAccessInfo {
             }
         };
 
-        // 최근 6개월 라벨 동적 생성 (KST 기준) - YY.M 형식
+
         const months = getLast6Months(6);
 
-        // 월별 접속 추이 차트
+
         const chartCanvas = document.getElementById('ua-chart');
         if (chartCanvas) {
             this.chartInst = new Chart(chartCanvas, {
@@ -383,7 +379,7 @@ class UserAccessInfo {
             });
         }
 
-        // 시간대별 분포 차트
+
         const hourCanvas = document.getElementById('ua-hour-chart');
         if (hourCanvas) {
             const hourLabels = Array.from({ length: 24 }, (_, i) => i % 6 === 0 ? i + '시' : '');
@@ -417,12 +413,12 @@ class UserAccessInfo {
         const weeklyCanvas = document.getElementById('ua-weekly-chart');
         if (!weeklyCanvas) return;
 
-        // hm 데이터가 32개 (26주 + 6개 구분자)인 경우 처리
+
         let weeklyData = [];
         let weekLabels = [];
         
         if (user.hm && Array.isArray(user.hm)) {
-            // hm 데이터에서 주간 데이터 추출 (null 값은 구분자로 skip)
+
             user.hm.forEach((value, idx) => {
                 if (value !== null) {
                     weeklyData.push(value);
@@ -431,7 +427,7 @@ class UserAccessInfo {
             });
         }
 
-        // 데이터가 없으면 기본값
+
         if (weeklyData.length === 0) {
             weeklyData = Array(26).fill(0);
             weekLabels = Array.from({ length: 26 }, (_, i) => `${i + 1}주`);
@@ -440,7 +436,7 @@ class UserAccessInfo {
         const tcol = 'rgba(0,0,0,0.35)', gcol = 'rgba(0,0,0,0.06)';
 
         if (this.chartType === 'heatmap') {
-            // 히트맵 스타일 차트 (수평 막대로 히트맵 효과)
+
             const backgroundColors = weeklyData.map(val => {
                 if (this.currentMode === 'distinct') {
                     if (val === 0) return '#f3f4f6';
@@ -495,7 +491,7 @@ class UserAccessInfo {
                 }
             });
         } else {
-            // 선차트 (line)
+
             this.weeklyChartInst = new Chart(weeklyCanvas, {
                 type: 'line',
                 data: {
@@ -551,11 +547,11 @@ class UserAccessInfo {
     }
 
     showMessage(message, type = 'info') {
-        // 기존 메시지가 있으면 제거
+
         const existing = document.getElementById('userAccessMessage');
         if (existing) existing.remove();
 
-        // 새 메시지 생성
+
         const messageEl = document.createElement('div');
         messageEl.id = 'userAccessMessage';
         messageEl.style.cssText = `
@@ -575,7 +571,7 @@ class UserAccessInfo {
 
         document.body.appendChild(messageEl);
 
-        // 3초 후 자동 제거
+
         setTimeout(() => {
             if (messageEl.parentNode) {
                 messageEl.parentNode.removeChild(messageEl);
@@ -584,26 +580,26 @@ class UserAccessInfo {
     }
 }
 
-// Singleton instance
+
 const userAccessInfo = new UserAccessInfo();
 
-// 전역에서 접근 가능하도록 등록
+
 window.userAccessInfo = userAccessInfo;
 
-// Promise 기반 파이프라인: 중복 호출 방지
+
 function setupTabHandlers() {
     const tabButtons = document.querySelectorAll('.tab-button[data-tab="userAccessInfo"]');
     if (tabButtons.length > 0) {
         tabButtons.forEach(btn => {
             btn.addEventListener('click', async () => {
-                // 파이프라인 실행: 탭 활성화 시 한 번만 데이터 로드
+
                 await userAccessInfo.pipeline();
             });
         });
     }
 }
 
-// DOM 준비 상태 확인 후 핸들러 설정
+
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', setupTabHandlers);
 } else {

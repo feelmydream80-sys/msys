@@ -1,9 +1,9 @@
--- 데이터 수집 일정 화면 표시 설정 테이블 생성 및 초기 데이터 삽입
 
--- 1. 테이블이 이미 존재하면 삭제
+
+
 DROP TABLE IF EXISTS tb_data_clt_schd_sett;
 
--- 2. 테이블 생성 (DDL)
+
 CREATE TABLE tb_data_clt_schd_sett (
     sett_id SERIAL PRIMARY KEY,
     grp_min_cnt INT NOT NULL,
@@ -31,7 +31,7 @@ CREATE TABLE tb_data_clt_schd_sett (
     updr_dt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 테이블 및 컬럼 코멘트 추가
+
 COMMENT ON TABLE tb_data_clt_schd_sett IS '데이터 수집 일정 표시 설정 테이블';
 COMMENT ON COLUMN tb_data_clt_schd_sett.sett_id IS '설정 고유ID';
 COMMENT ON COLUMN tb_data_clt_schd_sett.grp_min_cnt IS '그룹화 최소 개수';
@@ -58,10 +58,10 @@ COMMENT ON COLUMN tb_data_clt_schd_sett.regr_dt IS '등록 일시';
 COMMENT ON COLUMN tb_data_clt_schd_sett.updr_id IS '수정자 ID';
 COMMENT ON COLUMN tb_data_clt_schd_sett.updr_dt IS '수정 일시';
 
--- 3. 초기 데이터 삽입 (DML)
--- 그룹화 최소 개수: 3
--- 진행률 문제점(붉은색) 기준: 30% 미만
--- 진행률 경고(주황색) 기준: 60% 미만
+
+
+
+
 INSERT INTO tb_data_clt_schd_sett (
     grp_min_cnt, prgs_rt_red_thrsval, prgs_rt_org_thrsval, use_yn,
     sucs_icon_id, sucs_bg_colr, sucs_txt_colr,

@@ -3,7 +3,7 @@
         <span class="text-white text-2xl font-bold">수집 현황 대시보드</span>
         
         <div class="flex items-center space-x-2">
-            {# --- 메뉴 링크 --- #}
+            
             {% if g.user and g.user.permissions and menu_items %}
                 {% for item in menu_items %}
                     {% if item.menu_id in g.user.permissions %}
@@ -16,7 +16,7 @@
                 {% endfor %}
             {% endif %}
 
-            {# --- 로그인/로그아웃 버튼 --- #}
+            
             <div class="ml-4">
                 {% if g.user %}
                     <div class="relative" id="user-menu-container">

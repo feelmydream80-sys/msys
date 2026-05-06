@@ -26,13 +26,13 @@ def get_job_list():
         user = session.get('user')
         with get_db_connection() as conn:
             mst_service = ConMstService(conn)
-            # DataTables parameters
+                                   
             draw = int(request.args.get('draw', 0))
             start = int(request.args.get('start', 0))
             length = int(request.args.get('length', 10))
             search_value = request.args.get('search[value]', '')
             
-            # Get date range parameters
+                                       
             start_date = request.args.get('start_date')
             end_date = request.args.get('end_date')
             all_data = request.args.get('allData', 'false').lower() == 'true'
@@ -74,7 +74,7 @@ def get_job_mst_info():
         return jsonify({"error": "Error fetching job master info."}), 500
 
 @bp.route('/api/jandi-data')
-@bp.route('/api/jandi/raw_data') # Add a new route for raw data access
+@bp.route('/api/jandi/raw_data')                                      
 def get_jandi_data():
     """API for Jandi heatmap data."""
     job_id = request.args.get('job_id')

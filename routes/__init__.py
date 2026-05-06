@@ -1,8 +1,8 @@
-# routes/__init__.py
+                    
 
 def init_app(app):
     from . import auth_routes
-    from . import admin_routes  # 순환 참조 방지: mngr_sett_routes보다 먼저 임포트
+    from . import admin_routes                                       
     from . import data_spec_routes
     from . import jandi_routes
     from . import mngr_sett_routes

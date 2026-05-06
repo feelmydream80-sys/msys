@@ -1,17 +1,6 @@
-// static/js/modules/data_analysis/events.js
 
-/**
- * @module events
- * @description 데이터 분석 페이지의 이벤트 처리 및 메인 로직을 담당합니다.
- * - 필터 변경, 버튼 클릭 등 사용자 이벤트를 처리합니다.
- * - 데이터 모듈과 UI 모듈을 연결하여 전체 애플리케이션 흐름을 제어합니다.
- * - AI 분석 요청 및 응답 처리를 담당합니다.
- * 
- * @example
- * import { initializeAnalysisPage } from './events.js';
- * 
- * document.addEventListener('DOMContentLoaded', initializeAnalysisPage);
- */
+
+
 
 import {
     initializeData,
@@ -41,7 +30,7 @@ import { updatePaginationData } from '../ui_components/pagination.js';
 import { displayMinMaxDates } from '../dashboard/ui.js';
 import { downloadExcelTemplate } from '../../utils/excelDownload.js';
 
-// DOM 요소 캐싱
+
 const elements = {
     startDate: document.getElementById('startDate'),
     endDate: document.getElementById('endDate'),
@@ -53,9 +42,7 @@ const elements = {
     analyzeBtn: document.getElementById('analyzeBtn')
 };
 
-/**
- * @description 필터 값에 따라 모든 데이터를 조회하고 화면을 다시 렌더링합니다.
- */
+
 async function fetchAndRenderAll() {
     const start = elements.startDate.value;
     const end = elements.endDate.value;
@@ -85,7 +72,7 @@ async function fetchAndRenderAll() {
 
         renderRawTable(filteredRaw);
         renderJobInfoTable();
-        renderSummaryCards(getRawData()); // 항상 전체 데이터로 요약 카드 렌더링
+        renderSummaryCards(getRawData());
         renderInsight('');
         renderAiAnswer('');
 
@@ -112,11 +99,9 @@ async function fetchAndRenderAll() {
     }
 }
 
-/**
- * @description Gemini API를 호출하여 데이터 분석을 요청하고 결과를 표시합니다.
- */
+
 function askGeminiAnalysis() {
-    // ... (기존 askGeminiAnalysis 로직)
+
     let jobInfoRows = [];
     const jobInfoTable = document.getElementById('jobInfoTable');
     if (jobInfoTable) {
@@ -163,9 +148,7 @@ function askGeminiAnalysis() {
     });
 }
 
-/**
- * @description 이벤트 리스너를 초기화합니다.
- */
+
 function initializeEventListeners() {
     elements.jobIdSelect?.addEventListener('change', fetchAndRenderAll);
     elements.errorCodeSelect?.addEventListener('change', fetchAndRenderAll);
@@ -179,7 +162,7 @@ function initializeEventListeners() {
 
     elements.analyzeBtn?.addEventListener('click', askGeminiAnalysis);
 
-    // 검색 이벤트 리스너
+
     const jobInfoSearch = document.getElementById('jobInfoSearch');
     if (jobInfoSearch) {
         jobInfoSearch.addEventListener('input', (e) => {
@@ -203,11 +186,11 @@ function initializeEventListeners() {
             const filtered = allRawData.filter(item => {
                 const statusLabel = errorCodeMap[item.error_code || item.status] || (item.error_code || item.status || '');
                 
-                // '실패'로 검색했을 때의 특별 처리
+
                 if (searchTerm === '실패') {
                     const match = item.rqs_info && item.rqs_info.match(/(?:실패|실패): (\d+)/);
                     const failCount = match ? parseInt(match[1]) : 0;
-                    // status가 CD902이고, rqs_info에 실패 건수가 0보다 크거나, statusLabel이 '실패'를 포함하는 경우
+
                     return (item.status === 'CD902' && failCount > 0) || (statusLabel && statusLabel.includes('실패'));
                 }
 
@@ -220,18 +203,16 @@ function initializeEventListeners() {
         });
     }
 
-    // 엑셀 템플릿 다운로드 버튼 이벤트 리스너
+
     const downloadExcelTemplateBtn = document.getElementById('downloadExcelTemplateBtn');
     if (downloadExcelTemplateBtn) {
         downloadExcelTemplateBtn.addEventListener('click', downloadExcelTemplate);
     }
 }
 
-/**
- * @description 데이터 분석 페이지를 초기화합니다.
- */
+
 export async function initializeAnalysisPage() {
-    // 카드 접기/펴기 기능 초기화
+
     initCollapsibleFeatures();
 
     displayMinMaxDates('dashboardSummary', 'data-min-date', 'data-max-date');

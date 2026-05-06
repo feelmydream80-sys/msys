@@ -1,4 +1,4 @@
-# dao/schedule_settings_dao.py
+                              
 import logging
 from typing import Dict, Optional
 from utils.logging_config import log_operation
@@ -15,7 +15,7 @@ class ScheduleSettingsDAO:
             with self.conn.cursor() as cursor:
                 self.logger.debug("DAO: 커서 생성 성공")
 
-                # 쿼리 실행
+                       
                 cursor.execute(query, params)
                 self.logger.debug("DAO: 쿼리 실행 성공")
 
@@ -56,19 +56,19 @@ class ScheduleSettingsDAO:
         """
         self.logger.info("=== DAO: get_schedule_settings() 시작 ===")
         try:
-            # SQL 파일 존재 여부 확인
-            #sql_file_path = 'sql/mngr_sett/get_schedule_settings.sql'
-            #self.logger.info(f"DAO: SQL 파일 경로 확인: {sql_file_path}")
+                             
+                                                                      
+                                                                    
 
-            #with open(sql_file_path, 'r', encoding='utf-8') as f:
-             #   query = f.read()
+                                                                  
+                                 
 
 
             from dao.sql_loader import load_sql
             query = load_sql('mngr_sett/get_schedule_settings.sql')
             log_operation("관리자설정", "스케줄설정", "SQL 파일 로드", f"성공: {len(query)}자")
 
-            # 쿼리 실행
+                   
             log_operation("관리자설정", "스케줄설정", "데이터 조회", "실행 시작")
             settings = self._execute_query(query, fetch_one=True)
             result_type = "데이터 있음" if settings else "데이터 없음"
@@ -79,7 +79,7 @@ class ScheduleSettingsDAO:
                 return None
             elif isinstance(settings, dict):
                 log_operation("관리자설정", "스케줄설정", "데이터 반환", f"{len(settings)}개 필드")
-                # 민감한 정보 제외하고 주요 키들 로깅 (디버그 모드에서만)
+                                                  
                 safe_keys = ['sett_id', 'grp_min_cnt', 'use_yn', 'grp_brdr_styl', 'grp_colr_crtr']
                 log_info = {k: v for k, v in settings.items() if k in safe_keys}
                 log_operation("관리자설정", "스케줄설정", "주요 설정", f"sett_id: {settings.get('sett_id')}", "DEBUG", log_info)
@@ -110,7 +110,7 @@ class ScheduleSettingsDAO:
 
             log_operation("관리자설정", "스케줄설정", "업데이트 시작", f"sett_id: {sett_id}")
 
-            # Ensure all keys are present, providing defaults if necessary
+                                                                          
             params = {
                 'grp_min_cnt': settings_data.get('grp_min_cnt'),
                 'prgs_rt_red_thrsval': settings_data.get('prgs_rt_red_thrsval'),

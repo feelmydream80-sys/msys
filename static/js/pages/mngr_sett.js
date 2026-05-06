@@ -1,24 +1,24 @@
-// @DOC_FILE: mngr_sett.js
-// @DOC_DESC: 관리자 설정 페이지의 메인 JavaScript 파일. 각 탭의 UI와 이벤트 로직을 관리합니다.
 
-// 디버그 모드 설정 (프로덕션에서는 false로 변경)
-const DEBUG_MODE = true; // TODO: 프로덕션 배포 시 false로 변경
 
-// 공통 유틸리티 함수들 가져오기
+
+
+const DEBUG_MODE = true;
+
+
 import { debugLog, showToast, setActiveColorInput, createStatusSettingRow } from '../utils.js';
 import { isValidUserId } from '../validators.js';
 
-// 서비스 모듈들 가져오기
+
 import { stateManager } from '../services/stateManager.js';
 
-// 탭 모듈들 가져오기
+
 import { statisticsTab } from '../tabs/statistics.js';
 import { userManagementTab } from '../tabs/userManagement.js';
 import { dataAccessTab } from '../tabs/dataAccess.js';
 import { popupManagementTab } from '../tabs/popupManagement.js';
 import { init as initDataDefinition } from '../tabs/dataDefinition/dataDefinition.js';
 
-// 외부 모듈들 가져오기
+
 import { setDataFlowStatus } from '../modules/common/api/client.js';
 import { setupTabs, renderSettingsTable, renderIconTable, populateIconSelects, initUI, initSettingsPagination } from '../modules/mngr_sett/ui.js';
 import { getAdminSettings, getIcons } from '../modules/mngr_sett/data.js';
@@ -36,15 +36,12 @@ import {
 } from '../modules/mngr_sett/events.js';
 import { downloadExcelTemplate } from '../utils/excelDownload.js';
 
-// 설정 동기화 함수를 전역으로 노출
+
 window.syncSettings = syncSettings;
 
-// --- START: Schedule Settings Tab Logic ---
 
-/**
- * Renders the schedule settings form.
- * @param {object} settings - The schedule settings data.
- */
+
+
 function renderScheduleSettingsForm(settings) {
     const formContainer = document.getElementById('scheduleSettingsForm');
     if (!formContainer) {
@@ -90,7 +87,7 @@ function renderScheduleSettingsForm(settings) {
         </label>
     `).join('');
 
-    // 아이콘 옵션 생성 함수
+
     const createIconOptions = (selectedIconId) => {
         const options = ['<option value="">선택 안 함</option>'];
         allIcons.forEach(icon => {
@@ -102,7 +99,7 @@ function renderScheduleSettingsForm(settings) {
         return options.join('');
     };
 
-    // 상태별 카드 생성 함수
+
     const createStatusCard = (statusKey, statusLabel, iconId, bgColor, textColor) => {
         const iconOptions = createIconOptions(iconId);
         return `
@@ -236,7 +233,7 @@ function renderScheduleSettingsForm(settings) {
         </div>
     `;
 
-    // Add CSS styles for the new layout
+
     const styleId = 'schedule-settings-styles';
     let styleElement = document.getElementById(styleId);
     if (!styleElement) {
@@ -246,7 +243,7 @@ function renderScheduleSettingsForm(settings) {
     }
 
     styleElement.innerHTML = `
-        /* Settings Grid */
+        
         .settings-section {
             background-color: white;
             padding: 1.5rem;
@@ -264,14 +261,14 @@ function renderScheduleSettingsForm(settings) {
             border-bottom: 2px solid #e2e8f0;
         }
 
-        /* 3-Column Grid for Basic Settings */
+        
         .basic-settings-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 1.5rem;
         }
 
-        /* Setting Group */
+        
         .setting-group {
             background-color: #f1f5f9;
             padding: 1.25rem;
@@ -285,7 +282,7 @@ function renderScheduleSettingsForm(settings) {
             margin-bottom: 1rem;
         }
 
-        /* Form Elements */
+        
         .form-row {
             margin-bottom: 1rem;
         }
@@ -341,7 +338,7 @@ function renderScheduleSettingsForm(settings) {
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
 
-        /* Radio Buttons */
+        
         .radio-group {
             display: flex;
             gap: 1rem;
@@ -358,7 +355,7 @@ function renderScheduleSettingsForm(settings) {
             width: auto;
         }
 
-        /* Checkbox */
+        
         .checkbox-item {
             display: flex;
             align-items: center;
@@ -369,7 +366,7 @@ function renderScheduleSettingsForm(settings) {
             width: auto;
         }
 
-        /* Color Input */
+        
         .color-input-wrapper {
             display: flex;
             align-items: center;
@@ -397,14 +394,14 @@ function renderScheduleSettingsForm(settings) {
             background-color: white;
         }
 
-        /* Dynamic Flex Wrap Layout for Status Settings */
+        
         .status-settings-grid {
             display: flex;
             flex-wrap: wrap;
             gap: 1.5rem;
         }
 
-        /* Status Setting Card */
+        
         .status-card {
             background-color: #f1f5f9;
             padding: 1.25rem;
@@ -422,7 +419,7 @@ function renderScheduleSettingsForm(settings) {
             text-align: center;
         }
 
-        /* Border Style Selector */
+        
         .border-style-selector {
             display: flex;
             gap: 1rem;
@@ -468,7 +465,7 @@ function renderScheduleSettingsForm(settings) {
             color: #64748b;
         }
 
-        /* Responsive Design */
+        
         @media (max-width: 1200px) {
             .basic-settings-grid {
                 grid-template-columns: repeat(2, 1fr);
@@ -489,7 +486,7 @@ function renderScheduleSettingsForm(settings) {
             }
         }
 
-        /* Helper Classes */
+        
         .mt-2 {
             margin-top: 0.5rem;
         }
@@ -503,7 +500,7 @@ function renderScheduleSettingsForm(settings) {
         }
     `;
 
-    // Color preview update
+
     document.querySelectorAll('input[type="color"]').forEach(input => {
         input.addEventListener('input', function() {
             const preview = this.previousElementSibling;
@@ -513,7 +510,7 @@ function renderScheduleSettingsForm(settings) {
         });
     });
 
-    // Border style selector
+
     document.querySelectorAll('.border-style-option').forEach(option => {
         option.addEventListener('click', function() {
             const radio = this.querySelector('input[type="radio"]');
@@ -521,48 +518,36 @@ function renderScheduleSettingsForm(settings) {
         });
     });
 
-    // 상태코드 동기화 버튼 이벤트 리스너 등록
+
     const syncBtn = document.getElementById('syncStatusCodesBtn');
     if (syncBtn) {
         syncBtn.addEventListener('click', syncStatusCodes);
     }
 
-    // 페이지 렌더링 후 상태코드 자동 로드
+
     setTimeout(loadStatusCodes, 100);
 }
 
-/**
- * 상태코드 마스터 테이블에서 모든 상태코드를 불러와서 UI에 렌더링 합니다
- */
+
 async function loadStatusCodes() {
-    console.log('🔵 === CD900: loadStatusCodes() 시작 ===');
-    
+
     const container = document.getElementById('statusCodesContainer');
     if (!container) {
-        console.error('🔴 statusCodesContainer를 찾을 수 없습니다');
+
         return;
     }
 
     try {
-        console.log('🔵 API 호출 시작: /api/mngr_sett/status_codes');
-        
+
         const response = await fetch('/api/mngr_sett/status_codes');
-        console.log('🔵 응답 수신 완료', {
-            status: response.status,
-            ok: response.ok
-        });
 
         if (!response.ok) {
             throw new Error(`상태코드 조회 실패 (${response.status})`);
         }
 
         const statusCodes = await response.json();
-        console.log('🟢 상태코드 데이터 수신 성공', {
-            총건수: Array.isArray(statusCodes) ? statusCodes.length : 0,
-            데이터: statusCodes
-        });
 
-        // 아이콘 옵션 가져오기
+
         const allIcons = window.allIconsData || [];
         const createIconOptions = (selectedIconCd) => {
             const options = ['<option value="">선택 안 함</option>'];
@@ -573,7 +558,7 @@ async function loadStatusCodes() {
             return options.join('');
         };
 
-        // 상태코드 카드 렌더링 (코드 오름차순 정렬)
+
         container.innerHTML = statusCodes
             .sort((a, b) => a.cd.localeCompare(b.cd))
             .map(code => `
@@ -606,21 +591,19 @@ async function loadStatusCodes() {
             </div>
         `;
 
-        console.log('🟢 상태코드 카드 렌더링 완료');
 
-        // 색상 프리뷰 이벤트 리스너 재등록
         attachColorInputListeners();
         
         showToast('상태코드 목록이 정상적으로 로드되었습니다.', 'success');
 
-        // 저장 버튼 이벤트 리스너 등록
+
         const saveBtn = document.getElementById('saveStatusCodesBtn');
         if (saveBtn) {
             saveBtn.addEventListener('click', saveStatusCodes);
         }
 
     } catch (error) {
-        console.error('🔴 상태코드 로드 오류:', error);
+
         container.innerHTML = `
             <div style="text-align: center; padding: 2rem; color: #dc3545;">
                 ❌ 상태코드를 불러오는데 실패했습니다<br>
@@ -630,14 +613,10 @@ async function loadStatusCodes() {
         showToast(`상태코드 로드 실패: ${error.message}`, 'error');
     }
 
-    console.log('🔵 === CD900: loadStatusCodes() 종료 ===');
 }
 
-/**
- * tb_con_mst(CD900 그룹)과 tb_sts_cd_mst를 수동 동기화합니다
- */
+
 async function syncStatusCodes() {
-    console.log('🔵 === CD900: syncStatusCodes() 수동 동기화 시작 ===');
 
     const syncBtn = document.getElementById('syncStatusCodesBtn');
     if (syncBtn) {
@@ -657,15 +636,13 @@ async function syncStatusCodes() {
             throw new Error(result.message || '상태코드 동기화에 실패했습니다.');
         }
 
-        console.log('🟢 동기화 결과:', result);
 
-        // 동기화 후 최신 데이터 다시 로드
         await loadStatusCodes();
 
         showToast(`상태코드 동기화 완료: ${result.inserted_count}개 새로운 코드 추가`, 'success');
 
     } catch (error) {
-        console.error('🔴 상태코드 동기화 오류:', error);
+
         showToast(`동기화 실패: ${error.message}`, 'error');
     } finally {
         if (syncBtn) {
@@ -674,23 +651,17 @@ async function syncStatusCodes() {
         }
     }
 
-    console.log('🔵 === CD900: syncStatusCodes() 종료 ===');
 }
 
-/**
- * 상태코드 설정을 저장합니다
- * UI 설정값(icon_id, bg_colr, txt_colr)만 tb_sts_cd_mst에 저장
- * nm(상태코드명)은 tb_con_mst에서 관리하므로 저장하지 않음
- */
+
 async function saveStatusCodes() {
-    console.log('🔵 === CD900: saveStatusCodes() 시작 ===');
 
     try {
         const response = await fetch('/api/mngr_sett/status_codes');
         const statusCodes = await response.json();
 
-        // UI 설정값만 저장 (cd, icon_id, bg_colr, txt_colr)
-        // nm은 tb_con_mst에서 관리하므로 포함하지 않음
+
+
         const saveData = statusCodes.map(code => {
             return {
                 cd: code.cd,
@@ -699,8 +670,6 @@ async function saveStatusCodes() {
                 txt_colr: document.getElementById(`status_${code.cd}_txt`).value
             };
         });
-
-        console.log('🟢 저장할 데이터 (UI 설정값만):', saveData);
 
         const saveResponse = await fetch('/api/mngr_sett/status_codes/save', {
             method: 'POST',
@@ -715,28 +684,24 @@ async function saveStatusCodes() {
         }
 
         showToast('상태코드 설정이 성공적으로 저장되었습니다.', 'success');
-        console.log('🟢 저장 완료');
 
     } catch (error) {
-        console.error('🔴 상태코드 저장 오류:', error);
+
         showToast(`저장 실패: ${error.message}`, 'error');
     }
 
-    console.log('🔵 === CD900: saveStatusCodes() 종료 ===');
 }
 
 
-// --- START: Color Palette Logic ---
 
-// Make setActiveColorInput globally available for the module
+
+
 window.setActiveColorInput = setActiveColorInput;
 
-// --- END: Color Palette Logic ---
 
 
-/**
- * Fetches schedule settings from the server and renders the form.
- */
+
+
 async function loadScheduleSettings() {
     debugLog('=== JS: loadScheduleSettings() 시작 ===');
     debugLog('JS: API 요청 준비');
@@ -757,26 +722,26 @@ async function loadScheduleSettings() {
         let settings = [];
 
         if (!response.ok) {
-            // 500 에러 등 서버 오류 시 본문 읽어서 사용자에게 보여주기
+
             let errorMsg = `스케줄 표시 설정 조회 실패 (Status: ${response.status})`;
             try {
                 const errorText = await response.text();
                 if (errorText) {
-                    console.error('JS: 서버 오류 응답 본문:', errorText);
+
                     try {
                         const errorJson = JSON.parse(errorText);
                         errorMsg = errorJson.message || errorMsg;
                     } catch {
-                        errorMsg = errorText.substring(0, 200); // JSON 아니면 텍스트 일부만
+                        errorMsg = errorText.substring(0, 200);
                     }
                 }
             } catch (e) {
-                console.error('JS: 오류 본문 읽기 실패', e);
+
             }
             throw new Error(errorMsg);
         }
 
-        // 정상 응답 (200) 처리
+
         const text = await response.text();
         debugLog('JS: 응답 텍스트 수신', {
             length: text.length,
@@ -785,7 +750,7 @@ async function loadScheduleSettings() {
         });
 
         if (!text.trim()) {
-            console.warn('JS: 응답이 비어있음 → 기본값(빈 배열)으로 처리');
+
         } else {
             try {
                 const parsed = JSON.parse(text);
@@ -796,18 +761,18 @@ async function loadScheduleSettings() {
                     keys: typeof parsed === 'object' && !Array.isArray(parsed) ? Object.keys(parsed) : 'N/A'
                 });
 
-                // 서버가 배열이든 단일 객체든 모두 수용
+
                 if (Array.isArray(parsed)) {
                     settings = parsed.length > 0 ? parsed : [];
                 } else if (parsed && typeof parsed === 'object') {
-                    settings = [parsed]; // 단일 객체를 배열로 감싸서 일관성 유지
+                    settings = [parsed];
                 } else {
-                    console.warn('JS: 예상치 못한 데이터 형식 → 빈 배열 처리');
+
                     settings = [];
                 }
             } catch (parseError) {
-                console.error('JS: JSON 파싱 실패', parseError);
-                console.error('JS: 원본 응답:', text);
+
+
                 throw new Error('서버 응답 형식이 잘못되었습니다. (JSON 파싱 실패)');
             }
         }
@@ -815,40 +780,36 @@ async function loadScheduleSettings() {
         debugLog('JS: 최종 settings 데이터', settings);
         renderScheduleSettingsForm(settings);
 
-        // 색상 입력 필드 이벤트 리스너 재등록 (렌더링 후)
+
         attachColorInputListeners();
 
     } catch (error) {
-        console.error('=== JS: loadScheduleSettings() 오류 발생 ===');
-        console.error('JS: 오류 상세:', error);
+
 
         showToast(error.message || '스케줄 표시 설정을 불러오지 못했습니다.', 'error');
 
-        // 어떤 오류가 나도 폼은 기본값으로 그려지게 fallback
+
         renderScheduleSettingsForm([]);
-        attachColorInputListeners(); // fallback 후에도 색상 프리뷰 동작 보장
+        attachColorInputListeners();
     }
 
     debugLog('=== JS: loadScheduleSettings() 종료 ===');
 }
 
-/**
- * 색상 입력 필드에 대한 이벤트 리스너를 동적으로 붙이는 헬퍼 함수
- * (렌더링 후마다 호출 필요)
- */
+
 function attachColorInputListeners() {
     const formContainer = document.getElementById('scheduleSettingsForm');
     if (!formContainer) return;
 
     const colorInputs = formContainer.querySelectorAll('input[type="color"]');
     colorInputs.forEach(input => {
-        // 초기 프리뷰 색상 설정
+
         const preview = input.previousElementSibling;
         if (preview && preview.classList.contains('color-preview')) {
             preview.style.backgroundColor = input.value;
         }
 
-        // 실시간 프리뷰 업데이트
+
         input.addEventListener('input', (e) => {
             const prev = e.target.previousElementSibling;
             if (prev && prev.classList.contains('color-preview')) {
@@ -856,15 +817,13 @@ function attachColorInputListeners() {
             }
         });
 
-        // 팔레트 활성화용
+
         input.addEventListener('click', (e) => setActiveColorInput(e.target));
         input.addEventListener('focus', (e) => setActiveColorInput(e.target));
     });
 }
 
-/**
- * Collects data from the schedule settings form and saves it to the server.
- */
+
 async function saveScheduleSettings() {
     const settId = document.getElementById('scheduleSettId').value;
     const grpMinCntValue = document.getElementById('grpMinCnt').value;
@@ -927,7 +886,7 @@ async function saveScheduleSettings() {
         }
         showToast('스케줄 표시 설정이 성공적으로 저장되었습니다.', 'success');
         
-        // Update the hidden sett_id field with the returned new ID after creation
+
         if (result.sett_id) {
             document.getElementById('scheduleSettId').value = result.sett_id;
         }
@@ -937,7 +896,7 @@ async function saveScheduleSettings() {
     }
 }
 
-// --- END: Schedule Settings Tab Logic ---
+
 
 
 function addNewSettingRow() {
@@ -956,7 +915,7 @@ function addNewSettingRow() {
     newChartRow.innerHTML = `<td class="job-id-cell">${newCd}</td><td><input type="text" value="${newCd}" data-field="cd_nm" readonly disabled></td><td><input type="color" value="#007bff" data-field="chrt_colr"></td><td><input type="color" value="#9be9a8" data-field="grass_chrt_min_colr"></td><td><input type="color" value="#216e39" data-field="grass_chrt_max_colr"></td>`;
     populateIconSelects(window.allIconsData || []);
 
-    // 새로 추가된 행의 색상 입력 필드에도 이벤트 리스너 추가
+
     const newRowInputs = newRow.querySelectorAll('input[type="color"]');
     newRowInputs.forEach(input => {
         input.addEventListener('focus', (e) => setActiveColorInput(e.target));
@@ -976,13 +935,7 @@ async function refreshUserManagementTable() {
     userManagementTab.renderTable(users, menus);
 }
 
-/**
- * 서버 사이드 페이징과 검색을 지원하는 데이터 로드 함수
- * @param {Object} options - 페이징 및 검색 옵션
- * @param {number} options.page - 페이지 번호
- * @param {number} options.perPage - 페이지당 항목 수
- * @param {string} options.searchTerm - 검색어
- */
+
 async function loadPageData(options = {}) {
     const state = window._mngrSettState || {};
     const { page = 1, perPage = state.settingsItemsPerPage || 10, searchTerm = null } = options;
@@ -1058,36 +1011,35 @@ async function loadPageData(options = {}) {
 }
 
 
-// 전역으로 loadPageData 함수 노출
+
 window.loadPageData = loadPageData;
 
-// 중복 호출 방지를 위한 디바운스 타이머
+
 let loadPageDataDebounceTimer = null;
 
 async function initializePage() {
-    console.log('=== INITIALIZE PAGE CALLED ==='); // 디버그 로그 추가
     const container = document.getElementById('mngr_sett_page');
     if (!container) {
-        console.error('Container not found: mngr_sett_page');
+
         return;
     }
 
     setupTabs();
 
-    // The color palette is now attached by the main UI module.
-    // 의존성 주입: ui.js가 필요로 하는 event.js의 함수들을 전달
+
+
     initUI({
         confirmAndDeleteIcon,
         toggleIconDisplayStatus
     });
     initializeIconManagementUI();
-    // 페이징 기능 초기화
+
     initSettingsPagination();
     
-    // 탭 모듈 초기화
+
     statisticsTab.initElements();
     statisticsTab.initEventListeners();
-    // 통계 탭 활성화 (초기 데이터 로드)
+
     const statisticsTabButton = container.querySelector('button[data-tab="statistics"]');
     if (statisticsTabButton) {
         statisticsTabButton.addEventListener('click', () => statisticsTab.activate());
@@ -1102,30 +1054,30 @@ async function initializePage() {
     popupManagementTab.initElements();
     popupManagementTab.initEventListeners();
 
-    // 사용자접속정보 탭 초기화
+
     const userAccessInfoContainer = document.getElementById('userAccessInfo');
     if (userAccessInfoContainer) {
-        console.log('Initializing userAccessInfo tab...');
-        // 동적 import로 지연 로드
+
+
         import('../tabs/userAccessInfo/index.js').then(({ default: userAccessInfo }) => {
-            userAccessInfo.init().catch(err => console.error('userAccessInfo init error:', err));
-        }).catch(err => console.error('userAccessInfo module load error:', err));
+            userAccessInfo.init().catch(err => {});
+        }).catch(err => {});
     }
 
-    // 데이터정의 탭 초기화 (조건부)
+
     const dataDefinitionContainer = document.getElementById('dataDefinition');
     if (dataDefinitionContainer) {
-        console.log('🔍 mngr_sett.js: dataDefinitionContainer found, but NOT calling init yet');
-        // 탭 전환 시점에 초기화하도록 defer
+
+
     } else {
-        console.warn('⚠️ mngr_sett.js: dataDefinitionContainer not found');
+
     }
 
-    // 행 추가 버튼은 더 이상 사용하지 않음 (UI에서 제거)
 
-    const settingsTab = container.querySelector('button[data-tab="basicSettings"]'); // Changed from "settings" to "basicSettings" to match HTML
+
+    const settingsTab = container.querySelector('button[data-tab="basicSettings"]');
     if (settingsTab) {
-        // The loadPageData function is called at the end, so no need for a click listener here
+
     }
 
     const scheduleSettingsTab = container.querySelector('button[data-tab="scheduleSettings"]');
@@ -1133,33 +1085,33 @@ async function initializePage() {
         scheduleSettingsTab.addEventListener('click', loadScheduleSettings);
     }
 
-    // 데이터정의 탭 전환 시 초기화 (중복 호출 방지)
+
     const dataDefinitionTab = container.querySelector('button[data-tab="dataDefinition"]');
     if (dataDefinitionTab) {
         let hasBeenInitialized = false;
         dataDefinitionTab.addEventListener('click', () => {
-            console.log('🔍 Tab clicked: dataDefinition, hasBeenInitialized:', hasBeenInitialized);
+
             if (!hasBeenInitialized) {
-                console.log('🔍 Calling initDataDefinition');
+
                 initDataDefinition();
                 hasBeenInitialized = true;
             } else {
-                console.log('🔍 Already initialized, skipping init');
+
             }
         });
     } else {
-        console.warn('⚠️ mngr_sett.js: dataDefinitionTab not found');
+
     }
 
-    // The save button for schedule settings is inside the tab content, so it doesn't need a listener here.
-    // It's added dynamically in `loadScheduleSettings`.
-    // We need to add the event listener for the save button in init, as the button is always present in the DOM.
+
+
+
     const saveScheduleBtn = container.querySelector('#saveScheduleSettingsBtn');
     if (saveScheduleBtn) {
         saveScheduleBtn.addEventListener('click', saveScheduleSettings);
     }
 
-    // Add event listeners for buttons that previously used onclick
+
     const saveBasicSettingsBtn = container.querySelector('#saveBasicSettingsBtn');
     if (saveBasicSettingsBtn) saveBasicSettingsBtn.addEventListener('click', saveBasicSettings);
 
@@ -1178,13 +1130,13 @@ async function initializePage() {
     const importIconsBtn = container.querySelector('#importIconsBtn');
     if (importIconsBtn) importIconsBtn.addEventListener('click', importIcons);
 
-    // 엑셀 템플릿 관리 이벤트 리스너 추가
+
     const excelTemplateTab = container.querySelector('button[data-tab="excelTemplateManagement"]');
     if (excelTemplateTab) {
         excelTemplateTab.addEventListener('click', loadExcelTemplateInfo);
     }
 
-    // 검색 기능 이벤트 리스너 추가 (자동 검색 - debounce 적용)
+
     const searchInput = container.querySelector('#settingsSearchInput');
     let searchDebounceTimer = null;
     
@@ -1192,14 +1144,14 @@ async function initializePage() {
         searchInput.addEventListener('input', (e) => {
             const searchTerm = e.target.value.trim();
             
-            // 이전 타이머 취소
+
             if (searchDebounceTimer) {
                 clearTimeout(searchDebounceTimer);
             }
             
-            // 300ms 후 검색 실행
+
             searchDebounceTimer = setTimeout(() => {
-                // window._mngrSettState를 통해 상태 업데이트
+
                 if (!window._mngrSettState) window._mngrSettState = {};
                 window._mngrSettState.settingsSearchTerm = searchTerm || null;
                 window._mngrSettState.settingsCurrentPage = 1;
@@ -1223,11 +1175,11 @@ async function initializePage() {
         deleteExcelTemplateBtn.addEventListener('click', deleteExcelTemplate);
     }
 
-    // 초기에 첫 번째 탭(기본 설정)을 활성화하고 데이터를 로드합니다.
+
     const firstTab = container.querySelector('.tab-button[data-tab="basicSettings"]');
     if (firstTab) {
-        // The 'active' class is already on the first tab by default in HTML.
-        // No need to simulate a click, just load the data.
+
+
         firstTab.classList.add('active');
         const basicSettingsTab = container.querySelector('#basicSettings');
         if (basicSettingsTab) {
@@ -1235,17 +1187,14 @@ async function initializePage() {
         }
     }
 
-    // 데이터 로드 - F5 새로고침 시에도 보장
-    console.log('=== LOAD PAGE DATA START ==='); // 디버그 로그 추가
+
     await loadPageData();
-    console.log('=== LOAD PAGE DATA COMPLETE ==='); // 디버그 로그 추가
 }
 
 export async function init() {
-    console.log('=== INIT FUNCTION CALLED ==='); // 디버그 로그 추가
     const container = document.getElementById('mngr_sett_page');
     if (!container) {
-        console.error('Container not found: mngr_sett_page');
+
         return;
     }
     
@@ -1253,11 +1202,9 @@ export async function init() {
 }
 
 
-// --- START: Excel Template Management Functions ---
 
-/**
- * 엑셀 템플릿 정보를 로드하고 UI를 업데이트합니다.
- */
+
+
 async function loadExcelTemplateInfo() {
     try {
         const response = await fetch('/api/excel_template/info');
@@ -1271,10 +1218,7 @@ async function loadExcelTemplateInfo() {
     }
 }
 
-/**
- * 엑셀 템플릿 UI를 업데이트합니다.
- * @param {object} data - 템플릿 정보
- */
+
 function updateExcelTemplateUI(data) {
     const container = document.getElementById('mngr_sett_page');
     if (!container) return;
@@ -1298,9 +1242,7 @@ function updateExcelTemplateUI(data) {
     }
 }
 
-/**
- * 엑셀 템플릿 파일을 업로드합니다.
- */
+
 async function uploadExcelTemplate() {
     const container = document.getElementById('mngr_sett_page');
     if (!container) return;
@@ -1326,8 +1268,8 @@ async function uploadExcelTemplate() {
         if (!response.ok) throw new Error(result.error || '업로드에 실패했습니다.');
 
         showToast(result.message, 'success');
-        loadExcelTemplateInfo(); // UI 업데이트
-        fileInput.value = ''; // 파일 입력 초기화
+        loadExcelTemplateInfo();
+        fileInput.value = '';
 
     } catch (error) {
         showToast(error.message, 'error');
@@ -1336,9 +1278,7 @@ async function uploadExcelTemplate() {
 
 
 
-/**
- * 엑셀 템플릿 파일을 삭제합니다.
- */
+
 async function deleteExcelTemplate() {
     if (!confirm('엑셀 템플릿을 정말로 삭제하시겠습니까?')) {
         return;
@@ -1354,16 +1294,16 @@ async function deleteExcelTemplate() {
         if (!response.ok) throw new Error(result.error || '삭제에 실패했습니다.');
 
         showToast(result.message, 'success');
-        loadExcelTemplateInfo(); // UI 업데이트
+        loadExcelTemplateInfo();
 
     } catch (error) {
         showToast(error.message, 'error');
     }
 }
 
-// --- END: Excel Template Management Functions ---
 
-// --- END: Existing Page Logic ---
 
-// router.js에 의해 호출되는 init 함수에서 데이터 로드 수행
-// F5 새로고침 시에도 데이터가 로드되도록 보장
+
+
+
+

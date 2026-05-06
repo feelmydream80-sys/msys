@@ -1,4 +1,4 @@
--- 특정 사용자의 데이터 접근 권한(Job ID 목록)을 조회합니다.
+
 SELECT
     JOB_ID
 FROM

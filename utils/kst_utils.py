@@ -62,7 +62,7 @@ def utc_to_kst_date_str(utc_dt):
     Returns:
         str: KST 기준 YYYY-MM-DD 날짜 문자열
     """
-    # 문자열이면 datetime으로 파싱
+                         
     if isinstance(utc_dt, str):
         utc_dt = parse_datetime_to_kst(utc_dt)
     
@@ -70,7 +70,7 @@ def utc_to_kst_date_str(utc_dt):
         kst_dt = utc_to_kst(utc_dt)
         return format_date(kst_dt)
     
-    # 파싱 실패 시 원본 반환
+                   
     return str(utc_dt)
 
 
@@ -85,16 +85,16 @@ def parse_datetime_to_kst(datetime_str):
     Returns:
         datetime: KST 타임존의 datetime 객체
     """
-    # +09:00 형식 처리
+                  
     if '+09' in datetime_str and '+09:00' not in datetime_str:
         datetime_str = datetime_str.replace('+09', '+09:00')
     
     try:
         dt = datetime.fromisoformat(datetime_str)
         if dt.tzinfo is None:
-            # 타임존 정보 없으면 KST로 가정
+                                
             dt = KST_TZ.localize(dt)
         return dt.astimezone(KST_TZ)
     except (ValueError, AttributeError):
-        # 파싱 실패 시 원본 반환 (호환성 유지)
+                                
         return datetime_str

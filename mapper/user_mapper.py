@@ -1,4 +1,4 @@
-# mapper/user_mapper.py
+                       
 """
 사용자 정보 관련 데이터 변환을 책임지는 매퍼 계층입니다.
 """
@@ -72,16 +72,16 @@ class UserMapper:
 
     def update_user_permissions(self, user_id: str, menu_ids: List[str]) -> None:
         with self.conn.cursor() as cur:
-            # 먼저 해당 사용자의 모든 권한을 삭제합니다.
+                                      
             cur.execute(UserSQL.delete_user_permissions(), (user_id,))
             
-            # menu_ids 리스트에 값이 있는 경우, 새로운 권한을 추가합니다.
+                                                    
             if menu_ids:
-                # 중복 권한을 제거하기 위해 set으로 변환한 후 다시 리스트로 변환
+                                                       
                 unique_menu_ids = list(set(menu_ids))
-                # executemany를 위한 데이터 리스트 생성 (user_id, menu_id) 튜플의 리스트
+                                                                       
                 permission_data = [(user_id, menu_id) for menu_id in unique_menu_ids]
-                # executemany를 사용하여 여러 권한을 한 번에 INSERT
+                                                      
                 cur.executemany(UserSQL.insert_user_permission(), permission_data)
 
     def find_user_menus_sorted(self, user_id: str) -> List[Dict[str, Any]]:
@@ -113,11 +113,11 @@ class UserMapper:
         with self.conn.cursor() as cur:
             cur.execute(sql, {'user_id': user_id})
             
-            # 데이터베이스 드라이버가 반환한 원본 데이터를 로깅합니다.
+                                             
             raw_data = cur.fetchall()
             logging.info(f"DATA_PERMISSIONS_MAPPER_DEBUG: Raw data from fetchall(): {raw_data}")
             
-            # 리스트 컴프리헨션으로 데이터를 가공합니다.
+                                     
             processed_data = [row[0] for row in raw_data]
             logging.info(f"DATA_PERMISSIONS_MAPPER_DEBUG: Processed data after [row[0]]: {processed_data}")
             

@@ -1,14 +1,10 @@
-// static/js/modules/common/api/dashboard.js
+
 import { showMessage } from '../utils.js';
 import { updateApiStatus } from './client.js';
 
 const BASE_URL = '';
 
-/**
- * @AI_NOTE: 지정된 데이터 타입에 대한 DB에 저장된 최소/최대 날짜를 가져옵니다.
- * @param {string} dataType - 날짜를 조회할 데이터 타입 ('dashboardSummary' 또는 'eventLog')
- * @returns {Promise<Object>} 최소/최대 날짜 객체
- */
+
 export async function fetchMinMaxDates(dataType = 'dashboardSummary') {
     const apiName = `minMaxDatesFetch_${dataType}`;
     updateApiStatus(apiName, "apiCallAttempted", true);
@@ -29,20 +25,14 @@ export async function fetchMinMaxDates(dataType = 'dashboardSummary') {
         updateApiStatus(apiName, "apiResponseCount", data ? 1 : 0);
         return data;
     } catch (error) {
-        console.error("최소/최대 날짜 로드 실패:", error);
+
         showMessage('최소/최대 날짜 로드 실패: ' + error.message, 'error');
         updateApiStatus(apiName, "error", error.message);
         throw error;
     }
 }
 
-/**
- * @AI_NOTE: 대시보드 요약 데이터를 가져옵니다.
- * @param {string} startDate - 조회 시작 날짜 (YYYY-MM-DD)
- * @param {string} endDate - 조회 종료 날짜 (YYYY-MM-DD)
- * @param {boolean} allData - 전체 데이터 조회 여부
- * @returns {Promise<Array<Object>>} 요약 데이터 배열
- */
+
 export async function fetchDashboardSummary(startDate, endDate, allData) {
     const apiName = "dashboardSummaryFetch";
     updateApiStatus(apiName, "apiCallAttempted", true);
@@ -63,14 +53,14 @@ export async function fetchDashboardSummary(startDate, endDate, allData) {
             throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
         }
         const data = await response.json();
-        console.log(`[PIPELINE-9] Frontend received data count: ${data.length}`);
-        console.log(`[PIPELINE-9.1] Frontend received job_ids: ${data.map(item => item.job_id).join(', ')}`);
+
+
         showMessage('대시보드 요약 데이터 로드 성공.', 'success');
         updateApiStatus(apiName, "apiCallSuccess", true);
         updateApiStatus(apiName, "apiResponseCount", data.length);
         return data;
     } catch (error) {
-        console.error("대시보드 요약 데이터 로드 실패:", error);
+
         showMessage('대시보드 요약 데이터 로드 실패: ' + error.message, 'error');
         updateApiStatus(apiName, "error", error.message);
         throw error;

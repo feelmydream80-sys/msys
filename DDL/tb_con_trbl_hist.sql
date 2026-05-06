@@ -1,6 +1,6 @@
--- Table: public.tb_con_trbl_hist
 
--- DROP TABLE IF EXISTS public.tb_con_trbl_hist;
+
+
 
 CREATE TABLE IF NOT EXISTS public.tb_con_trbl_hist
 (

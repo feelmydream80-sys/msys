@@ -1,9 +1,9 @@
--- ==============================================
--- TB_STS_CD_MST 상태코드 마스터
--- CD900 계열 표준 규칙 적용
--- 아이콘 테이블 연동 지원
--- SQL 예약어 DESC 대신 DESCR 사용
--- ==============================================
+
+
+
+
+
+
 CREATE TABLE IF NOT EXISTS TB_STS_CD_MST (
     CD          VARCHAR(20)     NOT NULL PRIMARY KEY,
     NM          VARCHAR(100)    NOT NULL,
@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS TB_STS_CD_MST (
     UPD_DT      TIMESTAMP       DEFAULT CURRENT_TIMESTAMP
 );
 
--- CD900 계열 기본 데이터
+
 INSERT INTO TB_STS_CD_MST (CD, NM, DESCR, COLR, ICON_CD, ORD, BG_COLR, TXT_COLR) VALUES
 ('CD901', '성공', '✅', '#dcfce7', '#166534', 999, '#dcfce7', '#166534'),
 ('CD902', '실패', '❌', '#fee2e2', '#991b1b', 999, '#fee2e2', '#991b1b'),

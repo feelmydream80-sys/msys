@@ -1,6 +1,6 @@
--- Table: public.tb_data_spec_parm
 
--- DROP TABLE IF EXISTS public.tb_data_spec_parm;
+
+
 
 CREATE TABLE IF NOT EXISTS public.tb_data_spec_parm
 (

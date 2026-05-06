@@ -1,17 +1,12 @@
-/**
- * API 키 관리 페이지의 Chart 모듈
- * - Gantt 차트, 통계, 툴팁
- */
+
 
 window.ApiKeyMngrUI = window.ApiKeyMngrUI || {};
 
-// ==========================================
-// 통계 함수
-// ==========================================
 
-/**
- * 통계 수량 업데이트 (모듈화 함수)
- */
+
+
+
+
 window.ApiKeyMngrUI.updateStatisticsCount = function(keys) {
     const all = keys.length;
     const ok = keys.filter(k => k.status === 'ok').length;
@@ -27,9 +22,7 @@ window.ApiKeyMngrUI.updateStatisticsCount = function(keys) {
     document.getElementById('errCount').textContent = err;
 };
 
-/**
- * 전체 API 키 관리 데이터 통계 업데이트
- */
+
 window.ApiKeyMngrUI.updateApiKeyMngrStatisticsCount = function() {
     const apiData = ApiKeyMngrData.getApiKeyMngrData();
     const today = new Date();
@@ -57,23 +50,21 @@ window.ApiKeyMngrUI.updateApiKeyMngrStatisticsCount = function() {
     window.ApiKeyMngrUI.updateStatisticsCount(keys);
 };
 
-// ==========================================
-// Gantt 차트
-// ==========================================
 
-/**
- * Gantt 차트 렌더링
- */
+
+
+
+
 window.ApiKeyMngrUI.renderGanttChart = function() {
     const today = new Date();
-    const VIEW_START = new Date(today.getFullYear() - 1, 9, 1); // 10월
-    const VIEW_END = new Date(today.getFullYear() + 1, 0, 1); // 1월
+    const VIEW_START = new Date(today.getFullYear() - 1, 9, 1);
+    const VIEW_END = new Date(today.getFullYear() + 1, 0, 1);
     const TOTAL_MS = VIEW_END - VIEW_START;
 
-    // API 키 관리 데이터 가져오기
+
     const apiData = ApiKeyMngrData.getApiKeyMngrData();
     
-    // 데이터 변환
+
     const keys = apiData.map(k => {
         const endDate = new Date(k.start_dt);
         endDate.setFullYear(endDate.getFullYear() + k.due);
@@ -95,12 +86,12 @@ window.ApiKeyMngrUI.renderGanttChart = function() {
         };
     });
 
-    // 통계 수량 업데이트
+
     window.ApiKeyMngrUI.updateStatisticsCount(keys);
 
-    // 검색 및 필터링
+
     const q = document.getElementById('searchInput')?.value?.toLowerCase() || '';
-    const sortBy = 'expiry'; // 기본 정렬: 만료일 가까운 순
+    const sortBy = 'expiry';
 
     let filtered = keys.filter(k => {
         const matchQ = !q || k.name.toLowerCase().includes(q) || k.id.toLowerCase().includes(q);
@@ -108,27 +99,25 @@ window.ApiKeyMngrUI.renderGanttChart = function() {
         return matchQ && matchS;
     });
 
-    // 정렬 (만료일 가까운 순)
+
     filtered.sort((a, b) => {
         if (sortBy === 'expiry') return a.endDate - b.endDate;
         if (sortBy === 'name') return a.name.localeCompare(b.name);
         return new Date(a.start) - new Date(b.start);
     });
 
-    // Gantt 차트 렌더링
+
     window.ApiKeyMngrUI.buildGantt('API 키 유효기간', filtered, 'ganttChart');
 };
 
-/**
- * Gantt 차트 빌드
- */
+
 window.ApiKeyMngrUI.buildGantt = function(labelText, items, containerId) {
     if (!items.length) { 
         document.getElementById(containerId).innerHTML = '<div class="no-result">검색 결과가 없습니다.</div>'; 
         return; 
     }
     
-    // 페이지네이션 적용
+
     const startIndex = (window.ApiKeyMngrUI.currentPage - 1) * window.ApiKeyMngrUI.itemsPerPage;
     const endIndex = startIndex + window.ApiKeyMngrUI.itemsPerPage;
     const paginatedItems = items.slice(startIndex, endIndex);
@@ -160,7 +149,7 @@ window.ApiKeyMngrUI.buildGantt = function(labelText, items, containerId) {
 
     const ticksHtml = ['2025-10','2025-12','2026-02','2026-04','2026-06','2026-08','2026-10','2026-12'].map(t => '<div class="tick-label">' + t + '</div>').join('');
     
-    // 페이지네이션 HTML 생성
+
     const totalPages = Math.ceil(items.length / window.ApiKeyMngrUI.itemsPerPage);
     let paginationHtml = '';
     if (totalPages > 1) {
@@ -194,26 +183,22 @@ window.ApiKeyMngrUI.buildGantt = function(labelText, items, containerId) {
         paginationHtml;
 };
 
-/**
- * 날짜를 퍼센트로 계산
- */
+
 window.ApiKeyMngrUI.calculatePct = function(date) {
     const today = new Date();
-    const VIEW_START = new Date(today.getFullYear() - 1, 9, 1); // 10월
-    const VIEW_END = new Date(today.getFullYear() + 1, 0, 1); // 1월
+    const VIEW_START = new Date(today.getFullYear() - 1, 9, 1);
+    const VIEW_END = new Date(today.getFullYear() + 1, 0, 1);
     const TOTAL_MS = VIEW_END - VIEW_START;
     
     const d = new Date(date);
     return Math.max(0, Math.min(100, ((d - VIEW_START) / TOTAL_MS) * 100));
 };
 
-// ==========================================
-// 차트 페이지네이션
-// ==========================================
 
-/**
- * Gantt 차트 페이지당 수량 변경 이벤트 처리
- */
+
+
+
+
 window.ApiKeyMngrUI.handlePageSizeChange = function() {
     const select = document.getElementById('gantt-page-size-select');
     window.ApiKeyMngrUI.itemsPerPage = parseInt(select.value);
@@ -221,9 +206,7 @@ window.ApiKeyMngrUI.handlePageSizeChange = function() {
     window.ApiKeyMngrUI.renderGanttChart();
 };
 
-/**
- * 이전 페이지로 이동
- */
+
 window.ApiKeyMngrUI.previousPage = function() {
     if (window.ApiKeyMngrUI.currentPage > 1) {
         window.ApiKeyMngrUI.currentPage--;
@@ -231,9 +214,7 @@ window.ApiKeyMngrUI.previousPage = function() {
     }
 };
 
-/**
- * 다음 페이지로 이동
- */
+
 window.ApiKeyMngrUI.nextPage = function() {
     const apiData = ApiKeyMngrData.getApiKeyMngrData();
     const today = new Date();
@@ -271,9 +252,7 @@ window.ApiKeyMngrUI.nextPage = function() {
     }
 };
 
-/**
- * 특정 페이지로 이동
- */
+
 window.ApiKeyMngrUI.goToPage = function(page) {
     const apiData = ApiKeyMngrData.getApiKeyMngrData();
     const today = new Date();
@@ -311,13 +290,11 @@ window.ApiKeyMngrUI.goToPage = function(page) {
     }
 };
 
-// ==========================================
-// 툴팁
-// ==========================================
 
-/**
- * 툴팁 표시
- */
+
+
+
+
 window.ApiKeyMngrUI.showTip = function(e, el) {
     const tip = document.getElementById('tooltip');
     if (!tip) return;
@@ -341,9 +318,7 @@ window.ApiKeyMngrUI.showTip = function(e, el) {
     window.ApiKeyMngrUI.moveTip(e);
 };
 
-/**
- * 툴팁 이동
- */
+
 window.ApiKeyMngrUI.moveTip = function(e) {
     const tip = document.getElementById('tooltip');
     if (tip) {
@@ -352,9 +327,7 @@ window.ApiKeyMngrUI.moveTip = function(e) {
     }
 };
 
-/**
- * 툴팁 숨기기
- */
+
 window.ApiKeyMngrUI.hideTip = function() { 
     const tip = document.getElementById('tooltip');
     if (tip) {
@@ -362,20 +335,18 @@ window.ApiKeyMngrUI.hideTip = function() {
     }
 };
 
-// ==========================================
-// 차트 렌더링 호환 함수
-// ==========================================
 
-/**
- * API 키 유효기간 차트 렌더링 (기존 이름과 동일한 메서드)
- */
+
+
+
+
 window.ApiKeyMngrUI.renderApiKeyExpiryChart = function() {
     window.ApiKeyMngrUI.renderGanttChart();
 };
 
-// ==========================================
-// 전역 함수 별칭 (HTML 인라인 이벤트 호환성)
-// ==========================================
+
+
+
 window.showTip = window.ApiKeyMngrUI.showTip;
 window.hideTip = window.ApiKeyMngrUI.hideTip;
 window.moveTip = window.ApiKeyMngrUI.moveTip;

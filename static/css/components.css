@@ -1,8 +1,8 @@
-/* MSYS UI 표준화 - 컴포넌트 스타일 */
-/* 작성일: 2025-12-23 */
-/* 버전: 1.0 */
 
-/* ===== 카드 컴포넌트 ===== */
+
+
+
+
 
 .card {
     background-color: var(--color-surface);
@@ -38,7 +38,7 @@
     background-color: var(--color-surface);
 }
 
-/* 접을 수 있는 카드 */
+
 .card-collapsible .card-toggle {
     background: none;
     border: none;
@@ -69,7 +69,7 @@
     display: none;
 }
 
-/* ===== 버튼 컴포넌트 ===== */
+
 
 .btn {
     display: inline-flex;
@@ -98,7 +98,7 @@
     outline-offset: var(--space-1);
 }
 
-/* 버튼 변형 */
+
 .btn-primary {
     background-color: var(--color-primary);
     color: white;
@@ -175,7 +175,7 @@
     background-color: var(--color-surface-hover);
 }
 
-/* 버튼 크기 */
+
 .btn-sm {
     padding: var(--space-2) var(--space-3);
     font-size: var(--font-size-sm);
@@ -186,7 +186,7 @@
     font-size: var(--font-size-lg);
 }
 
-/* ===== 폼 컴포넌트 ===== */
+
 
 .form-group {
     margin-bottom: var(--space-4);
@@ -246,7 +246,7 @@
     margin-top: var(--space-1);
 }
 
-/* ===== 그리드 시스템 ===== */
+
 
 .grid-cards {
     display: grid;
@@ -273,7 +273,7 @@
     grid-template-columns: var(--grid-cols-4);
 }
 
-/* 반응형 그리드 */
+
 @media (min-width: 768px) {
     .grid-cards-auto {
         grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -286,7 +286,7 @@
     }
 }
 
-/* ===== 테이블 컴포넌트 ===== */
+
 
 .table {
     width: 100%;
@@ -316,7 +316,7 @@
     -webkit-overflow-scrolling: touch;
 }
 
-/* ===== 모달 컴포넌트 ===== */
+
 
 .modal-backdrop {
     position: fixed;
@@ -398,7 +398,7 @@
     gap: var(--space-3);
 }
 
-/* ===== 알림/토스트 컴포넌트 ===== */
+
 
 .toast {
     position: fixed;
@@ -460,7 +460,7 @@
     }
 }
 
-/* ===== 로딩 컴포넌트 ===== */
+
 
 .loading {
     display: flex;
@@ -483,7 +483,7 @@
     100% { transform: rotate(360deg); }
 }
 
-/* ===== 상태 표시 컴포넌트 ===== */
+
 
 .status {
     display: inline-flex;
@@ -515,7 +515,7 @@
     color: var(--color-info);
 }
 
-/* ===== 탭 컴포넌트 ===== */
+
 
 .tabs {
     border-bottom: var(--border-width-1) solid var(--color-outline);
@@ -543,7 +543,7 @@
     color: var(--color-text-primary);
 }
 
-/* ===== 드롭다운 컴포넌트 ===== */
+
 
 .dropdown {
     position: relative;
@@ -596,7 +596,7 @@
     background-color: var(--color-surface-hover);
 }
 
-/* ===== 툴팁 컴포넌트 ===== */
+
 
 .tooltip {
     position: relative;

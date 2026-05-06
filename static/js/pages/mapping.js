@@ -8,14 +8,14 @@ export function init() {
     const reloadUnmappedButton = document.getElementById('reload-unmapped-btn');
     const form = document.getElementById('mapping-form');
 
-    // 날짜 포맷 함수
+
     function formatDate(dateString) {
         if (!dateString) return '';
         const date = new Date(dateString);
         return date.toLocaleString('ko-KR');
     }
 
-    // 매핑되지 않은 컬럼 로드
+
     async function loadUnmappedColumns() {
         try {
             const response = await fetch('/mapping/api/unmapped');
@@ -38,12 +38,12 @@ export function init() {
                 });
             }
         } catch (error) {
-            console.error(error);
+
             unmappedTableBody.innerHTML = '<tr><td colspan="3" class="text-center">데이터 로드 중 오류 발생</td></tr>';
         }
     }
 
-    // 모든 매핑 정보 로드
+
     async function loadMappings() {
         try {
             const response = await fetch('/mapping/api/all');
@@ -68,12 +68,12 @@ export function init() {
                 mappingsTableBody.insertAdjacentHTML('beforeend', row);
             });
         } catch (error) {
-            console.error(error);
+
             mappingsTableBody.innerHTML = '<tr><td colspan="8" class="text-center">데이터 로드 중 오류 발생</td></tr>';
         }
     }
 
-    // 모달 열기 (추가 또는 수정)
+
     function openModal(data = {}) {
         form.reset();
         document.getElementById('mapp-id').value = data.mapp_id || '';
@@ -87,7 +87,7 @@ export function init() {
         modal.modal('show');
     }
 
-    // 저장 처리
+
     async function handleSave() {
         const mappId = document.getElementById('mapp-id').value;
         const data = {
@@ -126,7 +126,7 @@ export function init() {
         }
     }
 
-    // 삭제 처리
+
     async function handleDelete(mappId) {
         if (!confirm(`정말로 이 매핑(ID: ${mappId})을 삭제하시겠습니까?`)) return;
 
@@ -142,7 +142,7 @@ export function init() {
         }
     }
     
-    // 이벤트 리스너 등록
+
     addButton.addEventListener('click', () => openModal());
     reloadUnmappedButton.addEventListener('click', loadUnmappedColumns);
     saveButton.addEventListener('click', handleSave);
@@ -162,7 +162,7 @@ export function init() {
         const mappId = button.dataset.id;
 
         if (button.classList.contains('edit-btn')) {
-            // 기존 데이터를 찾아서 모달을 채워야 함
+
             const response = await fetch('/mapping/api/all');
             const mappings = await response.json();
             const mappingData = mappings.find(m => m.mapp_id == mappId);
@@ -173,12 +173,12 @@ export function init() {
         }
     });
 
-    // 전체 데이터 로드 함수
+
     function loadAllData() {
         loadUnmappedColumns();
         loadMappings();
     }
 
-    // 초기 데이터 로드
+
     loadAllData();
 }

@@ -1,4 +1,4 @@
--- Update menu_url to actual endpoints
+
 UPDATE tb_menu SET menu_url = 'admin.mngr_sett_page' WHERE menu_id = 'mngr_sett';
 UPDATE tb_menu SET menu_url = 'dashboard.dashboard' WHERE menu_id = 'dashboard';
 UPDATE tb_menu SET menu_url = 'analysis.chart_analysis' WHERE menu_id = 'chart_analysis';

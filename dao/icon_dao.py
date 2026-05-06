@@ -1,4 +1,4 @@
-# dao/icon_dao.py
+                 
 """
 DAO for handling icon data in the database.
 """
@@ -51,7 +51,7 @@ class IconDAO:
         Handles both cases with and without ICON_ID.
         """
         if 'ICON_ID' in icon_data and icon_data['ICON_ID']:
-            # ICON_ID is provided
+                                 
             query = """
                 INSERT INTO TB_ICON (ICON_ID, ICON_CD, ICON_NM, ICON_EXPL, ICON_DSP_YN)
                 VALUES (%s, %s, %s, %s, %s)
@@ -64,7 +64,7 @@ class IconDAO:
                 icon_data.get('ICON_DSP_YN', 'Y')
             )
         else:
-            # ICON_ID is not provided (auto-increment)
+                                                      
             query = """
                 INSERT INTO TB_ICON (ICON_CD, ICON_NM, ICON_EXPL, ICON_DSP_YN)
                 VALUES (%s, %s, %s, %s)

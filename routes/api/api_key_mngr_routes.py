@@ -42,12 +42,12 @@ def get_all_api_key_mngr_paged():
     try:
         page = request.args.get('page', 1, type=int)
         page_size = request.args.get('page_size', 10, type=int)
-        search = request.args.get('search', None)  # 검색어 파라미터
+        search = request.args.get('search', None)            
         
         logger.info(f"[API키관리] API 요청 수신 - /api/api_key_mngr/paged - page: {page}, page_size: {page_size}, search: {search}")
         service = ApiKeyMngrService()
         
-        # 검색어가 있으면 검색+페이징, 없으면 일반 페이징
+                                     
         if search:
             result = service.get_all_api_key_mngr_paged_with_search(page, page_size, search)
         else:
@@ -234,7 +234,7 @@ def send_api_key_expiry_email():
         service = ApiKeyMngrService()
         results = service.send_expiry_notification(cds)
         
-        # 결과 요약
+               
         success_count = len(results['success'])
         failed_count = len(results['failed'])
         skipped_count = len(results['skipped'])
@@ -322,9 +322,9 @@ def get_event_log():
         }), 500
 
 
-# ==========================================
-# 메일 전송 이력 관련 API (신규 추가)
-# ==========================================
+                                            
+                         
+                                            
 
 @api_key_mngr_api.route('/api_key_mngr/mail_send_history', methods=['GET'])
 @login_required
@@ -362,9 +362,9 @@ def get_mail_send_history():
         }), 500
 
 
-# ==========================================
-# 스케줄러 메일 발송 API (신규 추가)
-# ==========================================
+                                            
+                        
+                                            
 
 @api_key_mngr_api.route('/api_key_mngr/send_scheduled_mails', methods=['POST'])
 @login_required
@@ -383,7 +383,7 @@ def send_scheduled_mails():
             exclude_cds=exclude_cds
         )
         
-        # 결과 요약
+               
         success_count = len(result['success'])
         failed_count = len(result['failed'])
         skipped_count = len(result['skipped'])
@@ -406,9 +406,9 @@ def send_scheduled_mails():
         }), 500
 
 
-# ==========================================
-# 스케줄 설정 관련 API (신규 추가)
-# ==========================================
+                                            
+                       
+                                            
 
 @api_key_mngr_api.route('/api_key_mngr/schedule_settings', methods=['GET'])
 @login_required
@@ -438,7 +438,7 @@ def save_schedule_settings():
     """스케줄 설정 저장 (3개 스케줄 일괄 처리)"""
     try:
         data = request.json
-        # 배열 또는 단일 객체 모두 지원
+                           
         if isinstance(data, list):
             schedules = data
         else:
@@ -464,9 +464,9 @@ def save_schedule_settings():
         }), 500
 
 
-# ==========================================
-# 메일 설정 이력 조회 API (신규 추가)
-# ==========================================
+                                            
+                         
+                                            
 
 @api_key_mngr_api.route('/api_key_mngr/mail_setting_history', methods=['GET'])
 @login_required
@@ -521,9 +521,9 @@ def get_mail_setting_history_count():
         }), 500
 
 
-# ==========================================
-# 테스트 메일 발송 API (신규 추가)
-# ==========================================
+                                            
+                       
+                                            
 
 @api_key_mngr_api.route('/api_key_mngr/send_test_mail', methods=['POST'])
 @login_required

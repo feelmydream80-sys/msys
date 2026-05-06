@@ -5,7 +5,7 @@
 {% block head %}
     {{ super() }}
     <style>
-        /* Custom styles for better aesthetics */
+        
         .shadow-md {
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
@@ -13,11 +13,11 @@
             border-radius: 0.5rem;
         }
         .status-icon {
-            font-size: 1.25rem; /* text-xl */
-            vertical-align: middle; /* Align icon vertically with text */
+            font-size: 1.25rem; 
+            vertical-align: middle; 
         }
         .status-text {
-            font-weight: 600; /* font-semibold */
+            font-weight: 600; 
         }
         .tooltip {
             position: relative;
@@ -35,7 +35,7 @@
             padding: 5px 0;
             position: absolute;
             z-index: 1;
-            bottom: 125%; /* Tooltip above the text */
+            bottom: 125%; 
             left: 50%;
             margin-left: -60px;
             opacity: 0;
@@ -45,7 +45,7 @@
         .tooltip .tooltiptext::after {
             content: "";
             position: absolute;
-            top: 100%; /* At the bottom of the tooltip */
+            top: 100%; 
             left: 50%;
             margin-left: -5px;
             border-width: 5px;
@@ -61,13 +61,13 @@
 {% endblock %}
 
 {% block content %}
-    <!-- Main content area -->
+    
     <div class="container mx-auto p-4">
         {% include 'collapsible_controls.html' %}
-        <!-- <h1> 태그 제거 -->
-        <!-- <h1 class="text-3xl font-bold mb-6 text-gray-800">수집 현황 대시보드</h1> -->
+        
+        
 
-        <!-- 날짜 선택 섹션 -->
+        
         <div id="date-selection-card" class="collapsible-card bg-white rounded-lg shadow-md mb-6">
             <div class="card-header p-6 cursor-pointer flex justify-between items-center">
                 <h2 class="card-title">날짜 선택</h2>
@@ -97,9 +97,9 @@
             </div>
         </div>
 
-        <!-- 주요 지표 및 기간별 현황 한 줄 배치 -->
+        
         <div id="dashboard-main-grid" class="grid grid-cols-6 gap-6 mb-6">
-            <!-- Job ID 개수 -->
+            
             <div class="col-span-1 bg-white p-6 rounded-lg shadow-md flex items-center justify-between">
                 <div>
                     <h3 class="text-lg font-semibold text-gray-600">총 Job ID 개수</h3>
@@ -107,7 +107,7 @@
                 </div>
                 <span class="text-5xl text-blue-400">⚙️</span>
             </div>
-            <!-- 총 수집 건수 -->
+            
             <div class="col-span-1 bg-white p-6 rounded-lg shadow-md flex items-center justify-between">
                 <div>
                     <h3 class="text-lg font-semibold text-gray-600">총 호출 건수</h3>
@@ -115,7 +115,7 @@
                 </div>
                 <span class="text-5xl text-purple-400">📊</span>
             </div>
-            <!-- 기간별 수집 현황 요약 -->
+            
             <div class="col-span-4 bg-white p-6 rounded-lg shadow-md">
                 <div class="text-center">
                     <h3 class="text-lg font-semibold text-gray-600 mb-3">기간별 수집 현황</h3>
@@ -141,7 +141,7 @@
             </div>
         </div>
 
-        <!-- Job ID별 상세 현황 테이블 -->
+        
         <div id="job-details-card" class="collapsible-card bg-white rounded-lg shadow-md overflow-x-auto mb-6">
             <div class="card-header p-6 cursor-pointer flex justify-between items-center">
                 <div>
@@ -182,7 +182,7 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">데이터명</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">주기(cron)</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">총 호출 건수</th>
-                        <!--<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">성공률</th>-->
+                        
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">일간 성공률</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">주간 성공률</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">월간 성공률</th>
@@ -191,20 +191,20 @@
                     </tr>
                 </thead>
                 <tbody id="dashboardTableBody" class="bg-white divide-y divide-gray-200">
-                    <!-- Data will be loaded here by JavaScript -->
+                    
                     <tr><td colspan="10" class="px-6 py-4 text-center text-gray-500">데이터 로드 중...</td></tr>
                 </tbody>
             </table>
-                <!-- 페이징 컨트롤 -->
+                
                 <div id="detailTablePagination" class="mt-4 flex justify-center items-center gap-2">
-                    <!-- 페이징 버튼들이 여기에 동적으로 생성됩니다 -->
+                    
                 </div>
             </div>
         </div>
 
-        <!-- 수집 현황 상태 기준 설명 (최하단으로 이동) -->
-        <!-- 중복된 이벤트 로그 영역(ul#event-log-ul 포함) 완전히 삭제 -->
-        <!-- 이벤트 로그 영역 -->
+        
+        
+        
         <div id="event-log-card" class="collapsible-card bg-white rounded-lg shadow mb-6">
             <div class="card-header p-6 cursor-pointer flex justify-between items-center">
                 <div>
@@ -246,7 +246,7 @@
                 </div>
             </div>
                 <ul id="event-log-ul" class="list-disc pl-5 h-64 overflow-y-auto border rounded-md p-2 bg-gray-50">
-                    <!-- Event log items will be inserted here -->
+                    
                 </ul>
                 <div id="eventLogPagination" class="mt-4 flex justify-center"></div>
             </div>
@@ -259,9 +259,9 @@
 
 {% block scripts %}
     <script>
-        // Pass the is_admin flag from Flask to JavaScript
+
         window.isAdmin = {{ is_admin|tojson }};
     </script>
-    <!-- Custom JavaScript -->
+    
     <script type="module" src="/static/js/pages/dashboard.js"></script>
 {% endblock %}

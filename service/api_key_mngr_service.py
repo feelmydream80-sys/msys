@@ -22,7 +22,7 @@ class ApiKeyMngrService:
             data = self.dao.select_all()
             self.logger.info(f"[API키관리-서비스] DAO 조회 결과 - 데이터 건수: {len(data)}")
 
-            # Convert dates and calculate expiry info
+                                                     
             result = []
             today = self.dao.get_today_date()
 
@@ -40,7 +40,7 @@ class ApiKeyMngrService:
                 
                 result.append(item)
             
-            # Sort by start date (descending)
+                                             
             result.sort(key=lambda x: x['start_dt'], reverse=True)
             
             return result
@@ -55,16 +55,16 @@ class ApiKeyMngrService:
             added_cds = []
             updated_cds = []
             
-            # Get all CD values from TB_MNGR_SETT not in TB_API_KEY_MNGR
+                                                                        
             conn = get_db_connection()
             cds_not_in_api_key_mngr = self.dao.select_cds_not_in_api_key_mngr(conn)
             
-            # Add each CD to TB_API_KEY_MNGR with data from TB_CON_MST
+                                                                      
             for cd_item in cds_not_in_api_key_mngr:
                 cd = cd_item['cd']
                 
                 try:
-                    # Get ITEM10 and UDATE_DT from TB_CON_MST
+                                                             
                     con_mst_dao = ConMstDAO(conn)
                     con_mst_data = con_mst_dao.get_mst_data_by_cd(cd)
                     
@@ -76,9 +76,9 @@ class ApiKeyMngrService:
                         
                         self.dao.insert(
                             cd=cd,
-                            due=1,  # Default due is 1 year
+                            due=1,                         
                             start_dt=start_dt,
-                            api_ownr_email_addr='',  # Empty string instead of None
+                            api_ownr_email_addr='',                                
                             conn=conn
                         )
                         added_cds.append(cd)
@@ -100,20 +100,20 @@ class ApiKeyMngrService:
         try:
             conn = get_db_connection()
             
-            # Update TB_API_KEY_MNGR
+                                    
             self.dao.update(cd, due, start_dt, api_ownr_email_addr, conn)
             
-            # Update TB_CON_MST ITEM10 with API key
+                                                   
             con_mst_dao = ConMstDAO(conn)
             con_mst_data = con_mst_dao.get_mst_data_by_cd(cd)
             
             if con_mst_data:
-                # Update only ITEM10
+                                    
                 update_data = {
                     'item10': api_key
                 }
-                # Since cd_cl is required for update, we need to find it
-                # First, let's get all columns from con_mst_data to preserve existing values
+                                                                        
+                                                                                            
                 full_update_data = {**con_mst_data, **update_data}
                 con_mst_dao.update_mst_data(con_mst_data['cd_cl'], cd, full_update_data)
             
@@ -171,13 +171,13 @@ class ApiKeyMngrService:
         try:
             self.logger.info(f"[API키관리-서비스] get_all_api_key_mngr_paged 호출 - page: {page}, page_size: {page_size}")
             
-            # 페이징된 데이터 조회
+                         
             data = self.dao.select_all_paged(page, page_size)
             
-            # 전체 카운트 조회
+                       
             total_count = self.dao.count_all()
             
-            # Convert dates and calculate expiry info
+                                                     
             result = []
             today = self.dao.get_today_date()
             
@@ -195,10 +195,10 @@ class ApiKeyMngrService:
                 
                 result.append(item)
             
-            # Sort by start date (descending)
+                                             
             result.sort(key=lambda x: x['start_dt'], reverse=True)
             
-            # 전체 페이지 수 계산
+                         
             total_pages = (total_count + page_size - 1) // page_size if page_size > 0 else 1
             
             return {
@@ -225,10 +225,10 @@ class ApiKeyMngrService:
         try:
             self.logger.info(f"[API키관리-서비스] get_all_api_key_mngr_paged_with_search 호출 - page: {page}, page_size: {page_size}, search: {search_query}")
             
-            # 검색+페이징된 데이터 조회 (DAO에서 total_count도 반환)
+                                                    
             data, total_count = self.dao.select_all_paged_with_search(page, page_size, search_query)
             
-            # Convert dates and calculate expiry info
+                                                     
             result = []
             today = self.dao.get_today_date()
             
@@ -246,10 +246,10 @@ class ApiKeyMngrService:
                 
                 result.append(item)
             
-            # Sort by start date (descending)
+                                             
             result.sort(key=lambda x: x['start_dt'], reverse=True)
             
-            # 전체 페이지 수 계산
+                         
             total_pages = (total_count + page_size - 1) // page_size if page_size > 0 else 1
             
             return {
@@ -279,13 +279,13 @@ class ApiKeyMngrService:
         }
         
         try:
-            # Get all API key data
+                                  
             all_data = self.get_all_api_key_mngr()
             
-            # Filter data for requested CDs
+                                           
             target_data = [item for item in all_data if item['cd'] in cds]
             
-            # 메일 설정 가져오기 (템플릿용)
+                               
             mail_settings = {}
             try:
                 settings_list = self.get_mail_settings()
@@ -298,7 +298,7 @@ class ApiKeyMngrService:
                 self.logger.warning(f"Failed to load mail settings: {e}")
             
             for api_key_data in target_data:
-                # Validate email address
+                                        
                 email_addr = api_key_data.get('api_ownr_email_addr', '')
                 if not validate_email_address(email_addr):
                     self.logger.warning(f"Invalid email address for CD {api_key_data['cd']}: {email_addr}")
@@ -306,7 +306,7 @@ class ApiKeyMngrService:
                         'cd': api_key_data['cd'],
                         'reason': f'Invalid email: {email_addr}'
                     })
-                    # Log the skipped event
+                                           
                     try:
                         self.dao.insert_event_log(
                             cd=api_key_data['cd'],
@@ -318,7 +318,7 @@ class ApiKeyMngrService:
                         pass
                     continue
                 
-                # 남은 기간에 따른 메일 설정 선택
+                                    
                 days_remaining = api_key_data.get('days_remaining', 999)
                 if days_remaining <= 0:
                     mail_tp = 'mail0'
@@ -327,21 +327,21 @@ class ApiKeyMngrService:
                 elif days_remaining <= 30:
                     mail_tp = 'mail30'
                 else:
-                    mail_tp = 'mail30'  # 기본값
+                    mail_tp = 'mail30'       
                 
-                # 메일 설정에서 템플릿 가져오기
+                                  
                 mail_setting = mail_settings.get(mail_tp, {})
                 subject_template = mail_setting.get('subject', None) or None
                 body_template = mail_setting.get('body', None) or None
                 
-                # Create email content with template variables
+                                                              
                 subject, body = create_api_key_expiry_email(
                     api_key_data,
                     subject_template=subject_template,
                     body_template=body_template
                 )
                 
-                # Send email (following mail_s.txt EmailOperator pattern)
+                                                                         
                 try:
                     success, error_msg = send_email(
                         to=email_addr,
@@ -355,7 +355,7 @@ class ApiKeyMngrService:
                             'cd': api_key_data['cd'],
                             'email': email_addr
                         })
-                        # Log the success event
+                                               
                         try:
                             self.dao.insert_event_log(
                                 cd=api_key_data['cd'],
@@ -369,7 +369,7 @@ class ApiKeyMngrService:
                             'cd': api_key_data['cd'],
                             'reason': error_msg or 'send_email returned False'
                         })
-                        # Log the failed event
+                                              
                         try:
                             self.dao.insert_event_log(
                                 cd=api_key_data['cd'],
@@ -386,7 +386,7 @@ class ApiKeyMngrService:
                         'cd': api_key_data['cd'],
                         'reason': str(e)
                     })
-                    # Log the failed event
+                                          
                     try:
                         self.dao.insert_event_log(
                             cd=api_key_data['cd'],

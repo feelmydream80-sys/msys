@@ -17,14 +17,14 @@
     }
     .graph {
         width: 100%;
-        height: 150px; /* Reduced height */
+        height: 150px; 
     }
     .jandi-card {
         border: 1px solid #e5e7eb;
         border-radius: 0.5rem;
-        /*padding: 0.5rem; /* Reduced padding */
-        padding: 0.5rem 0.5rem 0.1rem 0.5rem; /* padding: top right bottom left; -> bottom 값을 줄였습니다. */
-        margin-bottom: -10px; /* Negative margin to reduce space */
+        
+        padding: 0.5rem 0.5rem 0.1rem 0.5rem; 
+        margin-bottom: -10px; 
     }
     .day {
         stroke: #fff;
@@ -34,7 +34,7 @@
         font-size: 10px;
         fill: #aaa;
     }
-    /* Flatpickr arrow icon size override */
+    
     .flatpickr-months .flatpickr-prev-month svg,
     .flatpickr-months .flatpickr-next-month svg {
         width: 14px;
@@ -52,13 +52,13 @@
 {% block content %}
 <div id="jandi-page-container" class="container mx-auto p-4 max-w-screen-xl relative" data-is-admin="{{ is_admin }}">
     {% include 'collapsible_controls.html' %}
-    <!-- Tooltip and Loading Indicator -->
+    
     <div id="tooltip" class="hidden absolute bg-gray-800 text-white text-xs rounded py-1 px-2 z-10 pointer-events-none"></div>
     <div id="loading" class="hidden absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-20">
         <div class="text-lg font-semibold">Loading...</div>
     </div>
 
-    <!-- 날짜 선택 섹션 -->
+    
     <div id="date-selection-card-jandi" class="collapsible-card bg-white rounded-lg shadow-md mb-6">
         <div class="card-header p-6 cursor-pointer flex justify-between items-center">
             <h2 class="card-title">날짜 선택</h2>
@@ -85,7 +85,7 @@
         </div>
     </div>
 
-        <!-- Job ID 상세정보 테이블 영역 -->
+        
         <div id="job-info-card-jandi" class="collapsible-card bg-white rounded-lg shadow-md mb-6">
             <div class="card-header p-6 cursor-pointer flex justify-between items-center">
                 <h2 class="text-xl font-semibold text-gray-700">Job ID 상세정보</h2>
@@ -121,18 +121,18 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <!-- 동적으로 데이터 삽입 -->
+                        
                     </tbody>
                 </table>
             </div>
-            <!-- 페이징 컨트롤 -->
+            
             <div id="jobInfoPagination" class="mt-4 flex justify-center items-center gap-2">
-                <!-- 페이징 버튼들이 여기에 동적으로 생성됩니다 -->
+                
             </div>
         </div>
     </div>
     
-    <!-- DataTables용 숨겨진 테이블 -->
+    
     <div style="display:none;">
         <table id="job-id-table" class="display" style="width:100%">
             <thead>
@@ -146,7 +146,7 @@
         </table>
     </div>
 
-    <!-- Job ID별 잔디 현황 -->
+    
     <div id="jandi-monitoring-card" class="collapsible-card bg-white rounded-lg shadow-md mb-6">
         <div class="card-header p-6 cursor-pointer flex justify-between items-center">
             <h2 class="text-xl font-semibold text-gray-700">Job ID별 잔디 모니터링</h2>
@@ -173,9 +173,9 @@
                 </div>
             </div>
             <div id="heatmap-container" class="graph-container"></div>
-            <!-- 페이징 컨트롤 -->
+            
             <div id="jandiPagination" class="mt-4 flex justify-center items-center gap-2">
-                <!-- 페이징 버튼들이 여기에 동적으로 생성됩니다 -->
+                
             </div>
         </div>
         </div>

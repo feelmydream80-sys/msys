@@ -31,8 +31,8 @@ class AnalyticsSQL:
 
     @staticmethod
     def build_dynamic_query(params: dict):
-        # This is a placeholder implementation.
-        # The actual query will depend on the 'params' structure.
+                                               
+                                                                 
         query = "SELECT * FROM TB_CON_HIST"
         query_params = []
         conditions = []

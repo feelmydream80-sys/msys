@@ -1,4 +1,4 @@
-# dao/popup_dao.py
+                  
 """
 DAO for handling popup data in the database.
 """

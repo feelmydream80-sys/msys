@@ -48,10 +48,10 @@ def api_collection_schedule():
     today = datetime.now(pytz.timezone('Asia/Seoul')).date()
     
     if view_type == 'monthly':
-        # 기준 연/월에서 month_offset만큼 정확히 이동
+                                        
         year = today.year
         month = today.month + month_offset
-        # 연도/월 보정
+                 
         while month > 12:
             month -= 12
             year += 1
@@ -60,13 +60,13 @@ def api_collection_schedule():
             year -= 1
 
         start_date = date(year, month, 1)
-        # 다음 달 1일 계산 후 하루 빼서 마지막 날 계산
+                                     
         next_month_year = year + (month // 12)
         next_month_month = 1 if month == 12 else month + 1
         next_month = date(next_month_year, next_month_month, 1)
         end_date = next_month - timedelta(days=1)
-    else:  # weekly
-        # 이번 주 월요일 기준에서 week_offset 주 만큼 이동
+    else:          
+                                           
         start_date = today - timedelta(days=today.weekday())
         if week_offset != 0:
             start_date = start_date + timedelta(weeks=week_offset)

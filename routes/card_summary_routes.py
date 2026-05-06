@@ -1,4 +1,4 @@
-# routes/card_summary_routes.py
+                               
 from flask import Blueprint, render_template, jsonify, session
 from service.card_summary_service import CardSummaryService
 from msys.database import get_db_connection

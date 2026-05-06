@@ -1,4 +1,4 @@
-# service/dashboard_service.py
+                              
 """
 Dashboard and Analytics Business Logic
 Handles fetching and processing data for the dashboard and analytics pages.
@@ -8,7 +8,7 @@ from typing import Optional, List, Dict
 from mapper.dashboard_mapper import DashboardMapper
 from mapper.user_mapper import UserMapper
 from msys.database import get_db_connection
-# Service Dependencies (Settings)
+                                 
 from mapper.mngr_sett_mapper import MngrSettMapper
 from service.mngr_sett_service import DEFAULT_ADMIN_SETTINGS
 from service.icon_service import IconService
@@ -34,22 +34,22 @@ class DashboardService:
         user_id_log = user.get('user_id') if user else 'None'
         logging.info(f"DashboardService.get_summary called for user: {user_id_log}")
 
-        # 1. Fetch manager settings with icon codes
+                                                   
         settings_map = self._fetch_manager_settings_with_icons()
 
-        # 2. Check data access permissions
+                                          
         allowed_job_ids = self._get_allowed_job_ids(user)
         if allowed_job_ids is not None and not allowed_job_ids:
             return []
 
-        # 3. Filter by use_yn = 'Y' from tb_con_mst
+                                                   
         from mapper.mst_mapper import MstMapper
         mst_mapper = MstMapper(self.connection)
         all_mst_data = mst_mapper.get_all_mst()
         active_mst_data = [mst for mst in all_mst_data if mst.get('use_yn') is None or mst.get('use_yn').upper().strip() == 'Y']
         active_job_ids = [mst['cd'] for mst in active_mst_data]
 
-        # Apply use_yn filter to allowed job ids
+                                                
         if allowed_job_ids is not None:
             filtered_job_ids = list(set(allowed_job_ids) & set(active_job_ids))
         else:
@@ -58,7 +58,7 @@ class DashboardService:
         if not filtered_job_ids:
             return []
 
-        # 3.5. Exclude 100-unit jobs (CD100, CD200, etc.) and CD900~CD999
+                                                                         
         filtered_job_ids = [
             jid for jid in filtered_job_ids
             if not should_exclude_job(jid)
@@ -68,18 +68,18 @@ class DashboardService:
         if not filtered_job_ids:
             return []
 
-        # 4. Combine historical data with today's schedule
+                                                          
         combined_summary_data = self._combine_historical_and_today_data(
             start_date, end_date, all_data, filtered_job_ids, user
         )
 
-        # 4. Combine summary data with settings and apply filters
+                                                                 
         processed_summary_data = self._apply_settings_and_filters(combined_summary_data, settings_map)
 
-        # 5. Add fail streak calculations
+                                         
         self._add_fail_streaks(processed_summary_data)
 
-        # 6. Log final data counts
+                                  
         self._log_final_data_counts(processed_summary_data)
 
         return processed_summary_data
@@ -87,14 +87,14 @@ class DashboardService:
     def _fetch_manager_settings_with_icons(self) -> Dict[str, Dict]:
         """Fetch all manager settings and create a lookup map with icon codes."""
         try:
-            # Fetch raw settings and icon data
+                                              
             all_settings_raw = self.mngr_sett_mapper.get_all_settings()
 
             icon_service = IconService(self.connection)
             all_icons = icon_service.get_all_icons_data()
             icon_code_map = {icon['icon_id']: icon['icon_cd'] for icon in all_icons}
 
-            # Add icon codes to each setting object
+                                                   
             all_settings_with_codes = []
             for setting_raw in all_settings_raw:
                 combined_setting = setting_raw.copy()
@@ -107,7 +107,7 @@ class DashboardService:
                     combined_setting[f'{field}_code'] = icon_code_map.get(icon_id)
                 all_settings_with_codes.append(combined_setting)
 
-            # Create the final settings map
+                                           
             settings_map = {setting['cd']: setting for setting in all_settings_with_codes}
             logging.info(f"Successfully fetched and mapped {len(settings_map)} manager settings with icon codes.")
             return settings_map
@@ -119,13 +119,13 @@ class DashboardService:
                                          all_data: bool, allowed_job_ids: Optional[List[str]],
                                          user: Optional[Dict]) -> List[Dict]:
         """Combine historical summary data with today's schedule data."""
-        # Fetch historical summary data
+                                       
         historical_summary_list = self.dashboard_mapper.get_summary(start_date, end_date, all_data, allowed_job_ids)
         logging.info(f"[PIPELINE-1] Historical data count from DB: {len(historical_summary_list)}")
         historical_summary_map = {item['job_id']: item for item in historical_summary_list}
         logging.info(f"[PIPELINE-2] Historical summary map keys: {list(historical_summary_map.keys())}")
 
-        # Fetch today's schedule and status
+                                           
         kst = pytz.timezone('Asia/Seoul')
         today = datetime.now(kst).date()
         collection_schedule_service = CollectionScheduleService(self.connection)
@@ -133,17 +133,17 @@ class DashboardService:
         logging.info(f"[PIPELINE-3] Today's schedule count from CollectionScheduleService: {len(job_statuses_today)}")
         logging.info(f"[PIPELINE-3.1] Today's schedule job_ids: {[j.get('job_id') for j in job_statuses_today]}")
 
-        # Process today's data to get counts
+                                            
         today_counts = self._process_today_schedule_data(job_statuses_today)
         logging.info(f"[PIPELINE-4] Today counts keys: {list(today_counts.keys())}")
         logging.info(f"[PIPELINE-4.1] Today counts data: {dict(today_counts)}")
 
-        # Only use job IDs that exist in historical data
+                                                        
         all_known_job_ids = sorted(list(set(historical_summary_map.keys())))
         logging.info(f"[PIPELINE-5] all_known_job_ids (historical only): {all_known_job_ids}")
         logging.info(f"[PIPELINE-5.1] Missing from today_counts: {[jid for jid in today_counts.keys() if jid not in all_known_job_ids]}")
 
-        # Build the final combined summary data
+                                               
         combined_summary_data = []
         for job_id in all_known_job_ids:
             hist_data = historical_summary_map.get(job_id, {})
@@ -161,34 +161,31 @@ class DashboardService:
         """Process today's schedule data to get status counts per job."""
         today_counts = defaultdict(lambda: {"success": 0, "fail": 0, "progress": 0, "uncollected": 0, "total_scheduled": 0})
 
-        # StatusCodeService를 사용하여 코드 기반으로 분류
+                                            
         from service.status_code_service import status_code_service
         
-        # Service가 초기화되지 않았거나 빈 리스트 반환 시 기본값 사용
+                                               
         success_codes = status_code_service.get_success_codes() if status_code_service else []
         fail_codes = status_code_service.get_fail_codes() if status_code_service else []
         in_progress_codes = status_code_service.get_in_progress_codes() if status_code_service else []
         
-        # 빈 리스트 체크 및 기본값 적용
+                           
         if not success_codes:
             success_codes = ['CD901']
-            print(f"[DEBUG-CODES] Using default success_codes: {success_codes}")
         if not fail_codes:
             fail_codes = ['CD902', 'CD903']
-            print(f"[DEBUG-CODES] Using default fail_codes: {fail_codes}")
         if not in_progress_codes:
             in_progress_codes = ['CD904']
-            print(f"[DEBUG-CODES] Using default in_progress_codes: {in_progress_codes}")
 
         for job in job_statuses_today:
             job_id = job['job_id']
             status = job['status']
 
-            # CD907(예정)이 아닌 경우에만 카운트
+                                    
             if status != 'CD907':
                 today_counts[job_id]["total_scheduled"] += 1
                 
-                # 코드 기반으로 카테고리 분류
+                                 
                 if status in success_codes:
                     category = 'success'
                 elif status in in_progress_codes:
@@ -200,10 +197,7 @@ class DashboardService:
                     
                 today_counts[job_id][category] += 1
                 
-                # [DEBUG] CD101 등 특정 job 로깅
-                if job_id in ['CD101', 'CD102']:
-                    print(f"[DEBUG-COUNT] {job_id}: status={status}, category={category}, success_codes={success_codes}, fail_codes={fail_codes}")
-
+                                           
         return today_counts
 
     def _create_combined_item(self, job_id: str, hist_data: Dict, today_data: Dict) -> Dict:
@@ -220,7 +214,7 @@ class DashboardService:
             'overall_fail_count': hist_data.get('overall_fail_count', 0),
             'overall_cd904_count': hist_data.get('overall_cd904_count', 0),
             'overall_no_data_count': hist_data.get('overall_no_data_count', 0),
-            # weekly, monthly, etc.
+                                   
             'week_success': hist_data.get('week_success', 0),
             'week_ing_count': hist_data.get('week_ing_count', 0),
             'week_fail_count': hist_data.get('week_fail_count', 0),
@@ -239,7 +233,7 @@ class DashboardService:
             'year_no_data_count': hist_data.get('year_no_data_count', 0),
         }
 
-        # Override daily counts with accurate data from CollectionScheduleService
+                                                                                 
         item['day_success'] = today_data['success']
         item['day_fail_count'] = today_data['fail']
         item['day_ing_count'] = today_data['progress']
@@ -255,7 +249,7 @@ class DashboardService:
             job_id = item.get('job_id')
             job_settings = settings_map.get(job_id, DEFAULT_ADMIN_SETTINGS)
 
-            # Apply 'Dashboard Display Y/N' setting
+                                                   
             if job_settings.get('CHRT_DSP_YN', 'Y').upper() == 'N':
                 logging.info(f"Skipping job '{job_id}' from dashboard summary as per CHRT_DSP_YN setting.")
                 continue
@@ -332,40 +326,40 @@ class DashboardService:
     def get_event_log(self, start_date: Optional[str] = None, end_date: Optional[str] = None, all_data: bool = False, user: Optional[Dict] = None) -> List[Dict]:
         logging.info(f"--- [DEBUG] get_event_log called. User: {user}")
 
-        # 1. 데이터 접근 권한 확인
+                         
         allowed_job_ids = self._get_allowed_job_ids(user)
         if allowed_job_ids is not None and not allowed_job_ids:
             logging.info(f"--- [DEBUG] User has no data permissions. Returning empty event logs.")
             return []
 
-        # 2. 허용된 Job ID로 이벤트 로그 조회
+                                  
         event_log_data = self.dashboard_mapper.get_event_log(start_date, end_date, all_data, allowed_job_ids)
 
         is_admin = user and 'mngr_sett' in user.get('permissions', [])
         logging.info(f"--- [DEBUG] Is admin? {is_admin}")
 
-        # if user is admin, return all logs (but already filtered by job_ids if applicable).
+                                                                                            
         if not user or is_admin:
             logging.info(f"--- [DEBUG] Returning all {len(event_log_data)} event logs for admin or no user.")
             return event_log_data
 
-        # if user is not admin, filter system logs.
+                                                   
         user_id = user.get('user_id', 'Unknown')
         logging.info(f"--- [DEBUG] Filtering logs for non-admin user '{user_id}'. Total logs before filter: {len(event_log_data)}")
 
         filtered_logs = []
         for log in event_log_data:
-            # job_id가 None일 경우를 대비해 기본값을 빈 문자열로 설정
+                                                  
             job_id_str = str(log.get('job_id') or '').lower()
             status_str = str(log.get('status') or '')
 
-            # 필터링 조건: job_id에 'system'이 포함되거나, status가 인증 관련인 경우
+                                                                
             is_system_by_id = 'system' in job_id_str
             is_system_by_status = status_str.startswith('AUTH_') or status_str == 'LOGIN_SUCCESS'
 
             if is_system_by_id or is_system_by_status:
                 logging.info(f"--- [DEBUG] Filtering out log for user '{user_id}': job_id='{log.get('job_id')}', status='{status_str}'")
-                continue  # 이 로그는 건너뜀
+                continue             
 
             filtered_logs.append(log)
 
@@ -421,7 +415,7 @@ class DashboardService:
         
     def _get_allowed_job_ids(self, user: Optional[Dict], requested_job_ids: Optional[List[str]] = None) -> Optional[List[str]]:
         if not user:
-            return None # Allow all if no user context is provided
+            return None                                           
 
         is_admin = 'mngr_sett' in user.get('permissions', [])
         if is_admin:

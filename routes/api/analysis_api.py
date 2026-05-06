@@ -83,7 +83,7 @@ def get_analytics_trouble_by_code_api():
 
             trouble_data = dashboard_service.get_trouble_by_code(start_date_str, end_date_str, job_ids, user=user)
 
-            # TB_STS_CD_MST에서 코드 정보(명칭+색상) 조회 - 일관성 확보
+                                                      
             cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
             cur.execute("""
                 SELECT CD, NM, BG_COLR, TXT_COLR 
@@ -91,7 +91,7 @@ def get_analytics_trouble_by_code_api():
             """)
             sts_cd_map = {row['cd']: row for row in cur.fetchall()}
 
-            # 각 장애 코드에 명칭과 색상 정보 추가
+                                   
             for item in trouble_data:
                 error_code = item.get('error_code')
                 if error_code in sts_cd_map:
@@ -100,9 +100,9 @@ def get_analytics_trouble_by_code_api():
                     item['bg_color'] = code_info['bg_colr']
                     item['txt_color'] = code_info['txt_colr']
                 else:
-                    # TB_STS_CD_MST에 없는 경우 코드 그대로 사용
+                                                    
                     item['error_name'] = error_code
-                    item['bg_color'] = '#a3a3a3'  # 기본 회색
+                    item['bg_color'] = '#a3a3a3'         
                     item['txt_color'] = '#374151'
 
             return jsonify(trouble_data), 200
@@ -118,7 +118,7 @@ def api_analysis_summary():
     [공통화] 대시보드와 데이터 구조/필터링 방식이 완전히 동일하므로,
     중복 방지를 위해 대시보드 summary API를 그대로 재사용함.
     """
-    # Re-implementing the logic from get_dashboard_summary to avoid direct call
+                                                                               
     try:
         with get_db_connection() as conn:
             dashboard_service = DashboardService(conn)
@@ -134,9 +134,9 @@ def api_analysis_summary():
 
             summary_data = dashboard_service.get_summary(start_date_str, end_date_str, all_data, user=user)
 
-            # Convert datetime objects to KST strings before jsonify
+                                                                    
             convert_datetime_fields_to_kst_str(summary_data)
-            # None 값을 빈 문자열로 변환
+                               
             for item in summary_data:
                 for key, value in item.items():
                     if value is None:
@@ -164,9 +164,9 @@ def api_analysis_trend():
             user = session.get('user')
             data = dashboard_service.get_analytics_success_rate_trend(start_date, end_date, job_ids, user=user)
 
-            # Convert datetime objects to KST strings before jsonify
+                                                                    
             convert_datetime_fields_to_kst_str(data)
-            # None 값을 빈 문자열로 변환
+                               
             for item in data:
                 for key, value in item.items():
                     if value is None:
@@ -192,7 +192,7 @@ def api_analysis_raw_data():
             job_ids = job_ids_str.split(',') if job_ids_str else None
             user = session.get('user')
 
-            # 권한 확인 로깅 추가
+                         
             user_id = user.get('user_id', 'Unknown') if user else 'NoUser'
             data_permissions = user.get('data_permissions', []) if user else []
             is_admin = user and 'mngr_sett' in user.get('permissions', [])
@@ -200,9 +200,9 @@ def api_analysis_raw_data():
 
             rows = dashboard_service.get_raw_data(start_date, end_date, job_ids, all_data=False, user=user)
 
-            # Convert datetime objects to KST strings before jsonify
+                                                                    
             convert_datetime_fields_to_kst_str(rows)
-            # None 값을 빈 문자열로 변환
+                               
             for item in rows:
                 for key, value in item.items():
                     if value is None:
@@ -245,14 +245,14 @@ def api_analysis_error_codes():
             all_data_str = request.args.get('all_data', 'false')
             all_data = all_data_str.lower() == 'true'
 
-            # dashboard_service를 통해 데이터 조회
+                                          
             user = session.get('user')
             error_codes = dashboard_service.get_distinct_error_codes(start_date, end_date, all_data, user=user)
 
-            # Get status codes dynamically
+                                          
             status_codes = get_status_codes()
 
-            # Create dynamic status name mapping
+                                                
             status_names = {}
             for code, desc in status_codes.items():
                 if 'FINISHED' in desc.upper():
@@ -264,7 +264,7 @@ def api_analysis_error_codes():
                 elif 'PROGRESS' in desc.upper():
                     status_names[code] = '계측중'
                 else:
-                    status_names[code] = desc  # Use description as fallback
+                    status_names[code] = desc                               
 
             result = [{"code": code, "name": status_names.get(code, code)} for code in error_codes]
             return jsonify(result), 200
@@ -356,7 +356,7 @@ def get_dynamic_chart_data():
                 'job_ids': request.args.getlist('job_ids')
             }
 
-            # 필수 파라미터 검증
+                        
             if not all([params['x_axis'], params['y_axis'], params['start_date'], params['end_date']]):
                 return jsonify({"message": "x_axis, y_axis, start_date, end_date는 필수 파라미터입니다."}), 400
 
@@ -371,9 +371,9 @@ def get_dynamic_chart_data():
         return jsonify({"message": "동적 차트 데이터 조회 중 오류가 발생했습니다."}), 500
 
 
-# ==========================================
-# 사용자접속정보 탭용 API
-# ==========================================
+                                            
+                
+                                            
 
 @analysis_api_bp.route('/statistics/user-list', methods=['GET'])
 @login_required
@@ -415,7 +415,7 @@ def get_user_detail_api(user_id: str):
         mode: 'all' (중복 포함, 기본값) 또는 'distinct' (1일 1접속)
     """
     try:
-        # 쿼리 파라미터에서 모드 추출
+                         
         mode = request.args.get('mode', 'all')
         if mode not in ['all', 'distinct']:
             mode = 'all'
@@ -434,10 +434,6 @@ def get_user_detail_api(user_id: str):
 @analysis_api_bp.route('/settings/thresholds', methods=['GET'])
 @login_required
 def get_thresholds_api():
-    """
-    사용자 접속 상태 판정 기준 임계값을 조회하는 API.
-    TB_CON_MST 테이블에서 CD991(최근), CD992(활성), CD993(휴 면)의 item1 값을 조회.
-    """
     try:
         with get_db_connection() as conn:
             with conn.cursor() as cur:
@@ -450,14 +446,12 @@ def get_thresholds_api():
                 cur.execute(query)
                 rows = cur.fetchall()
                 
-                # 기본값 설정
                 thresholds = {
-                    'cd991': 30,  # 최근 접속 기준 (일)
-                    'cd992': 7,   # 활성 사용자 기준 (일)
-                    'cd993': 90   # 휴 면 전환 기준 (일)
+                    'cd991': 30,
+                    'cd992': 7,
+                    'cd993': 90
                 }
                 
-                # DB 값으로 업데이트
                 for row in rows:
                     cd, item1 = row
                     if item1:
@@ -475,9 +469,41 @@ def get_thresholds_api():
                 return jsonify(thresholds), 200
     except Exception as e:
         logging.error(f"❌ API: 임계값 조회 실패: {e}", exc_info=True)
-        # 오류 시 기본값 반환
         return jsonify({
             'cd991': 30,
             'cd992': 7,
             'cd993': 90
         }), 200
+
+
+@analysis_api_bp.route('/settings/thresholds', methods=['POST'])
+@login_required
+def save_thresholds_api():
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"message": "요청 본문이 없습니다."}), 400
+
+        allowed_keys = ['cd991', 'cd992', 'cd993']
+        updates = {}
+        for key in allowed_keys:
+            if key in data:
+                val = data[key]
+                if not isinstance(val, int) or val < 0:
+                    return jsonify({"message": f"{key} 값은 0 이상의 정수여야 합니다."}), 400
+                updates[key.upper()] = str(val)
+
+        if not updates:
+            return jsonify({"message": "수정할 임계값이 없습니다."}), 400
+
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                for cd, item1 in updates.items():
+                    query = "UPDATE tb_con_mst SET item1 = %s WHERE cd = %s"
+                    cur.execute(query, (item1, cd))
+                conn.commit()
+
+        return jsonify({"message": "임계값이 저장되었습니다."}), 200
+    except Exception as e:
+        logging.error(f"❌ API: 임계값 저장 실패: {e}", exc_info=True)
+        return jsonify({"message": "임계값 저장 중 오류가 발생했습니다."}), 500

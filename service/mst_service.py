@@ -41,7 +41,7 @@ class ConMstService:
                 logging.info(f"Non-admin user. Applying data permissions. Allowed jobs: {allowed_job_ids}")
                 if not allowed_job_ids:
                     logging.warning(f"User {user_id} has no data permissions. Returning empty job list.")
-                    return [], 0, 0 # Return empty data, total_records=0, filtered_records=0
+                    return [], 0, 0                                                         
             else:
                 logging.info(f"Admin user {user_id}. No data permission filtering applied.")
         

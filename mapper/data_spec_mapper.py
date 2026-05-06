@@ -1,4 +1,4 @@
-# mapper/data_spec_mapper.py
+                            
 """
 데이터 명세서 관련 데이터 변환을 책임지는 매퍼 계층입니다.
 """
@@ -20,7 +20,7 @@ class DataSpecMapper:
         if not spec:
             return None
         
-        # Spec과 Params 각각에 대해 변환 적용
+                                   
         converted_spec = convert_to_legacy_columns('TB_DATA_SPEC', spec)
         if 'params' in spec:
             converted_spec['params'] = convert_to_legacy_columns('TB_DATA_SPEC_PARM', spec['params'])

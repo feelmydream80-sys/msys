@@ -1,4 +1,4 @@
-# dao/data_spec_dao.py
+                      
 """
 DAO for handling data specifications in the database.
 """
@@ -82,7 +82,7 @@ class DataSpecDAO:
         """Updates an existing data specification and its parameters."""
         try:
             with self.conn.cursor() as cur:
-                # 1. Update spec details
+                                        
                 if 'password' in spec_data and spec_data['password']:
                     query = load_sql('data_spec/update_spec_with_password.sql')
                     values = (
@@ -101,10 +101,10 @@ class DataSpecDAO:
                     )
                 cur.execute(query, values)
                 
-                # 2. Delete existing params
+                                           
                 cur.execute(load_sql('data_spec/delete_params_by_spec_id.sql'), (spec_id,))
                 
-                # 3. Insert new params
+                                      
                 for param in params_data:
                     param_values = (
                         spec_id,

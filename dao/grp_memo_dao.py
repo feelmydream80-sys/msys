@@ -1,4 +1,4 @@
-# dao/grp_memo_dao.py
+                     
 """
 DAO for handling group memo data in the database.
 """

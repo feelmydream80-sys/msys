@@ -1,6 +1,6 @@
--- Table: public.tb_col_mapp
 
--- DROP TABLE IF EXISTS public.tb_col_mapp;
+
+
 
 CREATE TABLE IF NOT EXISTS public.tb_col_mapp
 (
