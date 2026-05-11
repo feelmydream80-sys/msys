@@ -140,6 +140,7 @@ class UserListRenderer {
     }
 
     async _doRender(page, pageSize, searchTerm, filterMode, filterDays, forceReload) {
+        const pageChanged = this.currentPage !== page;
         this.currentPage = page;
         this.pageSize = pageSize;
         this.searchTerm = searchTerm;
@@ -149,7 +150,7 @@ class UserListRenderer {
         let data = null;
 
 
-        if (forceReload || !this.users || this.users.length === 0) {
+        if (forceReload || pageChanged || !this.users || this.users.length === 0) {
             data = await this.fetchUsers(page, pageSize, searchTerm);
             this.users = data.items;
         }
@@ -355,13 +356,13 @@ class UserListRenderer {
 
 
         if (page > 1) {
-            html += `<button onclick="window.userAccessInfo?.render(${page - 1})" style="padding: 6px 12px; border: 1px solid #ddd; background: white; border-radius: 4px; cursor: pointer;">이전</button>`;
+            html += `<button onclick="window.userAccessInfo?.refresh(${page - 1})" style="padding: 6px 12px; border: 1px solid #ddd; background: white; border-radius: 4px; cursor: pointer;">이전</button>`;
         }
 
 
         for (let i = 1; i <= total_pages; i++) {
             if (i === 1 || i === total_pages || (i >= page - 2 && i <= page + 2)) {
-                html += `<button onclick="window.userAccessInfo?.render(${i})" 
+                html += `<button onclick="window.userAccessInfo?.refresh(${i})" 
                         style="padding: 6px 12px; border: 1px solid ${i === page ? '#007bff' : '#ddd'}; background: ${i === page ? '#007bff' : 'white'}; color: ${i === page ? 'white' : '#333'}; border-radius: 4px; cursor: pointer;">${i}</button>`;
             } else if (i === page - 3 || i === page + 3) {
                 html += `<span style="padding: 6px;">...</span>`;
@@ -370,7 +371,7 @@ class UserListRenderer {
 
 
         if (page < total_pages) {
-            html += `<button onclick="window.userAccessInfo?.render(${page + 1})" style="padding: 6px 12px; border: 1px solid #ddd; background: white; border-radius: 4px; cursor: pointer;">다음</button>`;
+            html += `<button onclick="window.userAccessInfo?.refresh(${page + 1})" style="padding: 6px 12px; border: 1px solid #ddd; background: white; border-radius: 4px; cursor: pointer;">다음</button>`;
         }
 
         container.innerHTML = html;
