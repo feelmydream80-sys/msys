@@ -648,6 +648,10 @@ export function init() {
                         } else if (displayMode === 'desc' && mstData[subGroupId]) {
                             subDisplayName = mstData[subGroupId].cd_desc || subGroupId;
                         }
+                        const maxSubLength = 18;
+                        if (subDisplayName.length > maxSubLength) {
+                            subDisplayName = subDisplayName.substring(0, maxSubLength) + '...';
+                        }
                         
                         subGroupPill.innerHTML = `
                             <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -686,6 +690,10 @@ export function init() {
                                 jobDisplayName = mstData[job.job_id].cd_nm;
                             } else if (popupDisplayMode === 'desc' && mstData[job.job_id]) {
                                 jobDisplayName = mstData[job.job_id].cd_desc || job.job_id;
+                            }
+                            const maxPopupLength = 18;
+                            if (jobDisplayName.length > maxPopupLength) {
+                                jobDisplayName = jobDisplayName.substring(0, maxPopupLength) + '...';
                             }
                             const statusInfo = getStatusInfoByCd(job.status);
 
@@ -974,7 +982,7 @@ export function init() {
                         } else if (displayMode === 'desc' && mstData[job.job_id]) {
                             jobDisplayName = mstData[job.job_id].cd_desc || job.job_id;
                         }
-                        const maxLength = 12;
+                        const maxLength = 18;
                         if (jobDisplayName.length > maxLength) {
                             jobDisplayName = jobDisplayName.substring(0, maxLength) + '...';
                         }
