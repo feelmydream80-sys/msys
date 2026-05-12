@@ -2,15 +2,14 @@
 
 
 
-import { initializeDashboard } from '../modules/dashboard/events.js';
+import { initializeDashboard } from '../modules/dashboard/events.js?v=2';
 
 
 export function init() {
 
 
     const dashboardElement = document.getElementById('dashboard-main-grid');
-    if (dashboardElement && !window.isDashboardInitialized) {
-        window.isDashboardInitialized = true;
+    if (dashboardElement) {
 
         if (window.resetDashboardPagination) {
             window.resetDashboardPagination();
@@ -23,7 +22,6 @@ export function init() {
 
 
 
-window.isDashboardInitialized = false;
 
 
 init();

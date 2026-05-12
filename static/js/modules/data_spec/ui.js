@@ -170,7 +170,7 @@ export function populateForm(spec, params = [], scrapedData = null) {
         if (scrapedData.reference_doc && scrapedData.reference_doc.onclick) {
             const match = scrapedData.reference_doc.onclick.match(/fileDown\('([^']*)'/);
             if (match && match[1]) {
-                elements.refDocUrlInput.value = `https:
+                elements.refDocUrlInput.value = `https://www.data.go.kr/download/${match[1]}`;
             }
         } else {
              elements.refDocUrlInput.value = elements.scrapeUrlInput.value;

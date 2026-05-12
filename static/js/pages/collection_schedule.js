@@ -514,12 +514,10 @@ export function init() {
 
                     const allSubGroupJobs = Object.values(subGroups).flat().filter(isStatusDisplayed);
 
-                    const validJobs = allSubGroupJobs.filter(j => ['CD901', 'CD902', 'CD907', 'CD908'].includes(j.status));
-                    const allScheduled = validJobs.length > 0 && validJobs.every(j => j.status === 'CD907');
-
-                    const total = validJobs.length;
-                    const success = validJobs.filter(j => j.status === 'CD901').length;
-                    const fail = validJobs.filter(j => j.status === 'CD902').length;
+                    const total = allSubGroupJobs.length;
+                    const allScheduled = total > 0 && allSubGroupJobs.every(j => j.status === 'CD907');
+                    const success = allSubGroupJobs.filter(j => j.status === 'CD901').length;
+                    const fail = allSubGroupJobs.filter(j => j.status === 'CD902').length;
                     const completed = success + fail;
                     
                     const progressRate = total > 0 ? Math.round((completed / total) * 100) : 0;
@@ -608,14 +606,13 @@ export function init() {
                         const subGroupJobs = subGroups[subGroupId];
                         const filteredSubJobs = subGroupJobs.filter(isStatusDisplayed);
 
-                        const validSubJobs = filteredSubJobs.filter(j => ['CD901', 'CD902', 'CD907', 'CD908'].includes(j.status));
-                        const subTotal = validSubJobs.length;
-                        const subSuccess = validSubJobs.filter(j => j.status === 'CD901').length;
-                        const subFail = validSubJobs.filter(j => j.status === 'CD902').length;
+                        const subTotal = filteredSubJobs.length;
+                        const subSuccess = filteredSubJobs.filter(j => j.status === 'CD901').length;
+                        const subFail = filteredSubJobs.filter(j => j.status === 'CD902').length;
                         const subCompleted = subSuccess + subFail;
                         const subProgressRate = subTotal > 0 ? Math.round((subCompleted / subTotal) * 100) : 0;
                         const subSuccessRate = subCompleted > 0 ? Math.round((subSuccess / subCompleted) * 100) : 0;
-                        const subAllScheduled = validSubJobs.length > 0 && validSubJobs.every(j => j.status === 'CD907');
+                        const subAllScheduled = subTotal > 0 && filteredSubJobs.every(j => j.status === 'CD907');
 
                         let subColorClass;
                         if (subAllScheduled) {
@@ -1003,7 +1000,7 @@ export function init() {
 
     function updateSummary(data) {
         const filteredData = data.filter(isStatusDisplayed);
-        const total = filteredData.filter(d => d.status !== 'CD907').length;
+        const total = filteredData.length;
         const success = filteredData.filter(d => d.status === 'CD901').length;
         const fail = filteredData.filter(d => d.status === 'CD902').length;
         const nodata = filteredData.filter(d => ['CD908', 'CD904', 'CD905'].includes(d.status)).length;

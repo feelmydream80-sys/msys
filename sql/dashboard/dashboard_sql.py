@@ -32,97 +32,64 @@ class DashboardSQL:
             }
 
                                                                
-        def create_count_case(status_code, period_condition=""):
-            condition = f"h.status = '{status_code}'"
+        def create_count_case_multi(status_codes, period_condition=""):
+            condition = " OR ".join([f"h.status = '{code}'" for code in status_codes])
             if period_condition:
-                condition += f" AND {period_condition}"
+                condition = f"({condition}) AND {period_condition}"
             return f"COUNT(CASE WHEN {condition} THEN 1 END)"
 
         kst_date_expr = "(h.start_dt::timestamp AT TIME ZONE 'Asia/Seoul')::date"
 
-                                                     
+                                                      
         def safe_column_name(prefix, desc):
-                                                                                                           
+                                                                                                            
             safe_desc = ''.join(c if c.isalnum() or c == '_' else '_' for c in desc.lower().replace(' ', '_'))
-                                   
+                                    
             if not safe_desc:
                 safe_desc = 'unknown'
             return f"{prefix}_{safe_desc}"
 
-                                                            
-        column_mappings = {
-            'CD901': 'success',
-            'CD902': 'fail',
-            'CD903': 'no_data',
-            'CD904': 'ing'
+                                                             
+        group_mappings = {
+            'success': ['CD901'],
+            'fail': ['CD902'],
+            'no_data': ['CD903', 'CD905', 'CD906', 'CD908'],
+            'ing': ['CD904']
         }
 
-                                                 
-        overall_counts = []
-        for code, col_suffix in column_mappings.items():
-            if code in status_codes:
-                col_name = f"overall_{col_suffix}_count"
-                overall_counts.append(f"{create_count_case(code)} as {col_name}")
+        def build_period_counts(prefix, period_condition=""):
+            ALL_STATUS_CODES = {'CD901','CD902','CD903','CD904','CD905','CD906','CD907','CD908'}
+            result = []
+            for suffix, codes in group_mappings.items():
+                valid_codes = [c for c in codes if c in ALL_STATUS_CODES]
+                if not valid_codes:
+                    continue
+                col_name = f"{prefix}_{suffix}"
+                if suffix in ('fail', 'no_data', 'ing') or prefix == 'overall':
+                    col_name = f"{prefix}_{suffix}_count"
+                if period_condition == "":
+                    result.append(f"{create_count_case_multi(valid_codes)} as {col_name}")
+                else:
+                    result.append(f"{create_count_case_multi(valid_codes, period_condition)} as {col_name}")
+            return result
 
-                      
-        daily_counts = []
-        for code, col_suffix in column_mappings.items():
-            if code in status_codes:
-                col_name = f"day_{col_suffix}"
-                if col_suffix == 'fail':
-                    col_name = f"day_{col_suffix}_count"
-                elif col_suffix == 'no_data':
-                    col_name = f"day_{col_suffix}_count"
-                period_condition = f"{kst_date_expr} = CURRENT_DATE"
-                daily_counts.append(f"{create_count_case(code, period_condition)} as {col_name}")
+                                                  
+        overall_counts = build_period_counts('overall')
 
                        
-        weekly_counts = []
-        for code, col_suffix in column_mappings.items():
-            if code in status_codes:
-                col_name = f"week_{col_suffix}"
-                if col_suffix == 'fail':
-                    col_name = f"week_{col_suffix}_count"
-                elif col_suffix == 'no_data':
-                    col_name = f"week_{col_suffix}_count"
-                period_condition = f"{kst_date_expr} >= date_trunc('week', CURRENT_DATE)"
-                weekly_counts.append(f"{create_count_case(code, period_condition)} as {col_name}")
+        daily_counts = build_period_counts('day', f"{kst_date_expr} = CURRENT_DATE")
+
+                       
+        weekly_counts = build_period_counts('week', f"{kst_date_expr} >= date_trunc('week', CURRENT_DATE)")
+
+                         
+        monthly_counts = build_period_counts('month', f"{kst_date_expr} >= date_trunc('month', CURRENT_DATE)")
+
+                           
+        half_counts = build_period_counts('half', f"{kst_date_expr} >= date_trunc('month', CURRENT_DATE) - INTERVAL '5 months'")
 
                         
-        monthly_counts = []
-        for code, col_suffix in column_mappings.items():
-            if code in status_codes:
-                col_name = f"month_{col_suffix}"
-                if col_suffix == 'fail':
-                    col_name = f"month_{col_suffix}_count"
-                elif col_suffix == 'no_data':
-                    col_name = f"month_{col_suffix}_count"
-                period_condition = f"{kst_date_expr} >= date_trunc('month', CURRENT_DATE)"
-                monthly_counts.append(f"{create_count_case(code, period_condition)} as {col_name}")
-
-                          
-        half_counts = []
-        for code, col_suffix in column_mappings.items():
-            if code in status_codes:
-                col_name = f"half_{col_suffix}"
-                if col_suffix == 'fail':
-                    col_name = f"half_{col_suffix}_count"
-                elif col_suffix == 'no_data':
-                    col_name = f"half_{col_suffix}_count"
-                period_condition = f"{kst_date_expr} >= date_trunc('month', CURRENT_DATE) - INTERVAL '5 months'"
-                half_counts.append(f"{create_count_case(code, period_condition)} as {col_name}")
-
-                       
-        yearly_counts = []
-        for code, col_suffix in column_mappings.items():
-            if code in status_codes:
-                col_name = f"year_{col_suffix}"
-                if col_suffix == 'fail':
-                    col_name = f"year_{col_suffix}_count"
-                elif col_suffix == 'no_data':
-                    col_name = f"year_{col_suffix}_count"
-                period_condition = f"{kst_date_expr} >= date_trunc('year', CURRENT_DATE)"
-                yearly_counts.append(f"{create_count_case(code, period_condition)} as {col_name}")
+        yearly_counts = build_period_counts('year', f"{kst_date_expr} >= date_trunc('month', CURRENT_DATE) - INTERVAL '11 months'")
 
                                                     
         from service.status_code_service import status_code_service

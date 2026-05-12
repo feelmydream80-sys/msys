@@ -19,7 +19,7 @@ function createPeriodRateDisplay(
     const ingCount = item[`${periodPrefix}_ing_count`] || 0;
     const miscCount = item[`${periodPrefix}_misc_count`] || 0;
 
-    const calculatedPeriodTotal = successCount + failCount + noDataCount;
+    const calculatedPeriodTotal = successCount + failCount;
     const displayRate = (calculatedPeriodTotal > 0) ? ((successCount / calculatedPeriodTotal) * 100).toFixed(2) : '0.00';
     
     let periodStatusColor = successColor;

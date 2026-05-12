@@ -60,7 +60,7 @@ export function updateSummaryCards(summaryData) {
 
     const totalJobsCount = summaryData.length;
     const totalCollections = summaryData.reduce((sum, item) => {
-        return sum + (item.overall_success_count || 0) + (item.overall_fail_count || 0) + (item.overall_no_data_count || 0);
+        return sum + (item.overall_success_count || 0) + (item.overall_fail_count || 0) + (item.overall_no_data_count || 0) + (item.overall_ing_count || 0);
     }, 0);
 
     totalJobsElement.textContent = totalJobsCount;
