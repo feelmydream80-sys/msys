@@ -645,6 +645,7 @@ export function init() {
                         } else if (displayMode === 'desc' && mstData[subGroupId]) {
                             subDisplayName = mstData[subGroupId].cd_desc || subGroupId;
                         }
+                        const subTooltipName = subDisplayName;
                         const maxSubLength = 18;
                         if (subDisplayName.length > maxSubLength) {
                             subDisplayName = subDisplayName.substring(0, maxSubLength) + '...';
@@ -664,7 +665,7 @@ export function init() {
                                 (${subSuccessRate}%)
                             </div>
                         `;
-                        subGroupPill.title = subDisplayName;
+                        subGroupPill.title = subTooltipName;
 
 
                         const subPopup = document.createElement('div');
