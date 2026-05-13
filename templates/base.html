@@ -126,6 +126,7 @@
         });
     </script>
     <script src="{{ url_for('static', filename='js/session_timer.js') }}?v={{ now.timestamp() }}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/components/loading.js') }}?v={{ now.timestamp() }}"></script>
     <script type="module" src="{{ url_for('static', filename='js/router.js') }}?v={{ now.timestamp() }}"></script>
     <script type="module" src="{{ url_for('static', filename='js/utils/toast.js') }}?v={{ now.timestamp() }}"></script>
     <script type="module" src="{{ url_for('static', filename='js/components/card.js') }}?v={{ now.timestamp() }}"></script>
@@ -146,6 +147,16 @@
     
     <script src="{{ url_for('static', filename='js/modules/popup_display.js') }}?v={{ now.timestamp() }}"></script>
     
+    <div id="global-loading" class="hidden fixed inset-0" style="z-index: 60;">
+        <div class="absolute inset-0 bg-black bg-opacity-30"></div>
+        <div class="flex items-start justify-center pt-32">
+            <div class="bg-white rounded-2xl shadow-2xl px-16 py-12 flex flex-col items-center min-w-[240px]">
+                <div class="animate-spin rounded-full h-12 w-12 border-4 border-gray-200" style="border-top-color: #6366f1;"></div>
+                <p id="loading-message" class="mt-6 text-base font-medium text-gray-700 whitespace-nowrap">데이터 로딩 중...</p>
+            </div>
+        </div>
+    </div>
+
     {% block scripts %}{% endblock %}
 </body>
 </html>

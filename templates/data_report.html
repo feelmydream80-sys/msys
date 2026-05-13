@@ -35,16 +35,15 @@
                     </tbody>
                 </table>
             </div>
-            <div id="loading-indicator" class="text-center" style="display: none;">
-                <div class="spinner-border" role="status">
-                    <span class="sr-only">Loading...</span>
-                </div>
-            </div>
+
         </div>
     </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/pages/data_report.js') }}"></script>
+<script type="module">
+    import { init } from '/static/js/pages/data_report.js';
+    init();
+</script>
 {% endblock %}

@@ -8,12 +8,14 @@ import { initUrlMapper } from './urlMapper.js';
 import { initCollapsibleFeatures } from '../ui_components/collapsible.js';
 import { initPagination, updatePaginationData } from '../ui_components/pagination.js';
 import { showToast } from '../../utils/toast.js';
+import { showLoading, hideLoading } from '../../components/loading.js';
 import { downloadExcelTemplate } from '../../utils/excelDownload.js';
 
 let allSpecs = [];
 
 
 async function loadSpecs() {
+    showLoading();
     try {
         allSpecs = await api.getSpecs();
         initPagination({
@@ -28,6 +30,8 @@ async function loadSpecs() {
     } catch (error) {
 
         showToast('명세서 목록을 불러오는 데 실패했습니다.', 'error');
+    } finally {
+        hideLoading();
     }
 }
 
@@ -406,10 +410,10 @@ function parseAndFill(text) {
                 throw new Error('RDF/XML 파싱 중 오류가 발생했습니다. 형식을 확인해주세요.');
             }
 
-            const dcatNS = "http:
-            const dctNS = "http:
-            const foafNS = "http:
-            const rdfNS = "http:
+            const dcatNS = "http://www.w3.org/ns/dcat#";
+            const dctNS = "http://purl.org/dc/terms/";
+            const foafNS = "http://xmlns.com/foaf/0.1/";
+            const rdfNS = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
 
             const datasetEl = xmlDoc.getElementsByTagNameNS(dcatNS, 'Dataset')[0];
             const searchContext = datasetEl || xmlDoc;

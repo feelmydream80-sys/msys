@@ -14,6 +14,7 @@ import {
     getJobInfoData,
     getErrorCodeMap
 } from './data.js';
+import { showLoading, hideLoading } from '../../components/loading.js';
 import {
     setDefaultDates,
     renderSummaryCards,
@@ -44,6 +45,7 @@ const elements = {
 
 
 async function fetchAndRenderAll() {
+    showLoading();
     const start = elements.startDate.value;
     const end = elements.endDate.value;
     const jobId = elements.jobIdSelect.value;
@@ -96,6 +98,8 @@ async function fetchAndRenderAll() {
 
     } catch (e) {
         alert('데이터 조회 실패: ' + e.message);
+    } finally {
+        hideLoading();
     }
 }
 

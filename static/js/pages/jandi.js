@@ -5,9 +5,15 @@ import { initCollapsibleFeatures, initSingleCollapsibleCard } from '../modules/u
 import { initPagination } from '../modules/ui_components/pagination.js';
 import { setDefaultDates } from '../modules/common/dateUtils.js';
 import { downloadExcelTemplate } from '../utils/excelDownload.js';
+import { showLoading, hideLoading, getAbortSignal, dispose as disposeLoading } from '../components/loading.js';
+
+export function dispose() {
+    disposeLoading();
+}
 
 export function init() {
     const jandiPageContainer = document.getElementById('jandi-page-container');
+    if (!jandiPageContainer) return;
     const isAdmin = jandiPageContainer.dataset.isAdmin === 'True';
     initCollapsibleFeatures();
     setDefaultDates();
@@ -16,7 +22,6 @@ export function init() {
     const allDataCheckbox = document.getElementById('allDataCheckbox');
     const filterButton = document.getElementById('filter-button');
     const heatmapContainer = document.getElementById('heatmap-container');
-    const loadingIndicator = document.getElementById('loading');
     const jandiSearchInput = document.getElementById('jandiSearch');
     const jandiPageSizeSelect = document.getElementById('jandiPageSize');
     const jandiPagination = document.getElementById('jandiPagination');
@@ -33,9 +38,11 @@ export function init() {
     let pageSize = parseInt(jandiPageSizeSelect.value, 10);
     let searchTerm = '';
     let sortOrder = 'asc';
+    let isLoading = false;
 
 
     async function fetchAllData() {
+        if (isLoading) return;
         const startDate = startDateInput.value;
         const endDate = endDateInput.value;
         const allData = allDataCheckbox.checked;
@@ -45,13 +52,15 @@ export function init() {
             return;
         }
 
-        loadingIndicator.style.display = 'block';
+        isLoading = true;
+        showLoading();
         heatmapContainer.innerHTML = '';
 
         try {
+            const signal = getAbortSignal();
 
             if (isAdmin) {
-                const adminSettingsResponse = await fetch('/api/mngr_sett/settings/all');
+                const adminSettingsResponse = await fetch('/api/mngr_sett/settings/all', { signal });
                 if (!adminSettingsResponse.ok) throw new Error('관리자 설정 조회 실패');
                 const adminSettingsResult = await adminSettingsResponse.json();
                 adminSettingsMap = adminSettingsResult.reduce((acc, setting) => {
@@ -61,21 +70,19 @@ export function init() {
             }
 
 
-            const mstResponse = await fetch('/api/mst_list');
+            const mstResponse = await fetch('/api/mst_list', { signal });
             if (!mstResponse.ok) throw new Error('마스터 목록 조회 실패');
             const mstResult = await mstResponse.json();
-            
 
             const activeJobs = filterValidJobs(filterActiveMstData(mstResult));
 
 
             const jobIds = activeJobs.map(job => job.job_id);
-            const jobMstInfoResponse = await fetch(`/api/job_mst_info?job_ids=${jobIds.join(',')}`);
+            const jobMstInfoResponse = await fetch(`/api/job_mst_info?job_ids=${jobIds.join(',')}`, { signal });
             if (!jobMstInfoResponse.ok) throw new Error('Job 상세정보 조회 실패');
             const jobMstInfoResult = await jobMstInfoResponse.json();
             
             jobMstInfoMap = jobMstInfoResult;
-            
 
             const jobsWithSchedule = activeJobs.filter(job => jobMstInfoMap[job.job_id]?.item6);
 
@@ -83,9 +90,8 @@ export function init() {
             allJandiData = {};
             for (const job of jobsWithSchedule) {
                 const job_id = job.job_id;
-                const jandiDataResponse = await fetch(`/api/jandi-data?job_id=${job_id}&start_date=${startDate}&end_date=${endDate}&allData=${allData}`);
+                const jandiDataResponse = await fetch(`/api/jandi-data?job_id=${job_id}&start_date=${startDate}&end_date=${endDate}&allData=${allData}`, { signal });
                 if (!jandiDataResponse.ok) {
-
                     continue;
                 }
                 const jandiDataResult = await jandiDataResponse.json();
@@ -94,11 +100,9 @@ export function init() {
                 jandiDataResult.forEach(item => {
                     if (item.date) {
                         try {
-
                             const dateKey = new Date(item.date).toISOString().substring(0, 10);
                             jobDataMap.set(dateKey, item.count);
                         } catch (e) {
-
                         }
                     }
                 });
@@ -121,10 +125,11 @@ export function init() {
             renderPagedHeatmaps(true);
 
         } catch (error) {
-
-            heatmapContainer.innerHTML = `<p class="text-red-500">${error.message}</p>`;
+            if (error.name === 'AbortError') return;
+            if (heatmapContainer) heatmapContainer.innerHTML = `<p class="text-red-500">${error.message}</p>`;
         } finally {
-            loadingIndicator.style.display = 'none';
+            isLoading = false;
+            hideLoading();
         }
     }
 

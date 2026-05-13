@@ -1,12 +1,13 @@
-document.addEventListener('DOMContentLoaded', function() {
+import { showLoading, hideLoading } from '../components/loading.js';
+
+export async function init() {
     const viewTypeRadios = document.querySelectorAll('input[name="view-type"]');
     const tableBody = document.getElementById('report-table-body');
-    const loadingIndicator = document.getElementById('loading-indicator');
 
     let currentView = 'weekly';
 
     function fetchData(view) {
-        loadingIndicator.style.display = 'block';
+        showLoading();
         tableBody.innerHTML = '';
 
         fetch(`/api/data-report?view=${view}`)
@@ -20,11 +21,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 renderTable(data);
             })
             .catch(error => {
-
                 tableBody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">데이터를 불러오는 데 실패했습니다.</td></tr>`;
             })
             .finally(() => {
-                loadingIndicator.style.display = 'none';
+                hideLoading();
             });
     }
 
@@ -33,7 +33,6 @@ document.addEventListener('DOMContentLoaded', function() {
             tableBody.innerHTML = `<tr><td colspan="5" class="text-center">해당 기간에 조회된 데이터가 없습니다.</td></tr>`;
             return;
         }
-
 
         data.sort((a, b) => {
             if (a.date < b.date) return -1;
@@ -80,7 +79,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     viewTypeRadios.forEach(radio => {
         radio.addEventListener('change', function() {
-
             document.querySelectorAll('.btn-group-toggle .btn').forEach(label => {
                 label.classList.remove('active');
             });
@@ -91,6 +89,5 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-
     fetchData(currentView);
-});
+}

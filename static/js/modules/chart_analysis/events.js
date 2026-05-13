@@ -1,19 +1,13 @@
-
-
-
-
 import { fetchAnalyticsSuccessRateTrend, fetchAnalyticsTroubleByCode } from '../common/api/analytics.js';
 import { showMessage } from '../common/utils.js';
 import { renderSuccessRateChart, renderTroublePieChart } from './ui.js';
 import { allMngrSettings } from './data.js';
 import { downloadExcelTemplate } from '../../utils/excelDownload.js';
+import { showLoading, hideLoading } from '../../components/loading.js';
 
 
 export async function loadAnalyticsPageData() {
-    const analyticsLoadingOverlay = document.getElementById('analyticsLoadingOverlay');
-    if (analyticsLoadingOverlay) {
-        analyticsLoadingOverlay.classList.remove('hidden');
-    }
+    showLoading();
 
     const startDate = document.getElementById('startDate')?.value || '';
     const endDate = document.getElementById('endDate')?.value || '';
@@ -28,7 +22,7 @@ export async function loadAnalyticsPageData() {
     if (selectedJobIds.length === 0) {
         renderSuccessRateChart([], successChartType, allMngrSettings, labelDisplayType);
         renderTroublePieChart([], troubleChartType, startDate, endDate, allMngrSettings, labelDisplayType);
-        if (analyticsLoadingOverlay) analyticsLoadingOverlay.classList.add('hidden');
+        hideLoading();
         return;
     }
 
@@ -46,9 +40,7 @@ export async function loadAnalyticsPageData() {
 
         showMessage('분석 차트 로딩 중 오류 발생: ' + error.message, 'error');
     } finally {
-        if (analyticsLoadingOverlay) {
-            analyticsLoadingOverlay.classList.add('hidden');
-        }
+        hideLoading();
     }
 }
 

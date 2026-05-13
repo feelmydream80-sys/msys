@@ -1,7 +1,9 @@
+import { dispose as disposeLoading } from './components/loading.js';
+
 const mainContent = document.getElementById('main-content');
 
 
-let isPageInitialized = false;
+let currentPageModule = null;
 
 async function fetchPage(url) {
     try {
@@ -64,6 +66,11 @@ async function navigate(url) {
     const pageUrl = new URL(url, window.location.origin);
     const path = pageUrl.pathname;
 
+    if (currentPageModule && typeof currentPageModule.dispose === 'function') {
+        currentPageModule.dispose();
+    }
+    disposeLoading();
+
     const html = await fetchPage(path);
     if (html) {
         const parser = new DOMParser();
@@ -84,6 +91,7 @@ async function navigate(url) {
             try {
 
                 const module = await import(`./pages/${menuItem.menu_id}.js`);
+                currentPageModule = module;
                 if (module.init) {
                     module.init();
                 } else if (typeof module.default === 'function') {
@@ -117,6 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (menuItem && menuItem.menu_id) {
         import(`./pages/${menuItem.menu_id}.js`)
             .then(module => {
+                currentPageModule = module;
                 if (module.init) module.init();
                 else if (typeof module.default === 'function') module.default();
             })

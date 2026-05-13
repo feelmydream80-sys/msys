@@ -3,6 +3,7 @@ import { downloadExcelTemplate } from '../utils/excelDownload.js';
 import { filterActiveMstData } from '../modules/common/utils.js';
 import { scheduleSettingsApi } from '../services/api.js';
 import { getKSTNow, formatDateTime, formatDBDateTime } from '../modules/common/dateUtils.js';
+import { showLoading, hideLoading } from '../components/loading.js';
 
 
 let mstData = {};
@@ -1029,6 +1030,7 @@ export function init() {
     }
 
     async function fetchData(viewType) {
+        showLoading();
 
         if (Object.keys(mstData).length === 0) {
             try {
@@ -1125,6 +1127,8 @@ export function init() {
         } catch (error) {
 
             showToast('데이터를 불러오는 데 실패했습니다.', 'error');
+        } finally {
+            hideLoading();
         }
     }
 

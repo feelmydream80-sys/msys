@@ -1,5 +1,7 @@
 
 
+import { showLoading, hideLoading } from '../../components/loading.js';
+
 window.ApiKeyMngrUI = window.ApiKeyMngrUI || {};
 
 
@@ -41,22 +43,11 @@ window.ApiKeyMngrUI.formatDate = function(dateString) {
 
 
 window.ApiKeyMngrUI.showLoading = function(show) {
-    const loadingElement = document.getElementById('loading');
-    if (loadingElement) {
-        if (show) {
-            loadingElement.classList.remove('hidden');
-        } else {
-            loadingElement.classList.add('hidden');
-        }
-    }
+    if (show) showLoading(); else hideLoading();
 };
 
-
 window.ApiKeyMngrUI.hideLoading = function() {
-    const loadingElement = document.getElementById('loading');
-    if (loadingElement) {
-        loadingElement.classList.add('hidden');
-    }
+    hideLoading();
 };
 
 

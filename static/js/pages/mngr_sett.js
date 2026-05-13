@@ -5,6 +5,7 @@
 const DEBUG_MODE = true;
 
 
+import { showLoading, hideLoading } from '../components/loading.js';
 import { debugLog, showToast, setActiveColorInput, createStatusSettingRow } from '../utils.js';
 import { isValidUserId } from '../validators.js';
 
@@ -948,6 +949,7 @@ async function loadPageData(options = {}) {
     if (!container) return;
     
     loadPageDataDebounceTimer = true;
+    showLoading();
 
     try {
         const [adminResult, iconsResult, userResult] = await Promise.allSettled([
@@ -1004,6 +1006,7 @@ async function loadPageData(options = {}) {
     } catch (error) {
         showToast('페이지 초기화 중 치명적 오류 발생: ' + error.message, 'error');
     } finally {
+        hideLoading();
         setTimeout(() => {
             loadPageDataDebounceTimer = null;
         }, 100);

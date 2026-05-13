@@ -11,6 +11,7 @@ import { initializeDashboardData, getAllAdminSettings, getDataFlowStatus, setDas
 import { initializeDatePickers, updateSummaryCards, renderDashboardChartText, fetchAndDisplayMinMaxDatesDashboard } from './ui.js';
 import { initEventLog } from './eventLog.js';
 import { downloadExcelTemplate } from '../../utils/excelDownload.js';
+import { showLoading, hideLoading } from '../../components/loading.js';
 
 
 let isPaginationInitialized = false;
@@ -104,6 +105,7 @@ export async function initializeDashboard() {
 
 
     initCollapsibleFeatures();
+    showLoading();
 
     const dataFlowStatus = getDataFlowStatus();
     dataFlowStatus.overallStatus = "loading";
@@ -157,5 +159,7 @@ export async function initializeDashboard() {
     } catch (error) {
         dataFlowStatus.overallStatus = "error";
         showMessage('대시보드 페이지 초기화 중 오류 발생: ' + error.message, 'error');
+    } finally {
+        hideLoading();
     }
 }

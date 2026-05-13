@@ -2,6 +2,7 @@
 
 import { downloadExcelTemplate } from '../utils/excelDownload.js';
 import { filterActiveMstData } from '../modules/common/utils.js';
+import { showLoading, hideLoading } from '../components/loading.js';
 
 let mstData = {};
 
@@ -128,6 +129,7 @@ function filterBySearch(data, searchTerm) {
 }
  
 async function fetchAndRenderCardSummary(searchTerm = '') {
+    showLoading();
 
     if (Object.keys(mstData).length === 0) {
         try {
@@ -149,30 +151,27 @@ async function fetchAndRenderCardSummary(searchTerm = '') {
         }
     }
 
-    fetch('/api/card_summary')
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(summaryData => {
+    try {
+        const response = await fetch('/api/card_summary');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const summaryData = await response.json();
 
-            window.currentSummaryData = summaryData;
-            
-
-            renderCardSummary(summaryData, searchTerm);
-        })
-        .catch(error => {
-            const container = document.getElementById('cardContainer');
-            if (container) {
-                container.innerHTML = '';
-                const errorElement = document.createElement('div');
-                errorElement.className = 'no-data';
-                errorElement.textContent = `데이터를 불러오는 중 오류가 발생했습니다: ${error.message}`;
-                container.appendChild(errorElement);
-            }
-        });
+        window.currentSummaryData = summaryData;
+        renderCardSummary(summaryData, searchTerm);
+    } catch (error) {
+        const container = document.getElementById('cardContainer');
+        if (container) {
+            container.innerHTML = '';
+            const errorElement = document.createElement('div');
+            errorElement.className = 'no-data';
+            errorElement.textContent = `데이터를 불러오는 중 오류가 발생했습니다: ${error.message}`;
+            container.appendChild(errorElement);
+        }
+    } finally {
+        hideLoading();
+    }
 }
 
 
