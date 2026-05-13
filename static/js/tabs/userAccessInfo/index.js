@@ -346,7 +346,7 @@ class UserAccessInfo {
             this.hourChartInst = null;
         }
 
-        const tcol = 'rgba(0,0,0,0.35)', gcol = 'rgba(0,0,0,0.06)';
+        const tcol = '#374151', gcol = 'rgba(0,0,0,0.06)';
         const baseOpts = {
             responsive: true,
             maintainAspectRatio: false,
@@ -416,17 +416,33 @@ class UserAccessInfo {
 
         let weeklyData = [];
         let weekLabels = [];
-        
-        if (user.hm && Array.isArray(user.hm)) {
 
-            user.hm.forEach((value, idx) => {
-                if (value !== null) {
+        if (user.hm && Array.isArray(user.hm)) {
+            const now = getKSTNow();
+            const months = [];
+            for (let i = 5; i >= 0; i--) {
+                let m = now.getMonth() + 1 - i;
+                let y = now.getFullYear();
+                while (m <= 0) { m += 12; y -= 1; }
+                months.push({ year: y, month: m });
+            }
+
+            let monthIdx = 0;
+            let weekOfMonth = 1;
+            user.hm.forEach((value) => {
+                if (value === null) {
+                    if (monthIdx < months.length - 1) monthIdx++;
+                    weekOfMonth = 1;
+                } else {
                     weeklyData.push(value);
-                    weekLabels.push(`${idx + 1}주`);
+                    const { year, month } = months[monthIdx];
+                    const sy = String(year).slice(2);
+                    const sm = String(month).padStart(2, '0');
+                    weekLabels.push(`${sy}.${sm}.${weekOfMonth}주차`);
+                    weekOfMonth++;
                 }
             });
         }
-
 
         if (weeklyData.length === 0) {
             weeklyData = Array(26).fill(0);
@@ -480,7 +496,15 @@ class UserAccessInfo {
                     },
                     scales: {
                         x: {
-                            display: false
+                            ticks: {
+                                color: '#374151',
+                                font: { size: 11 },
+                                maxRotation: 45,
+                                autoSkip: true,
+                                maxTicksLimit: 13
+                            },
+                            grid: { display: false },
+                            border: { display: false }
                         },
                         y: {
                             ticks: { color: tcol, font: { size: 9 } },
@@ -525,8 +549,8 @@ class UserAccessInfo {
                     scales: {
                         x: {
                             ticks: { 
-                                color: tcol, 
-                                font: { size: 9 },
+                                color: '#374151', 
+                                font: { size: 11 },
                                 maxRotation: 0,
                                 autoSkip: true,
                                 maxTicksLimit: 13

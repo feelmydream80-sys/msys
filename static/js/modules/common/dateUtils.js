@@ -26,7 +26,7 @@ export function getLast6Months(months = 6) {
     const currentYear = now.getFullYear();
     const currentMonth = now.getMonth() + 1;
 
-    for (let i = 0; i < months; i++) {
+    for (let i = months - 1; i >= 0; i--) {
         let month = currentMonth - i;
         let year = currentYear;
 
