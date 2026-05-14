@@ -479,7 +479,7 @@ export function init() {
 
 
             dayHeader.innerHTML = `
-                <div>${dateStr}</div>
+                <div${currentDateStr === today ? ' style="font-size:1.1rem;color:#3b82f6"' : ''}>${dateStr}${currentDateStr === today ? ' -오늘' : ''}</div>
                 <div style="font-size: 10px; margin-top: 2px;">
                     <span style="color: ${settingsManager.getStatusInfoByCd('CD901')?.txt_colr || '#166534'}">성공: ${statusCounts['CD901']}</span> / 
                     <span style="color: ${settingsManager.getStatusInfoByCd('CD902')?.txt_colr || '#991b1b'}">실패: ${statusCounts['CD902']}</span> / 
