@@ -378,6 +378,17 @@ export function init() {
         return info?.txt_colr || '#4b5563';
     }
 
+    function applyPillBorder(pill, colorClass, width) {
+        const grpBrdrStyl = settingsManager.get('grpBrdrStyl');
+        if (grpBrdrStyl === 'none' || !grpBrdrStyl) {
+            pill.style.borderWidth = '0';
+            return;
+        }
+        pill.style.borderStyle = grpBrdrStyl;
+        pill.style.borderWidth = width;
+        pill.style.setProperty('border-color', getBorderColorFromClass(colorClass), 'important');
+    }
+
     function getProgressBarColorClass(rate, redThreshold, orangeThreshold) {
         if (rate < redThreshold) return 'progress-bar-danger';
         if (rate < orangeThreshold) return 'progress-bar-warning';
@@ -550,14 +561,7 @@ export function init() {
 
                     const groupPill = document.createElement('div');
                     groupPill.className = `job-pill group-pill-summary ${colorClass}`;
-                    const borderStyle = settingsManager.get('grpBrdrStyl') || 'solid';
-                    if (borderStyle === 'none') {
-                        groupPill.style.borderWidth = '0';
-                    } else {
-                        groupPill.style.borderStyle = borderStyle;
-                        groupPill.style.borderWidth = '2px';
-                        groupPill.style.borderColor = getBorderColorFromClass(colorClass);
-                    }
+                    applyPillBorder(groupPill, colorClass, '2px');
 
                     const displayMode = document.querySelector('input[name="displayMode"]:checked').value;
                     let parentDisplayName = parentGroupName;
@@ -642,13 +646,7 @@ export function init() {
 
                         const subGroupPill = document.createElement('div');
                         subGroupPill.className = `job-pill group-pill-summary ${subColorClass} sub-group-pill`;
-                        if (borderStyle === 'none') {
-                            subGroupPill.style.borderWidth = '0';
-                        } else {
-                            subGroupPill.style.borderStyle = borderStyle;
-                            subGroupPill.style.borderWidth = '1px';
-                            subGroupPill.style.borderColor = getBorderColorFromClass(subColorClass);
-                        }
+                        applyPillBorder(subGroupPill, subColorClass, '1px');
 
                         let subDisplayName = subGroupId;
                         if (displayMode === 'name' && mstData[subGroupId]) {
@@ -727,6 +725,7 @@ export function init() {
                             if (statusInfo.txt_colr) {
                                 pillElement.style.color = statusInfo.txt_colr;
                             }
+                            applyPillBorder(pillElement, statusInfo.class, '1px');
                             subPopupContent.appendChild(pillElement);
                         });
 
@@ -984,6 +983,7 @@ export function init() {
                         if (statusInfo.txt_colr) {
                             jobItem.style.color = statusInfo.txt_colr;
                         }
+                        applyPillBorder(jobItem, statusInfo.class, '1px');
                         const displayMode = document.querySelector('input[name="displayMode"]:checked').value;
                         let jobDisplayName = job.job_id;
                         if (displayMode === 'name' && mstData[job.job_id]) {
@@ -1523,7 +1523,7 @@ async function updateMemoButtons() {
                 if (groupPill) {
                     groupPill.style.setProperty('background-color', memoColors.bgColr, 'important');
                     groupPill.style.setProperty('color', memoColors.txtColr, 'important');
-                    groupPill.style.borderColor = memoColors.txtColr;
+                    groupPill.style.setProperty('border-color', memoColors.txtColr, 'important');
                 }
             } else {
                 if (isAdminUser) {
