@@ -123,7 +123,7 @@ function renderEventLogToasts(logs, errorCodeMap = {}) {
         if (dt_str) {
 
 
-            mainTime = dt_str;
+            mainTime = dt_str.replace(/[+-]\d{2}:\d{2}$/, '');
         }
 
 
@@ -192,7 +192,8 @@ function renderEventLogToasts(logs, errorCodeMap = {}) {
 
 
         const timeCell = document.createElement('div');
-        timeCell.className = 'font-monospace text-gray-500 text-sm whitespace-nowrap';
+        timeCell.className = 'font-monospace text-gray-400 text-sm whitespace-nowrap';
+        timeCell.style.minWidth = '120px';
         timeCell.textContent = mainTime;
 
         const iconCell = document.createElement('div');

@@ -1,0 +1,7 @@
+#!/bin/sh
+python scripts/build_zip.py
+if [ $? -ne 0 ]; then
+    echo "pre-commit: failed to create msys.zip, aborting commit"
+    exit 1
+fi
+git add msys.zip

@@ -370,6 +370,14 @@ export function init() {
         return 'status-CD901';
     }
 
+    function getBorderColorFromClass(colorClass) {
+        const match = colorClass.match(/^status-(CD\d+)/);
+        if (!match) return '#4b5563';
+        const cd = match[1];
+        const info = settingsManager.getStatusInfoByCd(cd);
+        return info?.txt_colr || '#4b5563';
+    }
+
     function getProgressBarColorClass(rate, redThreshold, orangeThreshold) {
         if (rate < redThreshold) return 'progress-bar-danger';
         if (rate < orangeThreshold) return 'progress-bar-warning';
@@ -548,6 +556,7 @@ export function init() {
                     } else {
                         groupPill.style.borderStyle = borderStyle;
                         groupPill.style.borderWidth = '2px';
+                        groupPill.style.borderColor = getBorderColorFromClass(colorClass);
                     }
 
                     const displayMode = document.querySelector('input[name="displayMode"]:checked').value;
@@ -638,6 +647,7 @@ export function init() {
                         } else {
                             subGroupPill.style.borderStyle = borderStyle;
                             subGroupPill.style.borderWidth = '1px';
+                            subGroupPill.style.borderColor = getBorderColorFromClass(subColorClass);
                         }
 
                         let subDisplayName = subGroupId;
@@ -1339,6 +1349,7 @@ export function init() {
                         if (groupPill) {
                             groupPill.style.removeProperty('background-color');
                             groupPill.style.removeProperty('color');
+                            groupPill.style.removeProperty('border-color');
                         }
                     }
                     memoPopup.classList.add('hidden');
@@ -1512,6 +1523,7 @@ async function updateMemoButtons() {
                 if (groupPill) {
                     groupPill.style.setProperty('background-color', memoColors.bgColr, 'important');
                     groupPill.style.setProperty('color', memoColors.txtColr, 'important');
+                    groupPill.style.borderColor = memoColors.txtColr;
                 }
             } else {
                 if (isAdminUser) {
@@ -1529,6 +1541,7 @@ async function updateMemoButtons() {
                 if (groupPill) {
                     groupPill.style.removeProperty('background-color');
                     groupPill.style.removeProperty('color');
+                    groupPill.style.removeProperty('border-color');
                 }
             }
         });
