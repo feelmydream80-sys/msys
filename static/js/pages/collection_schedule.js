@@ -1349,7 +1349,6 @@ export function init() {
                         if (groupPill) {
                             groupPill.style.removeProperty('background-color');
                             groupPill.style.removeProperty('color');
-                            groupPill.style.removeProperty('border-color');
                         }
                     }
                     memoPopup.classList.add('hidden');
@@ -1541,7 +1540,6 @@ async function updateMemoButtons() {
                 if (groupPill) {
                     groupPill.style.removeProperty('background-color');
                     groupPill.style.removeProperty('color');
-                    groupPill.style.removeProperty('border-color');
                 }
             }
         });
